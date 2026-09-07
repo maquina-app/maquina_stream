@@ -60,6 +60,16 @@ tasks:
       snapshot repairs real divergence. README.md there says what to look for.
       This is the closest an agent can get to "reviewed frame by frame"; the
       judgement is still a person's.
+    pixel_evidence: >-
+      docs/phase0-frames/pixel-evidence.md, reproducible with analyse.sh. Frames
+      cropped to their top 200px - text revealed long before the snapshot - and
+      diffed against the frame before. After the snapshot A and B are
+      PIXEL-IDENTICAL frame to frame (0 px), and C differs by 25-58 px, about
+      0.008%, which is the mask's gradient edge. The single ~47k spike per
+      strategy is the snapshot's reflow, not a strobe: it appears at equal
+      magnitude in C, which cannot re-animate old text by construction, and all
+      three frames jump to the same height at that moment. This settles the
+      factual question with pixels; it does not settle the judgement.
 
 dod:
   - line: One strategy chosen, reason written in the spec.

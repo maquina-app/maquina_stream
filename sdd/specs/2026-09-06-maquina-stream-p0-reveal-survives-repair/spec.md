@@ -158,6 +158,20 @@ neither `Emulation.setPageVisibilityOverride` (gone from CDP) nor
 is wired and will register the burst — it needs a human with a real browser tab.
 This is a manual step in the review below, not a passed check.
 
+## Pixel evidence
+
+`docs/phase0-frames/pixel-evidence.md` adds a second, independent measurement to
+the counters: consecutive frames cropped to the region revealed long before the
+snapshot, diffed pixel for pixel.
+
+After the snapshot, **A and B are pixel-identical frame to frame**; C differs by
+25-58 px (0.008%), which is its gradient edge. The one large spike per strategy
+is the snapshot's reflow rather than a strobe — it appears at the same magnitude
+in C, which cannot re-animate by construction.
+
+The factual question is therefore answered twice, from DOM events and from
+pixels. What remains is the judgement below.
+
 ## Human review
 
 The gate. Roughly ten minutes:
