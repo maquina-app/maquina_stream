@@ -107,7 +107,7 @@ class SourceposTest < Minitest::Test
     html = Commonmarker.to_html("para\n\n<div class=\"raw\">\nhtml block\n</div>\n\ntail\n",
       options: RENDER)
 
-    div = Nokogiri::HTML5.fragment(html).children.find { it.element? && it.name == "div" }
+    div = Nokogiri::HTML5.fragment(html).children.find { |node| node.element? && node.name == "div" }
 
     refute_nil div
     assert_nil div["data-sourcepos"],
@@ -116,7 +116,7 @@ class SourceposTest < Minitest::Test
 
   def test_html_block_does_have_a_sourcepos_via_the_node_api
     node = Commonmarker.parse("para\n\n<div class=\"raw\">\nhtml block\n</div>\n\ntail\n")
-      .find { it.type == :html_block }
+      .find { |node| node.type == :html_block }
 
     refute_nil node
     assert_equal({start_line: 3, start_column: 1, end_line: 5, end_column: 6},
@@ -274,7 +274,7 @@ class SourceposTest < Minitest::Test
   # Slices one line by a "L:C-L:C" range, 1-based inclusive, the way a
   # character-oriented splitter would.
   def slice_by_columns(line, range)
-    from, to = range.split("-").map { it.split(":").last.to_i }
+    from, to = range.split("-").map { |part| part.split(":").last.to_i }
     line[from - 1, to - from + 1]
   end
 
