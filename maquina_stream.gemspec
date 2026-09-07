@@ -11,6 +11,13 @@ Gem::Specification.new do |spec|
                      "server and broadcasts it over Turbo Streams. Only rendered HTML reaches " \
                      "the browser."
   spec.license = "MIT"
+  spec.homepage = "https://github.com/maquina-app/maquina_stream"
+  spec.metadata = {
+    "homepage_uri" => spec.homepage,
+    "source_code_uri" => spec.homepage,
+    "changelog_uri" => "#{spec.homepage}/blob/main/CHANGELOG.md",
+    "rubygems_mfa_required" => "true"
+  }
 
   spec.required_ruby_version = ">= 3.3"
 
