@@ -61,7 +61,7 @@ module MaquinaStream
       # How many recent sealed blocks a manifest carries in full. Everything
       # older is covered by one rollup digest, which is what keeps the payload
       # bounded by the window instead of by the message. See Manifest.
-      @manifest_window      = 50
+      @manifest_window = 50
       @seal_lag = 2
       @locale = :es
       @components = :maquina

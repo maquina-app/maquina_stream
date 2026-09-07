@@ -59,7 +59,7 @@ class RepairTest < ActiveSupport::TestCase
     stream("# Uno\n\nDos.\n\nTres.\n\nCuatro.")
 
     manifest = MaquinaStream::Manifest.for(@message)
-    stale = manifest.entries.map.with_index { |(id, digest), index| index == 1 ? [id, "stale"] : [id, digest] }
+    stale = manifest.entries.map.with_index { |(id, digest), index| (index == 1) ? [id, "stale"] : [id, digest] }
 
     assert_equal [manifest.entries[1].first], manifest.diff(stale)
   end
