@@ -100,6 +100,28 @@ class BroadcasterTest < ActiveSupport::TestCase
     assert_operator @recorder.frames, :>, before, "the final seal must always go out"
   end
 
+  # The repair path triggers on this, and a client cannot tell that a frame is
+  # the last one by looking at it. When it went missing nothing failed: the
+  # stream just never told anyone it had finished.
+  test "the final seal frame is marked as final on the wire" do
+    @broadcaster.append("un párrafo\n\n", now: 0)
+    @broadcaster.seal!
+
+    refute_predicate @recorder.sent.first, :final, "an ordinary frame must not claim to be the seal"
+    assert_predicate @recorder.sent.last, :final, "the seal frame is what triggers the final repair"
+  end
+
+  test "sealing a message with nothing pending still announces the seal" do
+    @broadcaster.append("texto", now: 0)
+    @broadcaster.broadcast(now: 0)
+    before = @recorder.frames
+
+    @broadcaster.seal!
+
+    assert_operator @recorder.frames, :>, before, "a seal with no content change still has to be announced"
+    assert_predicate @recorder.sent.last, :final
+  end
+
   test "the host owns persistence: append writes through the contract" do
     @broadcaster.append("texto")
 

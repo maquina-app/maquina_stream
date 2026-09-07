@@ -40,7 +40,7 @@ module MaquinaStream
     # drift becomes cosmetic and self-correcting because of this one.
     def seal!(status: :complete)
       record.maquina_stream_seal!(status: status)
-      emit(now: monotonic_ms, force: true)
+      emit(now: monotonic_ms, final: true)
     end
 
     # Coalescing happens BEFORE the render, not after it. Building a frame means
@@ -75,16 +75,21 @@ module MaquinaStream
         now - @last_flush >= config.frame_budget_ms
       end
 
-      def emit(now:, force: false)
+      def emit(now:, final: false)
         frame = build_frame
-        return nil if frame.empty?
+        return nil if frame.empty? && !final
 
         @last_flush = now
         frame.blocks.each { |block| @known[block.id] = sent_digest(block) }
 
         # The sequence belongs to the host's row and moves once per frame that
         # actually goes out, not once per append.
-        sequenced = Frame.new(seq: record.maquina_stream_advance, appends: frame.appends, patch: frame.patch)
+        sequenced = Frame.new(
+          seq: record.maquina_stream_advance,
+          appends: frame.appends,
+          patch: frame.patch,
+          final: final
+        )
         transport.call(record: record, frame: sequenced, config: config)
         sequenced
       end
@@ -162,8 +167,10 @@ module MaquinaStream
       end
 
       private
+        # The final seal is marked as such, whatever it happens to carry. The
+        # repair path triggers on it.
         def frame_attributes(frame, kind)
-          {"data-ms-seq" => frame.seq, "data-ms-frame" => kind}
+          {"data-ms-seq" => frame.seq, "data-ms-frame" => frame.final? ? :final : kind}
         end
     end
   end

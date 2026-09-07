@@ -14,11 +14,18 @@ module MaquinaStream
   class Frame
     attr_reader :seq, :appends, :patch
 
-    def initialize(seq:, appends: [], patch: [])
+    def initialize(seq:, appends: [], patch: [], final: false)
       @seq = seq
       @appends = appends
       @patch = patch
+      @final = final
     end
+
+    # The final seal. It is marked on the wire because the repair path triggers
+    # on it: docs/design.md calls this the trigger that makes all intra-stream
+    # drift cosmetic and self-correcting, and a client cannot know a frame is
+    # the last one by looking at it.
+    def final? = @final
 
     def empty?
       appends.empty? && patch.empty?
@@ -35,6 +42,7 @@ module MaquinaStream
     def to_h
       {
         seq: seq,
+        final: final?,
         appends: appends.map(&:id),
         patch: patch.map(&:id)
       }

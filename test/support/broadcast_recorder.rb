@@ -6,7 +6,7 @@
 # the Phase 3 DoD is otherwise an estimate. It plugs into the transport seam, so
 # it records exactly what the real transport would have sent.
 class BroadcastRecorder
-  Sent = Struct.new(:seq, :appends, :patch, :bytes, :html, keyword_init: true)
+  Sent = Struct.new(:seq, :appends, :patch, :bytes, :html, :final, keyword_init: true)
 
   attr_reader :sent
 
@@ -20,6 +20,7 @@ class BroadcastRecorder
       appends: frame.appends.map(&:id),
       patch: frame.patch.map(&:id),
       bytes: frame.bytesize,
+      final: frame.final?,
       # The bytes themselves, so replay parity compares what was actually sent
       # rather than what the final document says now.
       html: (frame.appends + frame.patch).to_h { |block| [block.id, block.html] }
