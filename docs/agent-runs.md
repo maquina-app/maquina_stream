@@ -7,6 +7,19 @@ call a tool, read the result, continue. Where do the steps live?
 `test/maquina_stream/agent_shapes_test.rb` is the proof. This is a product
 decision, not an engine constraint.
 
+**Decided 2026-09-07: shape A.** A tool call is its own `Streamable` record.
+`test/maquina_stream/nexo_test.rb` drives it against a real `Nexo::Agent`, and
+`test/dummy/app/models/message.rb` holds the whole bridge — Nexo reports tool
+activity through the block `Agent#prompt` takes, each `:tool_call` opens a
+record, each `:tool_result` seals one.
+
+The deciding case is a tool result that arrives late. Under shape B it rewrites
+blocks in the middle of a message whose tail has already moved on, which is
+exactly what the seal lag cannot cover: the lag protects the last `seal_lag`
+blocks, not a block twenty back. Under shape A the late result is simply its own
+stream, still open, sealing when it finishes. Two streams open at once is also
+what a parallel tool call IS, and shape B has no way to represent it.
+
 ## Shape A — each step is its own Streamable record
 
 ```ruby
