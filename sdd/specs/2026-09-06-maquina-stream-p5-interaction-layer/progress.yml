@@ -36,9 +36,13 @@ dod:
       table copy round-trips quotes and commas, the link dialog traps focus and
       restores it, autoscroll holds position through further frames. Findings
       were fixed, not logged - see found_in_the_browser below.
-      SCREEN READER HALF NOT DONE and cannot be done by an agent: no session
-      here drives VoiceOver, NVDA or JAWS, and asserting an aria-label exists is
-      not hearing what is announced. Needs a person, ~10 minutes at the harness.
+      An axe-core 4.10.2 audit (WCAG 2.0/2.1 A + AA) additionally reports ZERO
+      violations on /harness, on /harness with the link dialog open, and on
+      /history - which narrows what a person has to check.
+      SCREEN READER HALF STILL NOT DONE and cannot be done by an agent: no
+      session here drives VoiceOver, NVDA or JAWS, axe cannot tell whether what
+      is announced makes sense, and asserting an aria-label exists is not
+      hearing it. Needs a person, ~10 minutes at the harness.
   - line: Both locales complete, Spanish default.
     met: true
     verification: "config/locales/{es,en}.yml, 70 keys each; locales_test.rb fails the build on a key present in one and missing in the other."

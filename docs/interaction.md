@@ -120,6 +120,25 @@ Against the harness, in Chromium:
   **holds position through further frames**, and re-sticks only when the reader
   returns to the bottom themselves.
 
+## Automated accessibility audit
+
+axe-core 4.10.2, WCAG 2.0/2.1 A and AA, run in Chromium against the harness:
+
+| Page / state | Violations |
+|---|---|
+| `/harness` | **0** (19 rule groups passing) |
+| `/harness` with the link dialog open | **0** |
+| `/history` | **0** |
+
+The dialog is audited *while open*, because that is the state a modal usually
+fails in.
+
+**This is not the screen reader pass.** axe finds missing names, roles, contrast
+and structure; it cannot tell you whether what gets announced makes sense, and
+it does not know that "Copiar como CSV" read aloud after "Copiar como Markdown"
+needs to be distinguishable. It narrows what a person has to check; it does not
+replace them.
+
 ## Not verified, and why
 
 - **The screen reader pass.** No agent in this project can drive VoiceOver, NVDA
