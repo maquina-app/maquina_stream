@@ -93,7 +93,8 @@ class SourceposTest < Minitest::Test
       ["div", nil], # <- the HTML block. No sourcepos.
       ["ul", "30:1-31:10"],
       ["p", "33:1-33:25"],
-      ["p", "37:1-40:16"],
+      ["p", "37:1-38:13"],
+      ["p", "40:1-40:16"],
       ["section", "42:1-42:14"]
     ]
 
@@ -168,7 +169,7 @@ class SourceposTest < Minitest::Test
     # The same span's byte columns fed to the same slicer: silent garbage, no
     # exception. This is the off-by-N class sourcepos_chars removes.
     refute_equal "**強調**", slice_by_columns(line, "1:11-1:20")
-    assert_equal "🎉 tail", slice_by_columns(line, "1:11-1:20")
+    assert_equal " 🎉 tail", slice_by_columns(line, "1:11-1:20")
   end
 
   def test_inline_node_columns_shift_too_not_just_block_columns
@@ -188,7 +189,7 @@ class SourceposTest < Minitest::Test
     {
       "👨‍👩‍👧‍👦 family" => [14, 8],
       "🇲🇽 flag" => [7, 6],
-      "é combining" => [12, 11] # "e" + U+0301
+      "e\u0301 combining" => [12, 11] # "e" + U+0301
     }.each do |line, (codepoints, graphemes)|
       assert_equal codepoints, line.length, line.inspect
       assert_equal graphemes, line.grapheme_clusters.length, line.inspect
@@ -222,7 +223,10 @@ class SourceposTest < Minitest::Test
 
     # github_pre_lang defaults to true: the language lands as lang= on <pre>,
     # not as class="language-ruby" on <code>.
-    assert_includes plain, %(<pre data-sourcepos="1:1-2:6" lang="ruby">)
+    pre = Nokogiri::HTML5.fragment(plain).at_css("pre")
+
+    assert_equal "ruby", pre["lang"]
+    assert_equal "1:1-2:6", pre["data-sourcepos"]
     refute_includes plain, "language-ruby"
 
     # Either way the attribute is on <pre>, which is the element a top-level
@@ -231,22 +235,27 @@ class SourceposTest < Minitest::Test
   end
 
   def test_indented_code_block_end_column_is_zero
-    html = Commonmarker.to_html("para\n\n    indented code\n", options: RENDER,
+    html = Commonmarker.to_html("para\n\n    indented code\n\ntail\n", options: RENDER,
       plugins: NO_HIGHLIGHT)
 
-    # 22:5-23:0 style: the range starts past the indent and ends at column 0 of
-    # the following line. Any slicer must treat column 0 as "end of previous
-    # line", not as an index.
+    # The range starts past the indent and ends at column 0 of the FOLLOWING
+    # line. A slicer must read column 0 as "end of the previous line", never as
+    # an index. (Drop the trailing blank line and the same block reports
+    # 3:5-3:17 instead, so the shape is context-dependent.)
     assert_includes html, %(data-sourcepos="3:5-4:0")
   end
 
   def test_list_item_end_positions_can_run_past_the_list_end
-    html = Commonmarker.to_html("- item one\n- item two\n", options: RENDER)
-    fragment = Nokogiri::HTML5.fragment(html)
+    fragment = Nokogiri::HTML5.fragment(
+      Commonmarker.to_html("- a\n- b\n\n1. x\n2. y\n", options: RENDER)
+    )
 
-    assert_equal "1:1-2:10", fragment.at_css("ul")["data-sourcepos"]
-    # The last <li> claims line 3 column 0, one line beyond the <ul> itself.
-    assert_equal "2:1-3:0", fragment.css("li").last["data-sourcepos"]
+    assert_equal "1:1-2:3", fragment.at_css("ul")["data-sourcepos"]
+    # The last <li> claims line 3 column 0 -- one line beyond the <ul> that
+    # contains it, and onto the blank separator line. Nested positions are not
+    # guaranteed to nest. It only happens when a bullet list is followed
+    # directly by an ordered list; "- a\n- b\n\ntail\n" reports 2:1-2:3.
+    assert_equal "2:1-3:0", fragment.at_css("ul").css("li").last["data-sourcepos"]
   end
 
   private
