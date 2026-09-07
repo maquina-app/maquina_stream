@@ -29,6 +29,8 @@ export default class extends ApplicationController {
   }
 
   connect() {
+    this.connected = true
+
     if (this.eagerValue) return this.render()
 
     this.observer = new IntersectionObserver((entries) => {
@@ -39,14 +41,27 @@ export default class extends ApplicationController {
   }
 
   disconnect() {
+    this.connected = false
     this.observer?.disconnect()
     this.observer = null
   }
 
   // The payload changed under a morph: re-render, but only because it really
   // changed. Stimulus only fires this when the attribute's value differs.
+  //
+  // The `connected` guard is the whole of the lazy load, and it is not
+  // defensive coding. Stimulus invokes every value-changed callback ONCE while
+  // the context connects, before `connect()` runs, and it passes as `previous`
+  // the value type's DEFAULT — `{}` for an Object — never `undefined`. So a
+  // guard written as `previous === undefined` never fires: the initial
+  // invocation reads as a real change, resets `rendered` and calls `render()`.
+  //
+  // That is exactly what happened. With mermaid and katex pinned in the dummy
+  // app, Chromium fetched both at scrollY 0 with the blocks 4,500px down the
+  // page. `library()` is lazy and the observer is correct; this callback was
+  // calling past both of them.
   payloadValueChanged(payload, previous) {
-    if (previous === undefined) return
+    if (!this.connected) return
     if (JSON.stringify(payload) === JSON.stringify(previous)) return
 
     this.rendered = false

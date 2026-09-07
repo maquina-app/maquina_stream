@@ -45,3 +45,11 @@ MaquinaStream.register_fence "timeline",
   strategy: :client,
   controller: "ms-timeline",
   payload: ->(source, info) { {source: source, info: info, format: "timeline"} }
+
+# The math renderer, wired host-side exactly like the diagram one. `ms-math`
+# ships with the engine but no fence name does: which fence means "math" is the
+# host's decision, and this is the one the harness exercises.
+MaquinaStream.register_fence "math",
+  strategy: :client,
+  controller: "ms-math",
+  payload: ->(source, _info) { {source: source, display: true} }

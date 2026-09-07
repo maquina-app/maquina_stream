@@ -1,0 +1,26 @@
+<h1>Carga perezosa de los renderizadores diferidos</h1>
+
+<p>
+  Dos bloques diferidos — una fence <code>mermaid</code> y una fence
+  <code>math</code> — colocados deliberadamente muy por debajo del pliegue, y
+  separados entre sí, de modo que cada biblioteca se pueda atribuir al bloque
+  que entró en pantalla. Nada de esto está simulado: <code>mermaid</code> y
+  <code>katex</code> están fijados en el importmap del anfitrión, sin precarga.
+</p>
+
+<p>
+  Compárese con <a href="/harness">/harness</a>, que no tiene ningún bloque
+  diferido y por tanto no debe pedir ninguna de las dos bibliotecas.
+</p>
+
+<div class="spacer" style="height: 250vh; border-left: 2px dashed #ccc;">
+  <p>Espaciador. Nada aquí necesita una biblioteca.</p>
+</div>
+
+<div id="ms-msg-diagram"><%= @diagram_html %></div>
+
+<div class="spacer" style="height: 250vh; border-left: 2px dashed #ccc;">
+  <p>Segundo espaciador, entre el diagrama y la fórmula.</p>
+</div>
+
+<div id="ms-msg-math"><%= @math_html %></div>

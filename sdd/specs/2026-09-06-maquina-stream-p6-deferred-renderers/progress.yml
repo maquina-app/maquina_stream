@@ -3,7 +3,7 @@ slug: deferred-renderers
 title: Client-deferred renderers
 repo: maquina_stream
 depends_on: [2, 4]
-status: complete_except_library_smoke_test
+status: complete
 opened: 2026-09-06
 
 tasks:
@@ -31,12 +31,34 @@ dod:
       iframe, onload and style stripped; javascript: href dropped while https:
       survives; nothing executes; legitimate SVG renders.
   - line: Heavy libraries load lazily, never on pages that don't need them.
-    met: partial
+    met: true
     verification: >-
-      Structurally true - the import is inside library(), called on first draw,
-      and draw only runs on intersection with a payload present. NOT confirmed
-      in a network panel with the real libraries, because mermaid and katex are
-      host pins and are not pinned in this environment.
+      Confirmed in a Chromium network panel with the real libraries. mermaid
+      11.4.1 and katex 0.16.11 are pinned host-side in test/dummy (CDN, exact
+      version, preload: false - importmap-rails preloads by default and a
+      preloaded pin would fetch both on every page). /harness/deferred puts each
+      block behind its own 250vh spacer so a fetch is attributable to one block.
+      1) /harness, no deferred block: 15 requests, zero to the CDN. The engine's
+      own ms_diagram/ms_math controller files load - they are small and they are
+      not the libraries. 2) /harness/deferred at scrollY 0, both blocks ~2,400px
+      and ~6,000px down: still zero CDN requests. 3) scroll the diagram in:
+      mermaid@11.4.1/+esm plus its dependency graph; katex not requested; the
+      math block still shows its shimmer. 4) scroll the formula in:
+      katex@0.16.11/dist/katex.mjs, after the mermaid request. 5) scroll out and
+      back four times: each entry point still appears exactly once, one <svg>,
+      zero console errors.
+    found: >-
+      The lazy path did not work, and only the real pins showed it. Stimulus
+      invokes payloadValueChanged once as the context connects and passes as
+      `previous` the value type's DEFAULT - {} for an Object - never undefined,
+      so the `previous === undefined` guard never fired: the initial invocation
+      read as a change, reset `rendered` and called render(). Both libraries
+      were fetched at scrollY 0 with the blocks 4,500px down the page. Fixed by
+      guarding on a `connected` flag set in connect(), which runs after the
+      value observer starts. Re-verified: the morph behaviour the first DoD line
+      depends on is unchanged - byte-identical payload = 0 draws, changed
+      payload = exactly 1 - and the eager path (ms-hostile, eager-value=true)
+      still renders on connect.
   - line: A host can add a renderer using only the documented registry, demonstrated in the dummy app.
     met: true
     verification: >-
@@ -47,5 +69,4 @@ dod:
     met: true
     verification: "ms-deferred#fail shows the source the model wrote; every subclass inherits it."
 
-open:
-  - "The lazy-load claim needs one run with mermaid and katex actually pinned, watching the network panel."
+open: []
