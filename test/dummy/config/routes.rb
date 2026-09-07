@@ -5,4 +5,5 @@ Rails.application.routes.draw do
 
   # Harness only. See HarnessController.
   get "harness" => "harness#show"
+  get "history" => "history#index", :as => :history
 end

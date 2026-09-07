@@ -38,5 +38,26 @@ module MaquinaStream
     def reset_configuration!
       @config = Configuration.new
     end
+
+    # Render a message, cached once it is sealed.
+    #
+    #   <%= MaquinaStream.render(message) %>
+    #
+    # A sealed message is immutable, so its HTML is a pure function of its
+    # buffer and can be cached by digest — which is what makes a page of history
+    # cheap: re-rendering fifty finished messages on every page load is work
+    # nobody asked for. An open message is never cached; it is about to change.
+    #
+    # The digest is of the buffer, so a host that edits a message gets a new key
+    # rather than a stale render.
+    def render(record, config: self.config)
+      markdown = record.maquina_stream_buffer
+
+      return Renderer.call(markdown, mode: :streaming, config: config) if record.maquina_stream_open?
+
+      ComponentCache.fetch("document", record.maquina_stream_id, Digest::SHA256.hexdigest(markdown.to_s)) do
+        Renderer.call(markdown, mode: :static, config: config)
+      end
+    end
   end
 end

@@ -1,0 +1,18 @@
+<%# The frame at the top loads the page above it when it scrolls into view, so
+    history grows upward without a full page load and without a pagination bar. %>
+<% if older %>
+  <%= turbo_frame_tag "history-before-#{messages.first.id}",
+        src: history_path(before: messages.first.id),
+        loading: :lazy do %>
+    <p data-history-part="loading"><%= t("maquina_stream.history.loading", default: "Cargando mensajes anteriores…") %></p>
+  <% end %>
+<% end %>
+
+<% messages.each do |message| %>
+  <article id="ms-msg-<%= message.maquina_stream_id %>"
+           <%= "data-ms-streaming" if message.maquina_stream_open? %>
+           data-history-part="message">
+    <%# Sealed messages come from cache; an open one is rendered live. %>
+    <%= MaquinaStream.render(message) %>
+  </article>
+<% end %>

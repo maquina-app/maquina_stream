@@ -1,0 +1,13 @@
+<%# One page of history, loading upward.
+    A page requested through a frame answers inside that same frame; the top
+    level renders the newest page directly. %>
+<% if @frame %>
+  <%= turbo_frame_tag @frame do %>
+    <%= render "history/page", messages: @messages, older: @older %>
+  <% end %>
+<% else %>
+  <h1>Historial</h1>
+  <div id="history">
+    <%= render "history/page", messages: @messages, older: @older %>
+  </div>
+<% end %>

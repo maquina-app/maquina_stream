@@ -12,6 +12,7 @@ require "action_view/railtie"
 # :development/:test). The engine's Ruby side needs neither; its asset and
 # importmap initializers no-op when they are absent.
 begin
+  require "turbo-rails"
   require "propshaft"
   require "importmap-rails"
   require "stimulus-rails"
