@@ -50,7 +50,7 @@ module MaquinaStream
         return nil unless strategy == :client && closed?
 
         builder = registration&.options&.fetch(:payload, nil)
-        return { source: source, info: info } unless builder.respond_to?(:call)
+        return {source: source, info: info} unless builder.respond_to?(:call)
 
         builder.call(source, info)
       end

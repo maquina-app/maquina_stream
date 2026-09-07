@@ -27,11 +27,11 @@ module MaquinaStream
     # An assigned hash is merged onto the defaults one level deep, so a host
     # names only what it is changing and +controls+ stays complete.
     DEFAULT_CONTROLS = {
-      code:  { copy: true, download: true },
-      table: { copy: true, download: true, fullscreen: true },
-      image: { download: true },
-      attachment: { download: true, remove: true },
-      suggestion: { enabled: true },
+      code: {copy: true, download: true},
+      table: {copy: true, download: true, fullscreen: true},
+      image: {download: true},
+      attachment: {download: true, remove: true},
+      suggestion: {enabled: true},
       link_safety: true
     }.freeze
 
@@ -49,33 +49,33 @@ module MaquinaStream
     attr_reader :controls
 
     attr_accessor :frame_budget_ms, :keyframe_interval_ms, :seal_lag,
-                  :locale, :components, :themes,
-                  :default_origin, :allowed_protocols,
-                  :allowed_link_prefixes, :allowed_image_prefixes,
-                  :allow_data_images,
-                  :find_stream, :authorize, :transport
+      :locale, :components, :themes,
+      :default_origin, :allowed_protocols,
+      :allowed_link_prefixes, :allowed_image_prefixes,
+      :allow_data_images,
+      :find_stream, :authorize, :transport
 
     def initialize
-      @frame_budget_ms      = 250
+      @frame_budget_ms = 250
       @keyframe_interval_ms = 4_000
-      @seal_lag             = 2
-      @locale               = :es
-      @components           = :maquina
-      @themes               = { light: "github.light", dark: "github.dark" }
+      @seal_lag = 2
+      @locale = :es
+      @components = :maquina
+      @themes = {light: "github.light", dark: "github.dark"}
 
-      @default_origin         = nil
-      @allowed_protocols      = %w[http https mailto]
-      @allowed_link_prefixes  = ["*"]
+      @default_origin = nil
+      @allowed_protocols = %w[http https mailto]
+      @allowed_link_prefixes = ["*"]
       @allowed_image_prefixes = ["*"]
-      @allow_data_images      = true
+      @allow_data_images = true
 
       @controls = self.class.default_controls
 
       # Host seams. The engine never guesses a record and never assumes it may
       # serve one: with no host callable configured, every request is refused.
       @find_stream = nil
-      @authorize   = nil
-      @transport   = :turbo_streams
+      @authorize = nil
+      @transport = :turbo_streams
     end
 
     # +false+/+:none+ turns every control off; +true+/+:all+ turns every control
@@ -84,10 +84,10 @@ module MaquinaStream
       @controls =
         case value
         when false, nil, :none then self.class.controls_all(false)
-        when true, :all        then self.class.controls_all(true)
+        when true, :all then self.class.controls_all(true)
         else
           self.class.default_controls.merge(value.to_h.symbolize_keys) do |_key, default, given|
-            default.is_a?(Hash) && given.is_a?(Hash) ? default.merge(given.symbolize_keys) : given
+            (default.is_a?(Hash) && given.is_a?(Hash)) ? default.merge(given.symbolize_keys) : given
           end
         end
     end

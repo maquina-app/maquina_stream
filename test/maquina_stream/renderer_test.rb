@@ -12,7 +12,7 @@ class RendererTest < ActiveSupport::TestCase
     MaquinaStream.register_fence "mermaid",
       strategy: :client,
       controller: "ms-diagram",
-      payload: ->(source, info) { { source: source, info: info } }
+      payload: ->(source, info) { {source: source, info: info} }
   end
 
   teardown do
@@ -137,6 +137,6 @@ class RendererTest < ActiveSupport::TestCase
 
   private
     def strip_reveal(html)
-      html.gsub(/ data-ms-reveal=""/, "").gsub(/ data-ms-caret=""/, "")
+      html.gsub(' data-ms-reveal=""', "").gsub(' data-ms-caret=""', "")
     end
 end

@@ -3,14 +3,14 @@
 require_relative "lib/maquina_stream/version"
 
 Gem::Specification.new do |spec|
-  spec.name        = "maquina_stream"
-  spec.version     = MaquinaStream::VERSION
-  spec.authors     = ["Mario Chavez"]
-  spec.summary     = "Streaming markdown rendering for Rails, server-side."
+  spec.name = "maquina_stream"
+  spec.version = MaquinaStream::VERSION
+  spec.authors = ["Mario Chavez"]
+  spec.summary = "Streaming markdown rendering for Rails, server-side."
   spec.description = "Rails engine that renders a streaming markdown buffer to HTML on the " \
                      "server and broadcasts it over Turbo Streams. Only rendered HTML reaches " \
                      "the browser."
-  spec.license     = "MIT"
+  spec.license = "MIT"
 
   spec.required_ruby_version = ">= 3.3"
 

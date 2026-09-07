@@ -89,7 +89,7 @@ module MaquinaStream
       # that cannot seal holds every block after it open too.
       def apply_seal(built, sealed_count)
         limit = [sealed_count, unresolved_position(built) || sealed_count].min
-        built.each_with_index.map { |block, position| position < limit ? block.seal : block }
+        built.each_with_index.map { |block, position| (position < limit) ? block.seal : block }
       end
 
       def unresolved_position(built)
@@ -150,7 +150,7 @@ module MaquinaStream
 
           from = (previous_end || 0) + 1
           to = (next_start || line_count + 1) - 1
-          from > to ? (from..from) : (from..to)
+          (from > to) ? (from..from) : (from..to)
         end
       end
 

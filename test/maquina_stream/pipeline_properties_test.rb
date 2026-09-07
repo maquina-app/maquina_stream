@@ -6,7 +6,7 @@ require "test_helper"
 # over one hand-picked document.
 class PipelinePropertiesTest < ActiveSupport::TestCase
   CORPUS = Dir[File.expand_path("../fixtures/markdown/*.md", __dir__)] +
-           Dir[File.expand_path("../fixtures/retroactive/*.md", __dir__)]
+    Dir[File.expand_path("../fixtures/retroactive/*.md", __dir__)]
 
   setup do
     MaquinaStream.reset_registries!
@@ -82,7 +82,7 @@ class PipelinePropertiesTest < ActiveSupport::TestCase
 
   private
     def strip_reveal(html)
-      html.gsub(/ data-ms-reveal=""/, "").gsub(/ data-ms-caret=""/, "")
+      html.gsub(' data-ms-reveal=""', "").gsub(' data-ms-caret=""', "")
     end
 
     def measure

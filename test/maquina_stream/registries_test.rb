@@ -23,7 +23,7 @@ class MaquinaStream::RegistriesTest < ActiveSupport::TestCase
   end
 
   test "register_fence stores every strategy, keyed by info string" do
-    payload = ->(source, info) { { source: source, info: info } }
+    payload = ->(source, info) { {source: source, info: info} }
 
     MaquinaStream.register_fence "ruby", strategy: :server
     MaquinaStream.register_fence "unknown", strategy: :passthrough
@@ -36,7 +36,7 @@ class MaquinaStream::RegistriesTest < ActiveSupport::TestCase
 
     assert_equal :client, mermaid.options[:strategy]
     assert_equal "ms-diagram", mermaid.options[:controller]
-    assert_equal({ source: "graph TD", info: "mermaid" }, mermaid.options[:payload].call("graph TD", "mermaid"))
+    assert_equal({source: "graph TD", info: "mermaid"}, mermaid.options[:payload].call("graph TD", "mermaid"))
   end
 
   test "re-registering replaces the previous registration" do

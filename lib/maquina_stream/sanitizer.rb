@@ -2,7 +2,6 @@
 
 require "nokogiri"
 require "uri"
-require "set"
 
 module MaquinaStream
   # Allowlist plus URL hardening. The last pass before output, and it runs
@@ -47,18 +46,18 @@ module MaquinaStream
     GLOBAL_ATTRIBUTES = %w[id class title lang dir role translate hidden].to_set.freeze
 
     ELEMENT_ATTRIBUTES = {
-      "a"        => %w[href target rel hreflang type],
-      "img"      => %w[src alt width height loading decoding],
-      "ol"       => %w[start reversed type],
-      "li"       => %w[value],
-      "td"       => %w[colspan rowspan align valign headers scope],
-      "th"       => %w[colspan rowspan align valign headers scope abbr],
-      "col"      => %w[span align],
+      "a" => %w[href target rel hreflang type],
+      "img" => %w[src alt width height loading decoding],
+      "ol" => %w[start reversed type],
+      "li" => %w[value],
+      "td" => %w[colspan rowspan align valign headers scope],
+      "th" => %w[colspan rowspan align valign headers scope abbr],
+      "col" => %w[span align],
       "colgroup" => %w[span align],
-      "table"    => %w[align],
-      "input"    => %w[type checked disabled],
-      "time"     => %w[datetime],
-      "details"  => %w[open]
+      "table" => %w[align],
+      "input" => %w[type checked disabled],
+      "time" => %w[datetime],
+      "details" => %w[open]
     }.transform_values { |names| names.to_set.freeze }.freeze
 
     # The allowlist already excludes every one of these. Naming them keeps the
@@ -89,7 +88,7 @@ module MaquinaStream
     CONTROLLER_IDENTIFIER = /\Ams-[a-z0-9]+(?:-[a-z0-9]+)*\z/
     ACTION_DESCRIPTOR = %r{
       \A
-      (?:[a-zA-Z0-9:.\-]+(?:@[a-z]+)?->)?
+      (?:[a-zA-Z0-9:.-]+(?:@[a-z]+)?->)?
       ms-[a-z0-9-]+\#[a-zA-Z_][a-zA-Z0-9_]*
       (?::[a-z]+)*
       \z
@@ -276,7 +275,7 @@ module MaquinaStream
         return nil if decoded_scheme && decoded_scheme != scheme && DANGEROUS_SCHEMES.include?(decoded_scheme)
 
         if scheme
-          return kind == :image ? data_image_url(url) : nil if scheme == "data"
+          return (kind == :image) ? data_image_url(url) : nil if scheme == "data"
           return nil unless allowed_protocols.include?(scheme)
         else
           url = resolve(url)
@@ -287,7 +286,7 @@ module MaquinaStream
       end
 
       def scheme_of(url)
-        match = /\A([a-zA-Z][a-zA-Z0-9+.\-]*):/.match(url)
+        match = /\A([a-zA-Z][a-zA-Z0-9+.-]*):/.match(url)
         match && match[1].downcase
       end
 
@@ -323,7 +322,7 @@ module MaquinaStream
       end
 
       def allowed_prefix?(url, kind:)
-        prefixes = Array(kind == :image ? config.allowed_image_prefixes : config.allowed_link_prefixes)
+        prefixes = Array((kind == :image) ? config.allowed_image_prefixes : config.allowed_link_prefixes)
         return true if prefixes.empty? || prefixes.include?("*")
 
         prefixes.any? { |prefix| url.start_with?(prefix.to_s) }
@@ -341,7 +340,7 @@ module MaquinaStream
         case name
         when "input"
           # The tasklist extension's disabled checkbox, and nothing else.
-          node["type"].to_s.downcase == "checkbox" ? node["disabled"] = "disabled" : node.unlink
+          (node["type"].to_s.downcase == "checkbox") ? node["disabled"] = "disabled" : node.unlink
         when "a"
           harden_link(node)
         end

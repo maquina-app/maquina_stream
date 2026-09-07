@@ -4,13 +4,13 @@ module MaquinaStream
   # Registrations are stored here in Phase 1. Phase 2 (render pipeline) reads
   # them; nothing consumes them yet.
   Element = Struct.new(:name, :options, keyword_init: false)
-  Tag     = Struct.new(:name, :options, keyword_init: false)
-  Fence   = Struct.new(:info, :options, keyword_init: false)
+  Tag = Struct.new(:name, :options, keyword_init: false)
+  Fence = Struct.new(:info, :options, keyword_init: false)
 
   module Registries
     def elements = @elements ||= {}
-    def tags     = @tags ||= {}
-    def fences   = @fences ||= {}
+    def tags = @tags ||= {}
+    def fences = @fences ||= {}
 
     # MaquinaStream.register_element :h2, partial: "my/headings/h2"
     def register_element(name, **options)

@@ -134,7 +134,7 @@ module MaquinaStream
 
       private
         def frame_attributes(frame, kind)
-          { "data-ms-seq" => frame.seq, "data-ms-frame" => kind }
+          {"data-ms-seq" => frame.seq, "data-ms-frame" => kind}
         end
     end
   end

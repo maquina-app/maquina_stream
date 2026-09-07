@@ -11,7 +11,9 @@ Rake::TestTask.new(:test) do |t|
   t.warning = false
 end
 
-task default: :test
+require "standard/rake"
+
+task default: %i[test standard]
 
 namespace :maquina_stream do
   desc "Regenerate the light and dark highlighting stylesheets from config.themes"

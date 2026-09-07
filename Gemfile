@@ -22,3 +22,8 @@ group :development, :test do
   gem "propshaft"
   gem "puma"
 end
+
+group :development, :test do
+  gem "standard", "~> 1.0"
+  gem "herb", require: false
+end

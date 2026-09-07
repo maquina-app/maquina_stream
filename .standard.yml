@@ -1,0 +1,13 @@
+# Standard, with the three cops that fight this codebase's house style turned
+# off. Methods are indented under `private` throughout both gems (the Rails /
+# omakase convention); that is a deliberate style, not drift, and it is not
+# worth rewriting every file to satisfy a formatter.
+ignore:
+  - "test/dummy/db/schema.rb"
+  - "**/*":
+    - Layout/IndentationWidth
+    - Layout/IndentationConsistency
+    - Layout/EmptyLinesAroundAccessModifier
+    # Struct gained keyword init by default in Ruby 3.2. This gem supports 3.1,
+    # where dropping `keyword_init: true` breaks keyword construction outright.
+    - Style/RedundantStructKeywordInit

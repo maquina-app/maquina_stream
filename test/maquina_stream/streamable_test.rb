@@ -81,7 +81,7 @@ class MaquinaStream::StreamableTest < ActiveSupport::TestCase
   test "an unmet contract is reported before it is called" do
     assert_empty Message.maquina_stream_contract_gaps
     assert_equal %i[maquina_stream_sequence maquina_stream_open? maquina_stream_seal!].sort,
-                 Note.maquina_stream_contract_gaps.sort
+      Note.maquina_stream_contract_gaps.sort
   end
 
   test "every unmet contract method raises, and the met ones do not" do

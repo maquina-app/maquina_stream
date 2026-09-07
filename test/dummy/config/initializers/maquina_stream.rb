@@ -3,7 +3,7 @@
 MaquinaStream.configure do |c|
   # Host seams: the engine resolves and authorizes nothing on its own.
   c.find_stream = ->(sid) { Message.find_by(id: sid) }
-  c.authorize   = ->(record, _request) { record.present? }
+  c.authorize = ->(record, _request) { record.present? }
 end
 
 # Fence registry — one language of each strategy, which is what the Phase 2 DoD
@@ -13,13 +13,13 @@ end
 #   :client       one JSON payload for one leaf node, emitted only once closed
 #   :passthrough  left exactly as it arrived
 MaquinaStream.register_fence "ruby", strategy: :server
-MaquinaStream.register_fence "sql",  strategy: :server
+MaquinaStream.register_fence "sql", strategy: :server
 MaquinaStream.register_fence "text", strategy: :passthrough
 
 MaquinaStream.register_fence "mermaid",
   strategy: :client,
   controller: "ms-diagram",
-  payload: ->(source, info) { { source: source, info: info } }
+  payload: ->(source, info) { {source: source, info: info} }
 
 # Tag registry — the reference case, not a toy. A model citing its sources emits
 #

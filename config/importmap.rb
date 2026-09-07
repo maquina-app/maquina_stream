@@ -7,4 +7,4 @@
 # no reason. NoBuild: nothing here is compiled, bundled or fetched from npm.
 pin "maquina_stream", to: "maquina_stream/index.js"
 pin_all_from MaquinaStream::Engine.root.join("app/javascript/maquina_stream/controllers"),
-             under: "maquina_stream/controllers"
+  under: "maquina_stream/controllers"

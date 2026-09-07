@@ -48,7 +48,7 @@ module MaquinaStream
     def ==(other)
       other.is_a?(Block) && other.index == index && other.html == html
     end
-    alias eql? ==
+    alias_method :eql?, :==
 
     def hash = [index, html].hash
   end

@@ -113,9 +113,9 @@ class MaquinaStream::ComponentsTest < ActiveSupport::TestCase
       root = Pathname(dir)
       root.join("app/views/maquina_stream").mkpath
       root.join("app/views/maquina_stream/_offender.html.erb")
-          .write(%(<%= render "maquina_stream/components/shimmer" %>\n))
+        .write(%(<%= render "maquina_stream/components/shimmer" %>\n))
       root.join("app/views/maquina_stream/_innocent.html.erb")
-          .write(%(<%= component(:shimmer) %>\n))
+        .write(%(<%= component(:shimmer) %>\n))
 
       violations = direct_partial_references(root, except: [])
 
@@ -177,7 +177,7 @@ class MaquinaStream::ComponentsTest < ActiveSupport::TestCase
       Pathname.glob(root.join("{app,lib}/**/*.{rb,erb}")).filter_map do |path|
         relative = path.relative_path_from(root).to_s
         next if except.include?(relative)
-        next unless path.read.match?(/(?:render|partial)\b[^\n]*#{PARTIAL_PATH}/)
+        next unless path.read.match?(/(?:render|partial)\b[^\n]*#{PARTIAL_PATH}/o)
 
         relative
       end.sort
@@ -241,14 +241,14 @@ class MaquinaStream::ComponentPartialsTest < ActiveSupport::TestCase
   end
 
   test "caller data attributes merge, the component keeps its identity keys" do
-    html = component(:code_block, source: "x", data: { controller: "analytics", testid: "cb" })
+    html = component(:code_block, source: "x", data: {controller: "analytics", testid: "cb"})
 
     assert_includes html, %(data-component="code-block")
     assert_includes html, %(data-testid="cb")
     assert_match(/data-controller="[^"]*analytics/, html)
 
     # A caller cannot steal the identity key the CSS selects on.
-    overridden = component(:code_block, source: "x", data: { component: "not-a-code-block" })
+    overridden = component(:code_block, source: "x", data: {component: "not-a-code-block"})
 
     assert_includes overridden, %(data-component="code-block")
     refute_includes overridden, "not-a-code-block"
@@ -376,7 +376,7 @@ class MaquinaStream::ComponentPartialsTest < ActiveSupport::TestCase
   end
 
   test "the attachment download control is individually disableable" do
-    MaquinaStream.config.controls = { attachment: { download: false } }
+    MaquinaStream.config.controls = {attachment: {download: false}}
     html = component(:attachment, filename: "a.pdf", url: "/a.pdf")
 
     refute_includes html, %(data-attachment-part="download")
@@ -393,7 +393,7 @@ class MaquinaStream::ComponentPartialsTest < ActiveSupport::TestCase
     refute_includes component(:attachment, filename: "a.pdf", url: "/a.pdf"),
       %(data-attachment-part="remove"), "no remove path means no remove control"
 
-    MaquinaStream.config.controls = { attachment: { remove: false } }
+    MaquinaStream.config.controls = {attachment: {remove: false}}
     refute_includes component(:attachment, filename: "a.pdf", url: "/a.pdf", remove_path: "/attachments/9"),
       %(data-attachment-part="remove")
   end
@@ -402,8 +402,8 @@ class MaquinaStream::ComponentPartialsTest < ActiveSupport::TestCase
 
   test "suggestion renders a chip row of links, with no controller" do
     html = component(:suggestion, items: [
-      { text: "Resume el hilo", href: "/prompts?q=1" },
-      { text: "Dame un ejemplo", href: "/prompts?q=2" }
+      {text: "Resume el hilo", href: "/prompts?q=1"},
+      {text: "Dame un ejemplo", href: "/prompts?q=2"}
     ])
 
     assert_includes html, %(data-component="suggestion")
@@ -414,7 +414,7 @@ class MaquinaStream::ComponentPartialsTest < ActiveSupport::TestCase
 
   test "a suggestion chip can be a form submission the host supplied" do
     html = component(:suggestion, items: [
-      { text: "Reintentar", href: "/prompts", method: :post, params: { prompt: "Reintentar" } }
+      {text: "Reintentar", href: "/prompts", method: :post, params: {prompt: "Reintentar"}}
     ])
 
     assert_match(/<form[^>]*method="post"/, html)
@@ -422,21 +422,21 @@ class MaquinaStream::ComponentPartialsTest < ActiveSupport::TestCase
   end
 
   test "suggestion skips empty chips and renders nothing at all when it has none" do
-    html = component(:suggestion, items: [{ text: "", href: "/a" }, { href: "/b" }])
+    html = component(:suggestion, items: [{text: "", href: "/a"}, {href: "/b"}])
 
     assert_equal "", html.strip
   end
 
   test "the suggestion row is disableable wholesale" do
-    MaquinaStream.config.controls = { suggestion: { enabled: false } }
+    MaquinaStream.config.controls = {suggestion: {enabled: false}}
 
-    assert_equal "", component(:suggestion, items: [{ text: "Hola", href: "/a" }]).strip
+    assert_equal "", component(:suggestion, items: [{text: "Hola", href: "/a"}]).strip
   end
 
   test "every control off is one expression" do
     MaquinaStream.config.controls = false
 
-    assert_equal "", component(:suggestion, items: [{ text: "Hola", href: "/a" }]).strip
+    assert_equal "", component(:suggestion, items: [{text: "Hola", href: "/a"}]).strip
     refute_includes component(:attachment, filename: "a.pdf", url: "/a.pdf"),
       %(data-attachment-part="download")
   end

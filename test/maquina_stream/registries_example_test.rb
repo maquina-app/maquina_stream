@@ -10,7 +10,7 @@ class RegistriesExampleTest < ActiveSupport::TestCase
   test "the dummy app registers one language of each fence strategy" do
     strategies = %w[ruby text mermaid].to_h { |info| [info, MaquinaStream.fences[info].options[:strategy]] }
 
-    assert_equal({ "ruby" => :server, "text" => :passthrough, "mermaid" => :client }, strategies)
+    assert_equal({"ruby" => :server, "text" => :passthrough, "mermaid" => :client}, strategies)
   end
 
   test "a server fence highlights through the code_block component" do

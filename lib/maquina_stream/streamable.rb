@@ -19,9 +19,9 @@ module MaquinaStream
     extend ActiveSupport::Concern
 
     SEQUENCE_COLUMN = :stream_sequence
-    STATUS_COLUMN   = :stream_status
-    OPEN_STATUS     = "open"
-    SEAL_STATUSES   = %i[complete cancelled errored].freeze
+    STATUS_COLUMN = :stream_status
+    OPEN_STATUS = "open"
+    SEAL_STATUSES = %i[complete cancelled errored].freeze
 
     CONTRACT_METHODS = %i[
       maquina_stream_id
@@ -73,8 +73,8 @@ module MaquinaStream
         maquina_stream_buffer: :buffer,
         maquina_stream_append: :buffer,
         maquina_stream_sequence: SEQUENCE_COLUMN,
-        :maquina_stream_open? => STATUS_COLUMN,
-        :maquina_stream_seal! => STATUS_COLUMN
+        maquina_stream_open?: STATUS_COLUMN,
+        maquina_stream_seal!: STATUS_COLUMN
       }.freeze
 
       def maquina_stream_id

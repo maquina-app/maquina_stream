@@ -15,12 +15,12 @@ require "nokogiri"
 class SourceposTest < Minitest::Test
   # Rendered-HTML options. `unsafe: true` so raw HTML blocks reach the output at
   # all; without it comrak replaces them with a comment.
-  RENDER = { render: { sourcepos: true, unsafe: true } }.freeze
+  RENDER = {render: {sourcepos: true, unsafe: true}}.freeze
 
   # Plugins default to a syntect syntax highlighter that rewrites code block
   # innards into inline-styled spans. The splitter cares about the block
   # envelope, not the highlighting, so turn it off where it only adds noise.
-  NO_HIGHLIGHT = { syntax_highlighter: nil }.freeze
+  NO_HIGHLIGHT = {syntax_highlighter: nil}.freeze
 
   def test_commonmarker_version_under_test
     assert_equal "2.10.0", Commonmarker::VERSION
@@ -43,7 +43,7 @@ class SourceposTest < Minitest::Test
     open_pos = code_block_position("```ruby\nputs 1\n")
     closed_pos = code_block_position("```ruby\nputs 1\n```\n")
 
-    assert_equal 2, open_pos[:end_line],   "open fence ends on its last content line"
+    assert_equal 2, open_pos[:end_line], "open fence ends on its last content line"
     assert_equal 3, closed_pos[:end_line], "closed fence ends on the closing fence line"
 
     # Consequence for the splitter: sourcepos alone cannot tell an open block
@@ -54,9 +54,9 @@ class SourceposTest < Minitest::Test
 
   def test_degenerate_open_fences_still_report_a_position
     {
-      "```ruby\n" => { end_line: 1, end_column: 7 }, # fence opened, no content
-      "```"       => { end_line: 1, end_column: 3 }, # bare fence, no newline
-      "```ru"     => { end_line: 1, end_column: 5 }  # fence info still arriving
+      "```ruby\n" => {end_line: 1, end_column: 7}, # fence opened, no content
+      "```" => {end_line: 1, end_column: 3}, # bare fence, no newline
+      "```ru" => {end_line: 1, end_column: 5}  # fence info still arriving
     }.each do |markdown, expected|
       pos = code_block_position(markdown)
 
@@ -119,7 +119,7 @@ class SourceposTest < Minitest::Test
       .find { it.type == :html_block }
 
     refute_nil node
-    assert_equal({ start_line: 3, start_column: 1, end_line: 5, end_column: 6 },
+    assert_equal({start_line: 3, start_column: 1, end_line: 5, end_column: 6},
       node.source_position)
   end
 
@@ -177,9 +177,9 @@ class SourceposTest < Minitest::Test
   def test_inline_node_columns_shift_too_not_just_block_columns
     md = "日本語 **強調** 🎉 tail\n"
 
-    bytes = Commonmarker.to_html(md, options: { render: { sourcepos: true } })
+    bytes = Commonmarker.to_html(md, options: {render: {sourcepos: true}})
     chars = Commonmarker.to_html(md,
-      options: { parse: { sourcepos_chars: true }, render: { sourcepos: true } })
+      options: {parse: {sourcepos_chars: true}, render: {sourcepos: true}})
 
     assert_includes bytes, %(<strong data-sourcepos="1:11-1:20">)
     assert_includes chars, %(<strong data-sourcepos="1:5-1:10">)
@@ -208,7 +208,7 @@ class SourceposTest < Minitest::Test
 
     bytes = Commonmarker.to_html(md, options: RENDER)
     chars = Commonmarker.to_html(md,
-      options: { parse: { sourcepos_chars: true }, render: RENDER[:render] })
+      options: {parse: {sourcepos_chars: true}, render: RENDER[:render]})
 
     assert_includes bytes, %(<blockquote data-sourcepos="3:1-4:14">)
     assert_includes chars, %(<blockquote data-sourcepos="3:1-4:6">)
@@ -267,7 +267,7 @@ class SourceposTest < Minitest::Test
   end
 
   def paragraph_position(line, chars:)
-    options = { parse: { sourcepos_chars: chars }, render: { sourcepos: true } }
+    options = {parse: {sourcepos_chars: chars}, render: {sourcepos: true}}
     Commonmarker.to_html("#{line}\n", options:)[/data-sourcepos="([^"]+)"/, 1]
   end
 

@@ -25,8 +25,8 @@ module MaquinaStream
     # relaxation: the sanitizer is the gate, it runs unconditionally, and it runs
     # last. Model output is assumed hostile at every step before it.
     COMMONMARKER_OPTIONS = {
-      parse: { sourcepos_chars: true },
-      render: { sourcepos: true, unsafe: true, github_pre_lang: false },
+      parse: {sourcepos_chars: true},
+      render: {sourcepos: true, unsafe: true, github_pre_lang: false},
       extension: {
         table: true,
         strikethrough: true,
@@ -40,7 +40,7 @@ module MaquinaStream
     # highlighter's inline styles into a pipeline that already owns highlighting
     # (Rouge, at fence close only) and forbids inline colour. Confirmed against
     # commonmarker 2.10.0 in test/sourcepos_test.rb.
-    COMMONMARKER_PLUGINS = { syntax_highlighter: nil }.freeze
+    COMMONMARKER_PLUGINS = {syntax_highlighter: nil}.freeze
 
     attr_reader :mode, :config
 

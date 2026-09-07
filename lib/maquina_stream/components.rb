@@ -1,8 +1,5 @@
 # frozen_string_literal: true
 
-require "pathname"
-require "set"
-
 module MaquinaStream
   # The component seam.
   #
@@ -51,8 +48,8 @@ module MaquinaStream
 
       def defined_names
         @defined_names ||= @view_root.glob("#{DESTINATION_PREFIX}/_*.html.erb")
-                                     .map { |path| path.basename(".html.erb").to_s.delete_prefix("_").to_sym }
-                                     .to_set
+          .map { |path| path.basename(".html.erb").to_s.delete_prefix("_").to_sym }
+          .to_set
       end
     end
 
@@ -102,9 +99,9 @@ module MaquinaStream
       # fallback markup yet has no fallback CSS to load either.
       def styled_components
         @styled_components ||= Pathname(__dir__).join("../../app/assets/stylesheets", VENDORED_PREFIX)
-                                                .glob("*.css")
-                                                .map { |path| path.basename(".css").to_s.to_sym }
-                                                .sort
+          .glob("*.css")
+          .map { |path| path.basename(".css").to_s.to_sym }
+          .sort
       end
 
       def default_library

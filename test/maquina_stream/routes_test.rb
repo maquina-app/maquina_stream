@@ -10,7 +10,7 @@ class MaquinaStream::RoutesTest < ActionDispatch::IntegrationTest
   end
 
   test "blocks is routed and stubbed until Phase 2" do
-    get "/maquina_stream/#{messages(:streaming).id}/blocks", params: { ids: ["ms-1-b0"] }
+    get "/maquina_stream/#{messages(:streaming).id}/blocks", params: {ids: ["ms-1-b0"]}
 
     assert_response :not_implemented
   end

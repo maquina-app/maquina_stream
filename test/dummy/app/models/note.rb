@@ -6,5 +6,5 @@ class Note < ActiveRecord::Base
   include MaquinaStream::Streamable
 
   maquina_stream buffer: :body,
-                 stream_for: ->(n) { [:notes, n.id] }
+    stream_for: ->(n) { [:notes, n.id] }
 end

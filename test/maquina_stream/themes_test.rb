@@ -27,7 +27,7 @@ class ThemesTest < ActiveSupport::TestCase
   end
 
   test "an unknown theme name raises instead of silently rendering nothing" do
-    MaquinaStream.configure { |c| c.themes = { light: "github.light", dark: "no_such_theme" } }
+    MaquinaStream.configure { |c| c.themes = {light: "github.light", dark: "no_such_theme"} }
 
     assert_raises(MaquinaStream::Themes::UnknownTheme) { MaquinaStream::Themes.stylesheet(:dark) }
   end

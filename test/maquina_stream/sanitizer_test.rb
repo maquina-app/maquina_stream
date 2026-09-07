@@ -18,7 +18,7 @@ module MaquinaStream
     ].freeze
 
     FORBIDDEN_ATTRIBUTES = %w[srcdoc formaction style xlink:href xml:base action
-                              http-equiv background ping].freeze
+      http-equiv background ping].freeze
 
     DANGEROUS_SCHEME = /\A[\s\u0000-\u0020]*(?:javascript|vbscript|livescript|mocha|jscript|data|file|blob|about|view-source)\s*:/i
 
@@ -28,7 +28,7 @@ module MaquinaStream
       def self.load(path)
         body = File.read(path)
         input = body[/^--- input\n(.*?)^--- note\n/m, 1]
-        note  = body[/^--- note\n(.*)\z/m, 1]
+        note = body[/^--- note\n(.*)\z/m, 1]
 
         new(File.basename(path, ".txt"), input&.chomp, note&.strip)
       end
@@ -40,7 +40,7 @@ module MaquinaStream
 
     test "the corpus is not empty" do
       assert_operator self.class.corpus.size, :>=, 25,
-                      "the XSS corpus is the regression suite; it does not shrink"
+        "the XSS corpus is the regression suite; it does not shrink"
     end
 
     corpus.each do |path|
@@ -137,7 +137,7 @@ module MaquinaStream
 
     test "link and image prefixes are honoured" do
       MaquinaStream.configure do |c|
-        c.allowed_link_prefixes  = ["https://example.com/"]
+        c.allowed_link_prefixes = ["https://example.com/"]
         c.allowed_image_prefixes = ["https://cdn.example.com/"]
       end
 
@@ -220,7 +220,7 @@ module MaquinaStream
             refute_includes FORBIDDEN_ATTRIBUTES, qualified, "#{qualified} survived — #{context}"
             next if attr.value.to_s.match?(MaquinaStream::Sanitizer::DATA_IMAGE)
             refute_match DANGEROUS_SCHEME, attr.value.to_s,
-                         "#{qualified} carries a dangerous scheme — #{context}"
+              "#{qualified} carries a dangerous scheme — #{context}"
           end
         end
       end
