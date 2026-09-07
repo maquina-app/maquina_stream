@@ -1,0 +1,49 @@
+phase: 5
+slug: interaction-layer
+title: Interaction layer
+spec: spec.md
+repo: maquina_stream
+depends_on: [2]
+status: in_progress_interrupted
+opened: 2026-09-06
+note: >-
+  Two agents were building this in parallel and both were killed mid-task by the
+  session rate limit. Everything they had written is committed and the suite is
+  green; what is listed as pending below is genuinely not written, not merely
+  uncommitted.
+
+tasks:
+  - { id: 1, title: ms-code copy and download, status: done, file: app/javascript/maquina_stream/controllers/ms_code_controller.js }
+  - { id: 2, title: ms-table copy/download as markdown, CSV, TSV, fullscreen, status: done }
+  - { id: 3, title: ms-link-safety dialog with allowlist callback, status: done }
+  - { id: 4, title: ms-autoscroll, releases when the reader scrolls, status: done }
+  - { id: 5, title: controller registration and importmap pins, status: done, file: app/javascript/maquina_stream/index.js }
+  - { id: 6, title: attachment component (grid/inline/list, ActiveStorage attributes), status: done }
+  - { id: 7, title: suggestion component (server-rendered chips, no client state), status: done }
+  - { id: 8, title: locales es + en, status: done, note: "70 keys each; locales_test.rb asserts identical key sets" }
+  - { id: 9, title: every control individually disableable, plus wholesale, status: done, note: "config.controls = false/:none turns everything off; true/:all back on" }
+  - { id: 10, title: dummy-app harness page and route, status: pending, note: "agent was starting this when it was killed - needed for the keyboard pass" }
+  - { id: 11, title: controllers_test.rb, status: pending }
+  - { id: 12, title: keyboard-only pass in a real browser, status: pending, blocked_by: 10 }
+  - { id: 13, title: docs/interaction.md, status: pending }
+
+dod:
+  - line: Full keyboard and screen reader pass completed with findings fixed, not logged.
+    met: false
+    verification: >-
+      Neither half has run. The keyboard pass needs the harness page (task 10)
+      and is automatable in Chromium. THE SCREEN READER PASS CANNOT BE DONE BY
+      AN AGENT - no session here can drive VoiceOver, NVDA or JAWS, and
+      asserting an aria-label exists is not hearing what is announced. That half
+      needs a person.
+  - line: Both locales complete, Spanish default.
+    met: true
+    verification: "config/locales/{es,en}.yml, 70 keys each; locales_test.rb fails the build on a key present in one and missing in the other."
+  - line: Every control individually disableable via configuration.
+    met: true
+    verification: configuration_test.rb covers per-control and wholesale toggling.
+
+next_session:
+  - "Build the dummy-app harness page and route (task 10), then controllers_test.rb."
+  - "Run the keyboard pass in Chromium against the harness; fix findings rather than logging them."
+  - "Hand the harness to a human for the screen reader pass and the Firefox/Safari clipboard check."
