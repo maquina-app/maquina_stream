@@ -25,8 +25,17 @@
 
 <section id="streaming">
   <h2>Streaming message (controls must be inert)</h2>
-  <div id="ms-msg-streaming"><%= @streaming_html %></div>
+  <%# data-ms-streaming is the host's signal, stamped from maquina_stream_open? %>
+  <div id="ms-msg-streaming" data-ms-streaming><%= @streaming_html %></div>
+  <button type="button" id="seal-it">Seal it</button>
 </section>
+
+<script type="module">
+  // Sealing removes the attribute; the stream guard re-enables the controls.
+  document.getElementById("seal-it").addEventListener("click", () => {
+    document.getElementById("ms-msg-streaming").removeAttribute("data-ms-streaming")
+  })
+</script>
 
 <section id="autoscroll">
   <h2>Autoscroll</h2>

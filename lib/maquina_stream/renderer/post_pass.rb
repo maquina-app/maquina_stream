@@ -224,6 +224,9 @@ module MaquinaStream
         def table_button(bar, action, format, key)
           node = Nokogiri::XML::Node.new("button", fragment.document)
           node["type"] = "button"
+          # Marks it for the stream guard, which disables every control while
+          # the message is still being written.
+          node["data-ms-control"] = ""
           node["data-action"] = "ms-table##{action}"
           node["data-ms-table-format-param"] = format if format
           label = I18n.t("maquina_stream.table.#{key}", locale: locale, default: key.to_s.tr("_", " "))

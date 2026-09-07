@@ -43,6 +43,7 @@
         <span data-code-block-part="controls" class="flex gap-1">
           <% if controls[:copy] %>
             <button type="button"
+                    data-ms-control
                     data-code-block-part="copy"
                     data-action="ms-code#copy"
                     aria-label="<%= t("maquina_stream.code.copy_code") %>"
@@ -52,6 +53,7 @@
           <% end %>
           <% if controls[:download] %>
             <button type="button"
+                    data-ms-control
                     data-code-block-part="download"
                     data-action="ms-code#download"
                     aria-label="<%= t("maquina_stream.code.download_code") %>"

@@ -120,6 +120,22 @@ Against the harness, in Chromium:
   **holds position through further frames**, and re-sticks only when the reader
   returns to the bottom themselves.
 
+## Controls are inert while streaming
+
+Two things make that true, and both are needed:
+
+1. The message element carries `data-ms-streaming` while the message is open —
+   the host stamps it from `maquina_stream_open?`.
+2. Every control the engine renders carries `data-ms-control`.
+
+`ApplicationController` disables the marked controls whenever the attribute is
+present, and re-enables them the moment the seal removes it. Verified in a
+browser: 6/6 controls disabled in a streaming message, 0/6 in a sealed one, and
+sealing re-enables them live.
+
+A host rendering its own controls should mark them `data-ms-control` too;
+without it they stay clickable mid-stream.
+
 ## Automated accessibility audit
 
 axe-core 4.10.2, WCAG 2.0/2.1 A and AA, run in Chromium against the harness:
@@ -144,8 +160,11 @@ replace them.
 - **The screen reader pass.** No agent in this project can drive VoiceOver, NVDA
   or JAWS, and asserting that an `aria-label` exists is not the same as hearing
   what gets announced. Open the harness and listen.
-- **Clipboard in Firefox and Safari**, including the insecure-context fallback.
-  Chromium is covered above; the other two need a person or a CI matrix.
+- **Clipboard in Firefox and Safari.** Chromium is covered, *including the
+  insecure-context fallback*: with `navigator.clipboard` removed and
+  `isSecureContext` false, `copyText` falls through to `execCommand`, copies the
+  source exactly, and leaves no stray textarea. What remains is the other two
+  engines, which need a person or a CI matrix.
 
 Boot the harness:
 

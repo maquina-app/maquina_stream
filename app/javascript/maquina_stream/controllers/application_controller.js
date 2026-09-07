@@ -19,18 +19,26 @@ export default class ApplicationController extends Controller {
   // The message element. The DOM contract fixes `#ms-msg-<sid>`; hosts that
   // wrap rendered output themselves can mark it with `data-ms-message`.
   get messageElement() {
-    return this.element.closest("[data-ms-message]") || this.element.closest("[id^='ms-msg-']")
+    return this.element.closest("[data-ms-message]") ||
+      this.element.closest("[data-ms-streaming]") ||
+      this.element.closest("[id^='ms-msg-']")
   }
 
-  // A message is open exactly while its tail block carries `data-ms-caret`.
-  // The post-pass emits the caret only in `:streaming` mode and only on the
-  // last block, and seal re-renders in `:static` mode, which removes it. There
-  // is no second source of truth and no client-held "is streaming" flag that
-  // can fall out of sync with the server.
+  // A message is open exactly while its element carries `data-ms-streaming`.
+  //
+  // This used to read `data-ms-caret` off the tail block. Blocks no longer
+  // carry chrome at all — it made a block's bytes disagree with its digest, so
+  // repair could not correct it and two tabs could disagree — and the caret
+  // moved to the message element, derived in CSS. Reading the caret here
+  // therefore reported "not streaming" for every message, and controls were
+  // never inert. See docs/api-surface.md and docs/interaction.md.
+  //
+  // Still one source of truth, and still the server's: the host stamps the
+  // attribute from `maquina_stream_open?`.
   get streaming() {
     const message = this.messageElement
     if (!message) return false
-    return Boolean(message.querySelector("[data-ms-caret]"))
+    return message.hasAttribute("data-ms-streaming")
   }
 
   // Controls opt in by carrying `data-ms-control`. They are disabled while the
@@ -44,7 +52,9 @@ export default class ApplicationController extends Controller {
       subtree: true,
       childList: true,
       attributes: true,
-      attributeFilter: ["data-ms-caret"]
+      // The seal removes data-ms-streaming from the message element, which is
+      // what re-enables the controls.
+      attributeFilter: ["data-ms-streaming"]
     })
   }
 
