@@ -5,7 +5,7 @@ spec: spec.md
 repo: maquina_stream
 depends_on: [0, 2]
 blocks: [4, 7]
-status: server_half_complete_dod_blocked
+status: server_half_complete
 opened: 2026-09-06
 
 tasks:
@@ -34,14 +34,14 @@ dod:
       character (2,460 assertions) and asserts a sealed block's HTML never
       changes again. It failed when written: a link reference definition
       rewrote block 0 from 294 characters away.
-  - line: Bandwidth ratio measured, recorded in the spec, with a test that fails on regression.
-    met: partial
+  - line: Bandwidth ratio measured against rendered size, recorded in the spec, with a test that fails on regression.
+    met: true
     verification: >-
-      Measured and recorded. The 2.5x target is NOT met and is not reachable:
-      the rendered HTML is 5.51x the markdown, so one send of every block
-      already exceeds it. The committed test guards the measured overhead above
-      that floor (3.37x at the 60ms default, 1.20x at 250ms). Restating or
-      raising the target is a decision for the user.
+      The original "2.5x message size" was below the floor - rendered HTML is
+      5.51x the markdown, so one send of every block already exceeds it. The
+      user restated the budget against rendered size on 2026-09-06: under 1.5x
+      the rendered document. Measured 1.20x at the new 250ms default, asserted
+      by broadcaster_test.rb.
   - line: Frame budget host-configurable and documented.
     met: true
     verification: config.frame_budget_ms, exercised at 60/250/1000ms; the trade-off table is in spec.md.
@@ -54,6 +54,8 @@ measurements:
   rendered_html: 111434
   floor_vs_markdown: 5.51
   budget_60ms:   { frames: 1499, bytes: 375502, vs_markdown: 18.57, vs_rendered: 3.37, cpu_ms: 44283 }
+  default_moved_to: "250ms, restated by the user 2026-09-06; the word-level reveal covers the coarser cadence"
+  render_cost: "68.01ms -> 20.30ms per frame for a 20KB message, after collapsing the post pass to one traversal"
   budget_250ms:  { frames: 474,  bytes: 133837, vs_markdown: 6.62,  vs_rendered: 1.20 }
   budget_1000ms: { frames: 120,  bytes: 109744, vs_markdown: 5.43,  vs_rendered: 0.98 }
 

@@ -8,7 +8,7 @@ class MaquinaStream::ConfigurationTest < ActiveSupport::TestCase
   test "documented defaults" do
     c = MaquinaStream.config
 
-    assert_equal 60, c.frame_budget_ms
+    assert_equal 250, c.frame_budget_ms
     assert_equal 4_000, c.keyframe_interval_ms
     assert_equal 2, c.seal_lag
     assert_equal :es, c.locale

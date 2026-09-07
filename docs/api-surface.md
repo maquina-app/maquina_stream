@@ -50,7 +50,7 @@ end
 
 ```ruby
 MaquinaStream.configure do |c|
-  c.frame_budget_ms      = 60
+  c.frame_budget_ms      = 250        # restated in Phase 3; see below
   c.keyframe_interval_ms = 4_000
   c.seal_lag             = 2          # never seal block N until N+seal_lag opens
   c.locale               = :es
@@ -77,6 +77,11 @@ MaquinaStream.configure do |c|
   c.transport   = :turbo_streams      # Solid Cable underneath; seam for SSE
 end
 ```
+
+`frame_budget_ms` was 60. Measured on a 20KB message at a realistic token
+cadence, 60ms costs 3.37x the rendered document in bandwidth and 250ms costs
+1.20x — a factor of three traded for 190ms of coalescing, which the word-level
+reveal covers. The budget stays host-configurable; the default moved.
 
 Theme names are Rouge's own. **Corrected in Phase 2:** the default read
 `"github_dark"`, which Rouge does not define — the registry has `github.dark`

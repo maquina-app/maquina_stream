@@ -56,7 +56,7 @@ module MaquinaStream
                   :find_stream, :authorize, :transport
 
     def initialize
-      @frame_budget_ms      = 60
+      @frame_budget_ms      = 250
       @keyframe_interval_ms = 4_000
       @seal_lag             = 2
       @locale               = :es

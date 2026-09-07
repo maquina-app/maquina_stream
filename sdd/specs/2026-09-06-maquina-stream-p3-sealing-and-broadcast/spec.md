@@ -86,19 +86,23 @@ the broadcaster sends 0.98x the rendered document, meaning essentially nothing
 is re-sent. The overhead is entirely the open tail being re-sent as it grows,
 and it is the frame budget that decides how often that happens.
 
-Two things follow, and both are the user's call rather than this phase's:
+**Both were restated by the user on 2026-09-06:**
 
-1. **The budget needs restating against rendered size** (e.g. "under 1.5x the
-   rendered document", which holds from ~250ms), or raising.
-2. **The default frame budget of 60ms costs 3.37x.** 250ms costs 1.20x. That is
-   a latency-for-bandwidth trade with a factor of three in it.
+1. The budget is now **under 1.5x the rendered document**. Measured 1.20x.
+2. The default frame budget is now **250ms**, not 60ms. The word-level reveal is
+   what makes the coarser cadence look smooth, which is why Phase 0 comes first.
 
 A third measurement, unrelated to bandwidth but found alongside it: at a 60ms
-budget a single 20KB message costs **44 seconds of CPU**, because every frame
-re-renders the whole buffer. Coalescing to 250ms cuts it to roughly a third.
-Rendering incrementally would cut it properly, and the seal pointer now makes
-that sound — a sealed block cannot change, so its HTML can be cached. That is
-real work, not a tweak, and it is not in this phase's task list.
+budget a single 20KB message cost **44 seconds of CPU**, because every frame
+re-renders the whole buffer.
+
+Profiling that render was worth the hour. The markdown chain — remend,
+commonmarker, Nokogiri parse — is 4.3ms of a 68ms frame. ActionView is not the
+cost either: caching every component render produced 755 hits and saved 6ms.
+**The cost was Nokogiri traversal** — the post pass ran eighteen CSS queries per
+frame over a 2,000-node document, each about 3.5ms. Collapsing it to the single
+walk the class always claimed to be took a frame from **68.01ms to 20.30ms**,
+and the component cache is kept for the cold path.
 
 ## Definition of done (from docs/plan.md)
 

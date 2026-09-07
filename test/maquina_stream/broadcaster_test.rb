@@ -36,9 +36,12 @@ class BroadcasterTest < ActiveSupport::TestCase
   # This asserts the overhead ABOVE that floor, and is a regression guard on the
   # number actually measured — not a claim that the plan's DoD line is met. It
   # is not: see sdd/specs/.../p3.../progress.yml.
-  OVERHEAD_BUDGET = 3.6 # measured 3.37x at the documented 60ms default
+  # docs/plan.md now budgets 1.5x the RENDERED document, restated from "2.5x
+  # message size" which sat below the 5.51x floor. At the 250ms default the
+  # broadcaster measures 1.20x.
+  OVERHEAD_BUDGET = 1.5
 
-  test "bandwidth overhead above the rendered-html floor does not regress" do
+  test "bandwidth stays under 1.5x the rendered document" do
     markdown = large_message
     floor = MaquinaStream::Renderer.call(markdown, mode: :static).to_s.bytesize
 

@@ -140,7 +140,10 @@ Turn a growing buffer into a stream of small stable patches. Decides whether thi
 - Seal pointer with a two-block lag.
 - Stable index-derived block ids.
 - Digest cache for sealed block HTML.
-- Frame coalescer, configurable 50–80ms.
+- Frame coalescer, configurable. **Default 250ms** (restated 2026-09-06 from
+  50–80ms): at 60ms a 20KB message costs 3.37× the rendered document in
+  bandwidth, at 250ms it costs 1.20×. The word-level reveal is what keeps a
+  250ms cadence looking smooth, which is why Phase 0 comes first.
 - Append newly sealed blocks; patch only the open tail.
 - Monotonic per-message sequence on every frame.
 - Caret on the open block, removed at seal.
@@ -149,14 +152,18 @@ Turn a growing buffer into a stream of small stable patches. Decides whether thi
 **Verification**
 - Character-by-character replay of the fixture corpus: once sealed, a block's HTML never changes. Asserted, not eyeballed.
 - Retroactive corpus streamed a line at a time: setext headings, lazy continuations, table delimiter rows, list tightening.
-- Bandwidth: total bytes for a 20KB message under ~2.5× message size.
+- Bandwidth: total bytes for a 20KB message under **1.5× the rendered document**.
+  (Restated 2026-09-06 from "~2.5× message size", which was below the floor: the
+  rendered HTML of that corpus is 5.51× the markdown, so sending every block
+  exactly once already costs 5.5×. Measured against rendered size the broadcaster
+  sends 1.20× at a 250ms frame budget and 0.98× at 1s.)
 - Sequence monotonic under concurrent appends.
 - Cancelled mid-block stream still seals into valid HTML.
 
 **DoD**
 - No sealed block is ever re-broadcast during a normal stream.
 - Retroactive corpus passes in full and is in CI.
-- Bandwidth ratio measured, recorded in the spec, with a test that fails on regression.
+- Bandwidth ratio measured against rendered size, recorded in the spec, with a test that fails on regression.
 - Frame budget host-configurable and documented.
 
 ---
