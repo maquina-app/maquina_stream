@@ -21,6 +21,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # The Gemfile references maquina_remend by path, so bundler needs it as a
+      # sibling directory. This step goes away with that reference, once the gem
+      # is released and the gemspec dependency resolves from RubyGems.
+      - name: Check out maquina_remend
+        uses: actions/checkout@v4
+        with:
+          repository: maquina-app/maquina_remend
+          path: maquina_remend_checkout
+
+      - name: Put it where the Gemfile expects it
+        run: mv maquina_remend_checkout ../maquina_remend
+
       - uses: ruby/setup-ruby@v1
         with:
           ruby-version: ${{ matrix.ruby }}
