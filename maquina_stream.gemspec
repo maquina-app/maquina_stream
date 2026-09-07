@@ -46,9 +46,7 @@ Gem::Specification.new do |spec|
   ]
 
   spec.add_dependency "rails", ">= 8.0"
-  # TODO: handoff DoD requires the released maquina_remend gem. Until it ships,
-  # the Gemfile overrides this with a path reference to ../maquina_remend.
-  spec.add_dependency "maquina_remend"
+  spec.add_dependency "maquina_remend", ">= 0.1"
   spec.add_dependency "commonmarker"
   spec.add_dependency "nokogiri"
   spec.add_dependency "rouge"
