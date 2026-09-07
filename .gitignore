@@ -3,3 +3,9 @@
 /pkg/
 /tmp/
 /coverage/
+
+# dummy app artifacts
+/test/dummy/log/*
+/test/dummy/tmp/*
+/test/dummy/storage/*
+Gemfile.lock

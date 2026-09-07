@@ -1,0 +1,3 @@
+#!/usr/bin/env sh
+# Runs the engine test suite against the dummy host app.
+exec bundle exec rake test "$@"
