@@ -1,0 +1,70 @@
+phase: 7
+slug: history-hardening
+title: History, hardening and 0.1
+repo: maquina_stream
+depends_on: [3, 4, 5, 6]
+status: partial
+opened: 2026-09-06
+
+tasks:
+  - { id: 1, title: history pagination through Turbo Frames, status: pending }
+  - { id: 2, title: completed messages frozen and fragment-cached by digest, status: partial, note: "blocks carry stable ids and content digests, and the component cache is in place; the fragment-cache layer and morph-scope exclusion are not built" }
+  - { id: 3, title: explicit cancelled / errored / timed_out states with replay behaviour, status: done }
+  - { id: 4, title: whole-message markdown export with the Phase 6 fallback, status: done, file: lib/maquina_stream/export.rb }
+  - { id: 5, title: review VENDORED_COMPONENTS, status: pending }
+  - { id: 6, title: multi-tab convergence review, status: pending }
+  - { id: 7, title: dummy app demonstrating every feature, status: partial, note: "Streamable model, both seams, all three fence strategies, tag registry, third host-side renderer, browser harness at /harness" }
+  - { id: 8, title: README and integration guide, status: done }
+  - { id: 9, title: CI matrix, status: done, note: ".github/workflows/ci.yml - ruby 3.3/3.4 x rails 8.0/8.1 for the engine, 3.1-3.4 for the gem" }
+  - { id: 10, title: tag 0.1 and open the Fragua branch, status: deferred, note: "user asked to hold on pushing to a remote or releasing" }
+
+dod:
+  - line: Long-session load and memory figures recorded in the spec.
+    met: true
+    verification: >-
+      500 messages rendered in 387ms (0.77ms each), 2,071KB of HTML, 4,242B
+      average per message, 1.89M objects allocated; 289ms on a second pass with
+      the component cache warm (999 hits, 1 miss). Measured in-process; a
+      browser-side memory figure while scrolling history needs task 1.
+  - line: Replay parity asserted in CI, not checked once by hand.
+    met: true
+    verification: >-
+      replay_test.rb streams a message through the broadcaster, applies the real
+      broadcast bytes, runs the repair path, and asserts block-for-block content
+      parity with a static render. A companion test asserts the delta stream
+      alone does NOT converge, so the repair seam cannot quietly become dead
+      code.
+  - line: Documentation complete enough that the dummy app is the only example needed.
+    met: partial
+    verification: >-
+      README plus six docs; test/dummy is a working host. Not verified the way
+      the plan asks - "a fresh developer integrates using only the README" needs
+      a fresh developer.
+  - line: 0.1 tagged; Fragua consumes the released gem, not a path reference.
+    met: false
+    verification: "Deferred at the user's request: no remote, no tag, no release."
+
+measurements:
+  history_500_messages: { render_ms: 387, per_message_ms: 0.77, html_kb: 2071, objects: 1891041, warm_ms: 289 }
+
+known_divergence:
+  what: >-
+    A block that seals AFTER it stops being the tail keeps presentation chrome
+    on the client - data-ms-reveal, and data-ms-block-state="open" - because a
+    block's manifest digest covers its content and deliberately ignores chrome.
+  why_not_fixed: >-
+    Two fixes were measured and both cost a full extra copy of the message.
+    Re-sending at the tail handover took bandwidth from 1.248x to 2.41x of the
+    rendered document, against a 1.5x budget; a full keyframe at seal costs the
+    same. Content is correct in every case - only presentation lags, and the
+    next reload corrects it.
+  alternative: >-
+    Move data-ms-reveal and the caret off individual blocks and onto the message
+    element, deriving per-block appearance in CSS from :last-child. That removes
+    the staleness rather than paying to correct it, and would be a third change
+    to the DOM contract.
+
+open:
+  - "History pagination and fragment caching (tasks 1, 2) are not built."
+  - "VENDORED_COMPONENTS review and multi-tab convergence (tasks 5, 6) not done."
+  - "Release steps deferred by the user."
