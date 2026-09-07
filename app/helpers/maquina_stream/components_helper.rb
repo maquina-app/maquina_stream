@@ -52,18 +52,6 @@ module MaquinaStream
       tokens.flatten.compact.map(&:to_s).reject(&:empty?).join(" ").presence
     end
 
-    # Raw source destined for <script type="text/plain">.
-    #
-    # A script element is a raw-text element: the parser does not decode
-    # entities inside it, so HTML-escaping would corrupt the source the copy
-    # button hands back. The only sequence that can end the element is a
-    # literal `</script`, so that is the only sequence we touch. `ms-code`
-    # reverses it on read.
-    def component_script_source(source)
-      escaped = source.to_s.gsub(%r{</(script)}i) { "<\\/#{Regexp.last_match(1)}" }
-      escaped.html_safe # rubocop:disable Rails/OutputSafety -- see the comment above
-    end
-
     # Stylesheet paths for the components currently rendering from our own
     # app/views. Empty once maquina_components serves all of them.
     def component_stylesheets

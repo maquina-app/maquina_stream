@@ -210,7 +210,7 @@ class MaquinaStream::ComponentPartialsTest < ActiveSupport::TestCase
     assert_includes html, %(data-component="code-block")
     assert_includes html, %(data-ms-code-lang="ruby")
     assert_match(%r{<pre[^>]*><code[^>]*>puts 1</code></pre>}, html)
-    assert_match(%r{<script type="text/plain" data-ms-code-source>puts 1</script>}, html)
+    assert_match(%r{<pre hidden data-ms-code-source>puts 1</pre>}, html)
   end
 
   test "code_block renders highlighted html when the fence has closed, and never highlights itself" do
@@ -219,25 +219,25 @@ class MaquinaStream::ComponentPartialsTest < ActiveSupport::TestCase
 
     assert_includes html, %(<span class="k">puts</span> 1)
     # The raw source still travels verbatim for the copy button.
-    assert_includes html, %(<script type="text/plain" data-ms-code-source>puts 1</script>)
+    assert_includes html, %(<pre hidden data-ms-code-source>puts 1</pre>)
   end
 
-  test "raw source cannot break out of the script carrier" do
+  # The carrier is <pre hidden>, not <script type="text/plain">. A script
+  # carrier needs an exception in the sanitizer, and its content is serialized
+  # unescaped - so a fence containing "</script><img>" breaks out on the next
+  # parse. Ordinary escaped text in a <pre> needs no exception and nothing has
+  # to be reversed when the copy button reads it back.
+  test "raw source cannot break out of its carrier" do
     source = %(x = "</script><img src=x onerror=alert(1)>")
     html = component(:code_block, lang: "html", source: source)
-
-    carrier = html[%r{<script type="text/plain" data-ms-code-source>.*?</script>}m]
-
-    assert_includes carrier, %(<\\/script>)
-    refute_includes carrier, "</script><img"
-
-    # The source travels verbatim inside the carrier — that is the point of it —
-    # but nothing in it becomes an element: the parser never leaves the script.
     fragment = Nokogiri::HTML5.fragment(html)
 
-    assert_nil fragment.at_css("img")
-    assert_equal 1, fragment.css("script").size
-    assert_includes fragment.at_css("script").text, "onerror=alert(1)"
+    assert_nil fragment.at_css("img"), "the source escaped its carrier and became an element"
+    assert_empty fragment.css("script")
+
+    carrier = fragment.at_css("[data-ms-code-source]")
+
+    assert_equal source, carrier.text, "the source must travel verbatim for copy and download"
   end
 
   test "caller data attributes merge, the component keeps its identity keys" do

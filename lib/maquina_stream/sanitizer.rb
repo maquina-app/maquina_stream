@@ -42,7 +42,9 @@ module MaquinaStream
       track canvas map area portal dialog marquee plaintext xmp listing
     ].to_set.freeze
 
-    GLOBAL_ATTRIBUTES = %w[id class title lang dir role translate].to_set.freeze
+    # `hidden` earns its place: the raw-source carrier is a hidden <pre>, and a
+    # carrier that loses its hidden attribute renders every code block twice.
+    GLOBAL_ATTRIBUTES = %w[id class title lang dir role translate hidden].to_set.freeze
 
     ELEMENT_ATTRIBUTES = {
       "a"        => %w[href target rel hreflang type],
@@ -76,6 +78,10 @@ module MaquinaStream
     ].to_set.freeze
 
     DATA_ATTRIBUTE_SHAPE = /\Adata-[a-z0-9]+(?:-[a-z0-9]+)*\z/
+
+    # Component internals: data-code-block-part, data-shimmer-part and friends.
+    # They carry no behaviour, only styling hooks for a component's own parts.
+    COMPONENT_PART_ATTRIBUTE = /\Adata-[a-z0-9]+(?:-[a-z0-9]+)*-part\z/
     ARIA_ATTRIBUTE_SHAPE = /\Aaria-[a-z]+\z/
 
     # Only our own controller namespace. A host or third-party identifier
@@ -218,6 +224,7 @@ module MaquinaStream
       def data_attribute?(attr_name)
         return false unless attr_name.match?(DATA_ATTRIBUTE_SHAPE)
         return true if attr_name.start_with?("data-ms-")
+        return true if attr_name.match?(COMPONENT_PART_ATTRIBUTE)
 
         STATIC_DATA_ATTRIBUTES.include?(attr_name)
       end

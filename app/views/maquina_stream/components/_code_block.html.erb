@@ -5,7 +5,7 @@
 
     <div data-ms-code data-ms-code-lang="ruby">
       <pre><code>…highlighted…</code></pre>
-      <script type="text/plain" data-ms-code-source>…raw source…</script>
+      <pre hidden data-ms-code-source>…raw source…</pre>
     </div>
 
   This partial does not highlight. `highlighted` arrives already marked up by
@@ -40,5 +40,5 @@
   <% end %>
 
   <pre data-code-block-part="pre" class="overflow-x-auto p-3"><code data-code-block-part="code" class="font-mono"><%= highlighted.present? ? highlighted : source %></code></pre>
-  <script type="text/plain" data-ms-code-source><%= component_script_source(source) %></script>
+  <pre hidden data-ms-code-source><%= source %></pre>
 </div>

@@ -53,8 +53,16 @@ class RendererTest < ActiveSupport::TestCase
 
     assert document.at_css("[data-ms-code]"), "code block did not render through the component"
     assert_equal "ruby", document.at_css("[data-ms-code]")["data-ms-code-lang"]
-    assert document.at_css("[data-ms-code-source]"), "raw source must ship with the block for copy and download"
-    assert_match(/class="[^"]*"/, document.at_css("pre").to_html)
+    carrier = document.at_css("[data-ms-code-source]")
+
+    assert carrier, "raw source must ship with the block for copy and download"
+    assert carrier["hidden"], "the carrier must stay hidden or every code block renders twice"
+    assert_equal "puts 1\n", carrier.text
+
+    highlighted = document.at_css("[data-ms-code] pre:not([data-ms-code-source]) code")
+
+    refute_empty highlighted.css("span"),
+      "highlighted markup must reach the DOM as elements, not as escaped text"
   end
 
   test "open server fence performs no highlighting at all" do

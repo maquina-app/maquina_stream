@@ -25,6 +25,7 @@ module MaquinaStream
         wrap_tables
         render_registered_tags
         annotate_elements
+        annotate_blocks
         strip_sourcepos
         fragment
       end
@@ -73,10 +74,18 @@ module MaquinaStream
             Components.partial_for(:code_block, config: config),
             lang: fence.language,
             source: fence.source,
-            highlighted: fence.highlighted,
+            highlighted: html_safe(fence.highlighted),
             open: fence.open?,
             controls: config.controls[:code]
           )
+        end
+
+        # Rouge emits markup and escapes the source itself, so it is passed to
+        # the partial as markup rather than as text. It is not an exception to
+        # "never assign model output as raw HTML": the sanitizer still runs over
+        # the whole document afterwards, and it is the gate.
+        def html_safe(html)
+          html.respond_to?(:html_safe) ? html.html_safe : html
         end
 
         # Skeleton until the fence closes, then payload and controller. The
@@ -87,7 +96,7 @@ module MaquinaStream
 
           node = Nokogiri::XML::Node.new("div", fragment.document)
           node["data-controller"] = fence.controller if fence.controller
-          node["data-#{fence.controller}-payload-value"] = JSON.generate(fence.payload) if fence.controller
+          node["data-#{fence.controller}-payload-value"] = payload_json(fence) if fence.controller
           node.inner_html = render_shimmer(fence)
           node.to_html
         end
@@ -96,6 +105,15 @@ module MaquinaStream
         # component. Nothing here names a partial path.
         def render_shimmer(fence)
           view.render(Components.partial_for(:shimmer, config: config), label: fence.language)
+        end
+
+        # The HTML5 serializer escapes only &, " and NBSP inside an attribute
+        # value, so a fence containing "</div><script>" would sit in the payload
+        # with its angle brackets intact. It does not break out of the attribute,
+        # but it does mean the raw string is in the document; escaping at the
+        # JSON level keeps the payload inert whatever reads it next.
+        def payload_json(fence)
+          JSON.generate(fence.payload).gsub("<", "\\u003c").gsub(">", "\\u003e")
         end
 
         def language_of(code)
@@ -142,6 +160,16 @@ module MaquinaStream
           return unless registration&.options&.key?(:partial)
 
           node.replace(view.render(registration.options[:partial], content: node.inner_html, node: node))
+        end
+
+        # Top-level children are blocks. Numbering them here - rather than
+        # letting Phase 3 match by position - means the splitter survives the
+        # sanitizer dropping an element, which position matching would not.
+        # The index is derived from order, never from content.
+        def annotate_blocks
+          fragment.children.select(&:element?).each_with_index do |node, index|
+            node["data-ms-block-index"] = index.to_s
+          end
         end
 
         # The only difference between streaming and static output. The parity

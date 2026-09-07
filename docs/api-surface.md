@@ -181,9 +181,19 @@ Block ids are **index-derived, never content-derived**. Idiomorph keys on `id`; 
 ```html
 <div data-ms-code data-ms-code-lang="ruby">
   <pre><code>…highlighted…</code></pre>
-  <script type="text/plain" data-ms-code-source>…raw source…</script>
+  <pre hidden data-ms-code-source>…raw source…</pre>
 </div>
 ```
+
+**Changed in Phase 2.** The carrier was `<script type="text/plain">`. The
+sanitizer drops every script element and must keep doing so: it cannot tell our
+carrier from an imitation, and Nokogiri's HTML5 serializer writes script
+children unescaped, so a fence containing `</script><img onerror=…>` would break
+out on the next parse. Escaping it upstream is not an answer either — a
+`<\/script` sequence would travel into whatever the copy button hands back.
+
+`<pre hidden>` needs no exception: the content is ordinary escaped text, the
+copy and download controls read `textContent`, and nothing has to be reversed.
 
 ### Client-deferred block
 
