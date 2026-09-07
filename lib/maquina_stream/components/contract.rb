@@ -7,7 +7,7 @@ module MaquinaStream
     # A vendored partial is a `maquina_components` component that happens to
     # live here for now: it knows about variants, parts and `css_classes`, and
     # about nothing else. Everything that belongs to THIS engine — the
-    # `data-ms-*` DOM contract from docs/api-surface.md, the `ms-*` Stimulus
+    # `data-ms-*` DOM contract from docs/javascript.md, the `ms-*` Stimulus
     # identifiers, and the `maquina_stream.*` labels — is supplied from the call
     # site, and this is the call site.
     #

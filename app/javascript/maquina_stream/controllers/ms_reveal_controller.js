@@ -30,7 +30,7 @@ import ApplicationController from "maquina_stream/controllers/application_contro
 //
 // ## Why the span is temporary
 //
-// docs/api-surface.md, "Changed in Phase 7": a block's digest covers what the
+// docs/javascript.md: a block's digest covers what the
 // block says, so any chrome the reveal leaves behind is drift the manifest diff
 // cannot see and repair cannot correct — two tabs that lost different frames
 // end up visibly different with agreeing digests. The span therefore exists
@@ -38,7 +38,7 @@ import ApplicationController from "maquina_stream/controllers/application_contro
 // (`ms:suppress`), and is removed on seal, on disconnect and before Turbo
 // caches the page.
 //
-// Nothing here assigns a DOM-derived string as HTML. Per docs/sanitizer.md
+// Nothing here assigns a DOM-derived string as HTML. Per docs/security.md
 // every value a controller reads from the DOM is untrusted; this one moves
 // existing text nodes and never re-parses them.
 export default class extends ApplicationController {
@@ -50,7 +50,7 @@ export default class extends ApplicationController {
     disabled: Boolean
   }
 
-  // Both fixed by the DOM contract (docs/api-surface.md), like `data-ms-block`
+  // Both fixed by the DOM contract (docs/javascript.md), like `data-ms-block`
   // itself: the stylesheet and the controller have to agree, and an attribute a
   // host could rename is an attribute the shipped CSS would miss.
   static blockSelector = "[data-ms-block]"
@@ -78,9 +78,9 @@ export default class extends ApplicationController {
 
     // `ms-repair` dispatches these on the message element, without bubbling.
     // They are wired here rather than through `data-action` because the markup
-    // a host renders (docs/api-surface.md) carries `data-controller` and no
+    // a host renders (docs/javascript.md) carries `data-controller` and no
     // actions — a reveal that needed one more attribute would silently never
-    // suppress, which is the failure mode docs/interaction.md warns about.
+    // suppress, which is the failure mode docs/javascript.md warns about.
     this.onSuppress = () => this.suppress()
     this.onResume = () => this.resume()
     this.root.addEventListener("ms:suppress", this.onSuppress)
@@ -311,7 +311,7 @@ export default class extends ApplicationController {
     return block && this.element.contains(block) ? block : null
   }
 
-  // Block ids are index-derived and stable across a morph (docs/api-surface.md).
+  // Block ids are index-derived and stable across a morph (docs/streaming.md).
   // A block without one is still revealed; it just cannot be tracked across a
   // repair, so it re-baselines instead of re-revealing.
   identify(block) {

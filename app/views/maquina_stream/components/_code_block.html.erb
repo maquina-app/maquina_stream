@@ -1,4 +1,4 @@
-<%# EXTRACTION CANDIDATE → maquina_components. See docs/component-scope.md %>
+<%# EXTRACTION CANDIDATE → maquina_components. See MaquinaStream::VENDORED_COMPONENTS %>
 <%# locals: (lang: nil, source: "", highlighted: nil, controls: {}, copy_label: nil, copy_aria_label: nil, download_label: nil, download_aria_label: nil, source_attributes: {}, copy_attributes: {}, download_attributes: {}, variant: :default, size: :md, css_classes: "", **html_options) %>
 <%#
   A code block: a highlighted rendering plus the raw source, verbatim, for
@@ -12,7 +12,7 @@
   Nothing here knows about maquina_stream. The engine's DOM contract
   (`data-ms-code`, `data-ms-code-lang`, `data-ms-code-source`, the `ms-code`
   controller and the `data-ms-control` stream guard — all fixed in
-  docs/api-surface.md) arrives as `data:` and as the three `*_attributes`
+  docs/javascript.md) arrives as `data:` and as the three `*_attributes`
   locals, from MaquinaStream::Components::Contract. Labels arrive the same way:
   a control with no label is not rendered, because a caller that has not named
   a button has not asked for one.

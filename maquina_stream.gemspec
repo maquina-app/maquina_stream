@@ -22,12 +22,15 @@ Gem::Specification.new do |spec|
 
   spec.required_ruby_version = ">= 3.3"
 
-  # docs/ is filtered rather than globbed: this repository also holds the plan,
-  # the design seed and the phase specs it was built from, and none of those
-  # document the gem to someone who installs it.
-  spec.files = Dir["{app,config,lib}/**/*"] + Dir["docs/*.md"].reject { |path|
-    %w[plan design remend-patterns spike-sourcepos].include?(File.basename(path, ".md"))
-  } + ["README.md", "CHANGELOG.md", "LICENSE.txt", ".rdoc_options"].select { |file| File.exist?(file) }
+  # The documents that document the gem to someone who installs it. Named
+  # rather than globbed, so a working note left in docs/ never ships.
+  docs = %w[
+    getting-started configuration streaming repair
+    registries javascript security deferred-renderers
+  ].map { |name| "docs/#{name}.md" }.select { |path| File.exist?(path) }
+
+  spec.files = Dir["{app,config,lib}/**/*"] + docs +
+    ["README.md", "CHANGELOG.md", "LICENSE.txt", ".rdoc_options"].select { |file| File.exist?(file) }
   spec.require_paths = ["lib"]
 
   # Comments in lib/ and app/ are Markdown, not RDoc markup. `.rdoc_options`

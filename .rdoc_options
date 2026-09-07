@@ -7,11 +7,11 @@ main_page: README.md
 # Everything that documents how the gem was BUILT rather than how it is USED.
 # sdd/ holds the phase specs, test/ includes the whole dummy host application,
 # and docs/{plan,design,remend-patterns,spike-sourcepos}.md are the same four
-# files the gemspec refuses to package: none of them documents the gem to
+# files the gemspec does not package: none of them documents the gem to
 # somebody who installs it.
 #
 # app/javascript is excluded because the JavaScript is documented as a DOM and
-# controller contract in docs/interaction.md, which is a better description of
+# controller contract in docs/javascript.md, which is a better description of
 # it than RDoc's JavaScript parser produces.
 #
 # These are matched against ABSOLUTE paths, so each pattern is anchored to a

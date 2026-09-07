@@ -2,7 +2,7 @@ import ApplicationController from "maquina_stream/controllers/application_contro
 
 // `ms-code` — copy and download a rendered code block.
 //
-// The DOM contract (docs/api-surface.md) fixes the shape:
+// The DOM contract (docs/javascript.md) fixes the shape:
 //
 //   <div data-ms-code data-ms-code-lang="ruby" data-controller="ms-code">
 //     <button data-ms-control data-action="ms-code#copy">…</button>

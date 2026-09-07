@@ -1,4 +1,4 @@
-<%# EXTRACTION CANDIDATE → maquina_components. See docs/component-scope.md %>
+<%# EXTRACTION CANDIDATE → maquina_components. See MaquinaStream::VENDORED_COMPONENTS %>
 <%# locals: (filename: nil, byte_size: nil, content_type: nil, url: nil, preview_url: nil, remove_path: nil, controls: {}, unnamed_label: nil, download_label: nil, download_aria_label: nil, remove_label: nil, remove_aria_label: nil, remove_confirm: nil, size_units: nil, size_format: "%{value} %{unit}", decimal_separator: ".", thumbnail_attributes: {}, download_attributes: {}, remove_attributes: {}, variant: :grid, size: :md, css_classes: "", **html_options) %>
 <%#
   One attached file. The locals are ActiveStorage's own attribute names —
@@ -6,7 +6,7 @@
   (`url` for the blob, `preview_url` for a variant). AI Elements' Attachment
   takes a `FileUIPart`; that is the AI SDK's client-side model and importing it
   would fight the server-rendered decision. We take the visual design, not the
-  props. See the conversion warning in docs/component-scope.md.
+  props.
 
   Three variants:
 

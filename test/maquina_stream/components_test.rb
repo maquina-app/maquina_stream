@@ -131,7 +131,7 @@ class MaquinaStream::ComponentsTest < ActiveSupport::TestCase
       source = path.read
 
       assert_includes source,
-        "<%# EXTRACTION CANDIDATE → maquina_components. See docs/component-scope.md %>",
+        "<%# EXTRACTION CANDIDATE → maquina_components. See MaquinaStream::VENDORED_COMPONENTS %>",
         "#{name} is missing the extraction header"
       assert_match(/<%# locals: \(/, source, "#{name} is missing its locals line")
       refute_match(/\bclass:/, source.lines.grep(/<%# locals:/).join,

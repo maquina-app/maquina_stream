@@ -1,5 +1,5 @@
 /* Vendored fallback for the `attachment` component. Loaded only while the
- * vendored partial is the one rendering. See docs/component-scope.md.
+ * vendored partial is the one rendering.
  *
  * Layout is Tailwind, in the partial. What lives here is what a utility class
  * cannot express: the variant shapes, truncation of a long filename, and the

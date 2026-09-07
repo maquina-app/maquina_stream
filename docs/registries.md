@@ -1,47 +1,122 @@
 # Registries
 
-Three registries let a host change what the pipeline renders without touching
-engine internals. All three are process-global and are read during the render
-post-pass. Names and signatures come from `docs/api-surface.md` and are fixed.
-
-The dummy app registers all of them in
-`test/dummy/config/initializers/maquina_stream.rb`, and
-`test/maquina_stream/registries_example_test.rb` exercises that registration
-through the full pipeline — markdown in, rendered HTML out. Copy from there.
-
-## Fence registry
+Three registries let you change what the pipeline renders without touching the
+engine. All three are process-global and are read during the render post-pass,
+so register from an initializer:
 
 ```ruby
-MaquinaStream.register_fence "ruby",    strategy: :server
-MaquinaStream.register_fence "text",    strategy: :passthrough
-MaquinaStream.register_fence "mermaid", strategy: :client,
-  controller: "ms-diagram",
-  payload: ->(source, info) { { source: source, info: info } }
+# config/initializers/maquina_stream.rb
+MaquinaStream.register_fence "ruby", strategy: :server
+MaquinaStream.register_tag :source, attributes: %w[id href title], partial: "…"
+MaquinaStream.register_element :h2, partial: "headings/h2"
 ```
 
-| Strategy | Open fence | Closed fence |
-|---|---|---|
-| `:server` | code shell, **no highlighting** | Rouge-highlighted, into the `code_block` component |
-| `:client` | `shimmer` skeleton, **no payload** | payload attribute plus controller name |
-| `:passthrough` | plain `<pre><code>` | plain `<pre><code>` |
+Whatever a registration renders still goes through the sanitizer, which is the
+last pass and has no exceptions. A registry cannot inject raw HTML into a
+document. See [security.md](security.md).
 
-An unregistered language falls back to `:server`.
+`test/dummy/config/initializers/maquina_stream.rb` registers all of these, and
+`test/maquina_stream/registries_example_test.rb` drives that registration
+through the full pipeline. Copy from there.
+
+## Fences
+
+```ruby
+MaquinaStream.register_fence "ruby", strategy: :server
+MaquinaStream.register_fence "text", strategy: :passthrough
+MaquinaStream.register_fence "mermaid", strategy: :client,
+  controller: "ms-diagram",
+  payload: ->(source, info) { {source: source, info: info} }
+```
+
+| Strategy | What it does | When to use it |
+|---|---|---|
+| `:server` | Rouge highlights the source once the fence closes, into CSS classes. The default for every unregistered language. | Anything Rouge has a lexer for. |
+| `:client` | Nothing is rendered server-side. The block carries a `payload:` as a data attribute and a Stimulus `controller:` draws it in the browser. | Diagrams, math — anything whose renderer is a JavaScript library the server has no business running. |
+| `:passthrough` | The source is emitted as escaped text and nothing else happens to it. | A language Rouge would mangle, or one whose highlighting is not worth the CPU. |
 
 Two rules the pipeline enforces rather than trusts:
 
 - **An open fence is never highlighted.** The work would be thrown away on the
   next frame, and it is the difference between a 500-line fence fitting in the
-  frame budget and not.
-- **A client fence emits no payload until it closes.** A payload emitted early
-  hands the client half a diagram to draw.
+  frame budget and not. Do not expect syntax colours until the closing ``` lands.
+- **A `:client` fence emits no payload until it closes.** Handing the client
+  half a diagram to draw produces an error state for text that was merely still
+  arriving. Until then it renders a `shimmer` skeleton.
 
-The client-deferred block splits ownership, per the DOM contract: the payload
-attribute is server state and belongs to morph; the output element is client
-state, is `data-turbo-permanent`, and belongs to the controller.
+### `:server`, closed
 
-## Tag registry
+````markdown
+```ruby
+puts 1
+```
+````
 
-The reference case, and a real one: a model citing its sources.
+```html
+<div data-ms-code data-ms-code-lang="ruby" data-controller="ms-code" data-component="code-block" …>
+  <div data-code-block-part="header">
+    <span data-code-block-part="lang">ruby</span>
+    <span data-code-block-part="controls">
+      <button data-code-block-part="copy" data-ms-control data-action="ms-code#copy">Copiar</button>
+      <button data-code-block-part="download" data-ms-control data-action="ms-code#download">Descargar</button>
+    </span>
+  </div>
+  <pre data-code-block-part="pre"><code><span class="nb">puts</span> <span class="mi">1</span></code></pre>
+  <pre hidden data-ms-code-source>puts 1
+</pre>
+</div>
+```
+
+The `<pre hidden data-ms-code-source>` carrier is what the copy and download
+buttons read, so a copy hands back the raw source rather than Rouge's span
+markup. It is a `<pre hidden>` and not a script tag on purpose: the sanitizer
+drops every script element, and cannot tell our carrier from an imitation of it.
+
+The same fence while still open renders the shell and the carrier, with no
+highlighting spans and no control buttons.
+
+### `:client`, closed
+
+````markdown
+```mermaid
+graph TD; A-->B;
+```
+````
+
+```html
+<div data-controller="ms-diagram"
+     data-ms-diagram-payload-value='{"source":"graph TD; A--\u003eB;\n","info":"mermaid"}'>
+  <div data-ms-diagram-target="output" data-turbo-permanent>…shimmer…</div>
+</div>
+```
+
+Split ownership: the payload attribute is server state and belongs to morph; the
+output element is client state, is `data-turbo-permanent`, and belongs to the
+controller. See [deferred-renderers.md](deferred-renderers.md).
+
+While the fence is open there is no payload and no controller at all — only the
+shimmer.
+
+### `:passthrough`
+
+````markdown
+```text
+as is
+```
+````
+
+```html
+<pre data-ms-element="pre"><code class="language-text">as is
+</code></pre>
+```
+
+## Custom tags
+
+Models emit XML-ish tags that mean something to your application rather than to
+markdown: `<source>`, `<citation>`, `<thinking>`. Register one and the post-pass
+replaces its node with your partial.
+
+The reference case is a model citing its sources:
 
 ```ruby
 MaquinaStream.register_tag :source,
@@ -50,105 +125,159 @@ MaquinaStream.register_tag :source,
   literal_content: false
 ```
 
-Given `<source id="3" href="https://example.com/a" title="Un artículo"></source>`,
-the post-pass replaces that node with the partial, passing **only** the
-registered attributes as locals. An attribute the registration does not list —
-`onclick`, say — never reaches the partial at all; it is gone before the
-sanitizer is even asked.
+| Option | Meaning |
+|---|---|
+| `attributes:` | The attribute names the tag may carry. Anything else on it is dropped before the partial is called. |
+| `partial:` | The partial that renders it. Registered attribute names arrive as locals, so they must match the locals it declares — `href`, not `url`. |
+| `literal_content:` | `true` passes the tag's body as text; `false` renders it as markdown. |
 
-`literal_content: true` passes the tag's text rather than its inner HTML.
-
-Registered attribute names become partial locals, so they must match the locals
-the partial declares.
-
-**An unregistered tag does not survive — its content does.** The sanitizer
-*unwraps* an element it does not know: the tag goes, its children stay. See
-"App-meaning tags" below for what that means for `<thinking>` and friends.
-
-**`register_tag` is a single-node facility.** The post-pass replaces the tag's
-node with the partial and hands it that node's inner HTML. A tag wrapped around
-one inline run — the `<source>` case above — is exactly what it is for. A tag
-wrapped around several paragraphs is not: see below.
-
-## Element registry
-
-```ruby
-MaquinaStream.register_element :h2, partial: "my/headings/h2"
+```markdown
+Según la fuente <source id="3" href="https://example.com/a" title="Un artículo" onclick="alert(1)"></source>.
 ```
 
-Replaces every `<h2>` with that partial, receiving `content:` (the inner HTML)
-and `node:` (the Nokogiri node). Elements the host does not override still carry
-`data-ms-element="h2"` as a styling hook.
+```html
+<p data-ms-element="p">Según la fuente <span data-component="source-citation" data-ms-source-id="3" …>
+  <a data-source-citation-part="link" href="https://example.com/a" rel="noopener noreferrer">Un artículo</a>
+</span>.</p>
+```
 
-## App-meaning tags
+`onclick` never reaches the partial at all — it is gone before the sanitizer is
+even asked, because the registration did not list it.
 
-Models emit XML-ish tags that mean something to the application rather than to
-markdown: `<thinking>`, `<answer>`, `<tool_call>`, `<citation>`. CommonMark has
-never heard of any of them, so the line that opens one starts an **HTML block**
-and everything under it is raw HTML as far as the parser is concerned. What
-happens next is decided by the sanitizer and the splitter.
+### An unregistered tag does not survive; its content does
 
-`test/maquina_stream/app_tags_test.rb` holds every claim on this page as an
-assertion, and `test/fixtures/markdown/app_tags.md` is in the corpus the
-pipeline properties run over.
+The sanitizer *unwraps* an element it does not know: the tag goes, its children
+stay.
 
-### Unregistered
+```markdown
+text <danger id="1">content</danger> more
+```
 
-The tag is unwrapped by the sanitizer, and its content is kept. Text that was
-directly under the tag comes back as a **bare text node at the top level** of
-the fragment — not inside any element.
+```html
+<p data-ms-element="p">text content more</p>
+```
 
-Document wraps orphan text (and any inline element stranded the same way) into a
-`<p>` before splitting, so it lands in a block of its own. Before that wrapping
-existed, `children.select(&:element?)` dropped it and the first paragraph under
-a `<thinking>` tag silently vanished from the message. The property that pins
-it — the concatenated text of the blocks equals the text of the whole sanitized
-document — lives in `pipeline_properties_test.rb` and is asserted over the whole
-corpus, not over that one tag.
+Text stranded at the top level this way is wrapped into a `<p>` before the
+document is split, so it lands in a block of its own with an id and a digest,
+and morphs and repairs like any other block. Its id comes from the first free
+index at or after its position, so ids stay unique but are not always in
+ascending order.
 
-Mid-stream, with the tag open and `</thinking>` not yet sent:
+Mid-stream this is stable. `maquina_remend` removes only a tag whose `>` has not
+arrived yet (`"text <thinki"` → `"text"`), the sanitizer unwraps the tag whether
+it closed or not, and closing the tag changes no block above it — so nothing
+flickers and no sealed block is rewritten.
 
-- maquina_remend's `html_tags` handler removes only a tag whose `>` has not
-  arrived yet (`"text <thinki"` → `"text"`). It does **not** balance an element
-  that opened and has not closed, and it does not need to.
-- The content survives every frame, because the sanitizer unwraps the tag
-  whether it closed or not. The unwrapped shape is the same before and after the
-  close.
-- Nothing flickers. Closing the tag changes no block above it, so a sealed block
-  is never rewritten — the seal lag is not even called on here.
+### Block-level tags
 
-An orphan block wrapped this way is a real block with an id and a digest, and it
-morphs and repairs like any other. Its id comes from the first free index at or
-after its position: the post-pass numbers the top-level elements it sees, and a
-wrapper was not one of them. Ids stay unique, which is what idiomorph needs;
-they are not always in ascending order.
+A registered tag can also wrap several paragraphs. The partial receives the
+whole thing as its `content`, rendered as markdown:
 
-### Registered, and block level
+```ruby
+MaquinaStream.register_tag :thinking, attributes: [], partial: "tags/reasoning"
+```
 
-**`register_tag` really only works for inline or single-node tags.** Registering
-`:thinking` and pointing it at a partial does not give you a block-level
-container:
+```erb
+<%# app/views/tags/_reasoning.html.erb %>
+<%# locals: (content: "") %>
+<section data-ms-reasoning><%= content.to_s.html_safe %></section>
+```
 
-1. Everything inside the tag becomes **one** block. The partial receives one
-   node's inner HTML, so four paragraphs of reasoning render as one block, and
-   there is no arrangement of the registration that changes that.
-2. Worse, the partial receives content that came **after** the closing tag.
-   CommonMark emits `</thinking>` inside a paragraph — `…</thinking></p>` — so
-   the HTML5 parser never closes the element and parses the rest of the message
-   inside it. The paragraph after the tag ends up in the partial.
-3. That merged node is the last block, so it can never be far enough from the
-   tail to seal. The whole remainder of the message is re-sent on every frame.
+```markdown
+<thinking>
+One.
 
-Sealing is not violated by this — the merge only ever grows the tail, and a
-block that sealed before the tag opened is never rewritten — but the collapse
-leaves so few blocks that the seal lag holds almost all of the message open.
+Two.
+</thinking>
 
-Until that is fixed, a host that wants a block-level container around several
-blocks should leave the tag unregistered and style the blocks, or strip the tag
-before the buffer reaches the renderer.
+After.
+```
 
-## What the registries never do
+```html
+<section data-ms-reasoning id="ms-7-b0" data-ms-block data-ms-block-digest="434332299dedf830">
+  <p data-ms-element="p">One.</p>
+  <p data-ms-element="p">Two.</p>
+</section>
+<p id="ms-7-b1" data-ms-element="p" data-ms-block data-ms-block-digest="e44dfc18531833b6">After.</p>
+```
 
-They do not let a host inject raw HTML into the document. Whatever a partial
-renders still passes through the sanitizer, which is the last pass and has no
-exceptions — see `docs/sanitizer.md`.
+Two things to know before you reach for this:
+
+1. **The whole tag is one block.** Four paragraphs of reasoning are one id, one
+   digest and one unit of repair — not four. If you want them to seal and
+   repair separately, leave the tag unregistered and style the blocks instead.
+2. **That block cannot seal until the tag closes**, so everything inside it is
+   re-sent on every frame. A four-paragraph body costs about 30% more bytes on
+   the wire than the same text unregistered; a twenty-paragraph body costs 3.5x,
+   and the single block is 88% of it. Keep block-level tags short, or accept the
+   cost at the tail.
+3. **Only registered names are treated this way.** With an empty registry the
+   buffer is untouched, and a `<thinking>` inside a fence or a backtick span
+   stays text:
+
+````markdown
+```text
+<thinking>x</thinking>
+```
+````
+
+```html
+<pre data-ms-element="pre"><code class="language-text">&lt;thinking&gt;x&lt;/thinking&gt;
+</code></pre>
+```
+
+### Where block-level handling applies
+
+Only to names you passed to `register_tag`, and only where the opening tag
+begins a line under four columns of indent — the shape that starts an HTML
+block. An inline `<citation>…</citation>` in the middle of a sentence is left
+exactly as the model wrote it, because it already renders correctly.
+
+It never applies inside a fenced code block, an inline code span, an indented
+code block, an HTML comment, `<script>`, `<pre>`, `<style>`, `<textarea>`, CDATA
+or a processing instruction — that text is content, not markup. A tag broken
+across a newline, one whose `>` has not arrived, an opener with no closer, a
+closer with no opener, and `<thinking/>` are all left alone.
+
+One limitation follows from the indent rule: **a block-level registered tag
+inside a list item is not supported.** Put it at the top level.
+
+## Element overrides
+
+Replace the markup the renderer produces for one element with a partial of your
+own:
+
+```ruby
+MaquinaStream.register_element :h2, partial: "headings/h2"
+```
+
+The partial receives `content:` (the element's inner HTML) and `node:` (the
+Nokogiri node), so it must declare both:
+
+```erb
+<%# app/views/headings/_h2.html.erb %>
+<%# locals: (content: "", node: nil) %>
+<h2 class="section-heading"><span aria-hidden="true">§</span> <%= content.to_s.html_safe %></h2>
+```
+
+```markdown
+## Thinking
+```
+
+```html
+<h2 class="section-heading"><span aria-hidden="true">§</span> Thinking<a href="#thinking" class="anchor" …></a></h2>
+```
+
+Registering the same element twice replaces the first registration; the last one
+in wins. Elements you do not override carry `data-ms-element="<tag>"` as a
+styling hook, which is usually enough — reach for an override when you need
+different structure, not different CSS.
+
+## Resetting
+
+```ruby
+MaquinaStream.reset_registries!
+```
+
+For tests. Called in production it loses every registration your initializer
+made.

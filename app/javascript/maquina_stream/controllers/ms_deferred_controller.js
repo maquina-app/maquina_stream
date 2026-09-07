@@ -12,7 +12,7 @@ import ApplicationController from "maquina_stream/controllers/application_contro
 //     <div data-ms-diagram-target="output" data-turbo-permanent>…</div>
 //   </div>
 //
-// Split ownership, from docs/api-surface.md: the payload attribute is server
+// Split ownership, from docs/deferred-renderers.md: the payload attribute is server
 // state and belongs to morph; the output element is client state and belongs to
 // this controller. A repair morph that leaves the payload byte-identical fires
 // no value-changed callback, so it triggers no re-render and no flicker — which

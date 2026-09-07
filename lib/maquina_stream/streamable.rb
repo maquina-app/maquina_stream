@@ -16,7 +16,7 @@ module MaquinaStream
   # ```
   #
   # The macro generates the contract methods when the column names match (see
-  # docs/engine-contract.md). Anything the host defines itself wins, and a
+  # docs/streaming.md). Anything the host defines itself wins, and a
   # method whose backing column is missing raises ContractError naming the
   # method, the column and the class.
   #
@@ -249,7 +249,7 @@ module MaquinaStream
           raise ContractError, <<~MESSAGE
             #{self.class.name} does not supply #maquina_stream_target: `stream_for:`
             is not callable. The broadcast target belongs to the host — the engine
-            never guesses one. See docs/engine-contract.md.
+            never guesses one. See docs/streaming.md.
           MESSAGE
         end
 
@@ -273,7 +273,7 @@ module MaquinaStream
             #{self.class.name} does not satisfy MaquinaStream::Streamable: ##{method}
             needs a `#{column}` column, and #{self.class.name} has none. Add the column,
             or define ##{method} on #{self.class.name} yourself.
-            See docs/engine-contract.md.
+            See docs/streaming.md.
           MESSAGE
         end
     end

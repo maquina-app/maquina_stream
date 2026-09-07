@@ -3,7 +3,7 @@
 module Harness
   # nexo_ai: an agent run, streamed as several records. Each tool call opens a
   # record of its own and seals on its own — shape A, decided 2026-09-07, see
-  # docs/agent-runs.md.
+  # docs/streaming.md.
   #
   # The `broadcaster:` seam is what makes that visible in a browser. It is
   # called once per record the run opens, which is the only moment the host can

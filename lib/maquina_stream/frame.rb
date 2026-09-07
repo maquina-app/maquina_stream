@@ -11,8 +11,7 @@ module MaquinaStream
   # Frames come out of Broadcaster. A host reads them — to assert a bandwidth
   # budget, or to drive a transport of its own — rather than building them.
   #
-  # `patch` is a list rather than the single open block that docs/api-surface.md
-  # implied. The seal lag keeps `seal_lag` blocks unsealed at all times, and any
+  # `patch` is a list rather than a single open block. The seal lag keeps `seal_lag` blocks unsealed at all times, and any
   # of them can still change — a paragraph two blocks back becomes a heading
   # when its underline arrives. Sending only the last one would leave the others
   # wrong until a repair.

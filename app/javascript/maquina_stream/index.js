@@ -2,7 +2,7 @@
 //
 // The engine registers its own controllers rather than relying on the host's
 // eager-load glob: the identifiers are part of the DOM contract
-// (docs/api-surface.md) and must not depend on where a host puts its files.
+// (docs/javascript.md) and must not depend on where a host puts its files.
 //
 //   import { Application } from "@hotwired/stimulus"
 //   import { registerMaquinaStreamControllers } from "maquina_stream"
@@ -26,7 +26,7 @@ import MsTableController from "maquina_stream/controllers/ms_table_controller"
 
 export { linkSafety } from "maquina_stream/controllers/ms_link_safety_controller"
 
-// Identifier → controller. The identifiers are fixed by docs/api-surface.md.
+// Identifier → controller. The identifiers are fixed by docs/javascript.md.
 export const controllers = {
   "ms-autoscroll": MsAutoscrollController,
   "ms-code": MsCodeController,

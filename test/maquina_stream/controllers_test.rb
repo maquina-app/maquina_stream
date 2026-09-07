@@ -3,7 +3,7 @@
 require "test_helper"
 
 # The controllers' behaviour is verified in a real browser against
-# test/dummy/app/views/harness (see docs/interaction.md). What this file pins is
+# test/dummy/app/views/harness (see docs/javascript.md). What this file pins is
 # the server side of the contract: the markup the renderer emits has to carry
 # the actions, targets and carriers the controllers bind to.
 #
@@ -77,7 +77,7 @@ class ControllersTest < ActiveSupport::TestCase
   end
 
   # The Ruby half of "controls inert while streaming". The JavaScript half is
-  # verified in a browser (docs/interaction.md); this pins the marker the guard
+  # verified in a browser (docs/javascript.md); this pins the marker the guard
   # depends on, because when it went missing nothing failed — the controls
   # simply stayed live through every stream.
   test "every rendered control is marked for the stream guard" do
@@ -91,6 +91,23 @@ class ControllersTest < ActiveSupport::TestCase
       assert control.attribute("data-ms-control"),
         "#{control["data-action"]} is not marked data-ms-control, so it stays clickable mid-stream"
     end
+  end
+
+  # The half that was missing rather than wrong: ms-deferred reads this label
+  # off the element because JavaScript cannot read I18n, and nothing rendered
+  # it — so its hardcoded fallback was not a last resort, it was the only path,
+  # and every host saw one language whatever locale it asked for.
+  test "a client-deferred block carries its error label, in the host's locale" do
+    MaquinaStream.register_fence "mermaid",
+      strategy: :client, controller: "ms-diagram", payload: ->(source, info) { {source: source} }
+
+    document = I18n.with_locale(:en) { render("```mermaid\ngraph TD\n```") }
+
+    assert_equal "This block could not be rendered", document.at_css("[data-ms-diagram-payload-value]")["data-ms-deferred-error-label"]
+
+    document = I18n.with_locale(:es) { render("```mermaid\ngraph TD\n```") }
+
+    assert_equal "No se pudo representar este bloque", document.at_css("[data-ms-diagram-payload-value]")["data-ms-deferred-error-label"]
   end
 
   test "control labels follow the host's locale" do
@@ -109,7 +126,7 @@ class ControllersTest < ActiveSupport::TestCase
   # one `<span data-ms-revealing>` and unwraps it again on `animationend`. What
   # the server owes it is the marker it binds to and nothing else, and "nothing
   # else" is the half that has to be pinned — chrome the server leaves on a
-  # block is drift the digest cannot see (docs/api-surface.md, Phase 7).
+  # block is drift the digest cannot see (docs/javascript.md).
 
   test "every top-level block carries the marker ms-reveal binds to" do
     blocks = document_blocks("First.\n\nSecond.\n\nThird.\n")

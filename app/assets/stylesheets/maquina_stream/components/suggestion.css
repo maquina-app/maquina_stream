@@ -1,5 +1,5 @@
 /* Vendored fallback for the `suggestion` component. Loaded only while the
- * vendored partial is the one rendering. See docs/component-scope.md.
+ * vendored partial is the one rendering.
  *
  * No JavaScript and no client state: a chip is a link or a form submission, so
  * everything here is shape and focus.

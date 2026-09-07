@@ -6,7 +6,7 @@ module MaquinaStream
   # Every component the engine renders resolves through here, so extracting a
   # vendored component into `maquina_components` is mechanical: publish the
   # partial in that gem, drop the name from VENDORED_COMPONENTS, done. No call
-  # site changes. See docs/component-scope.md.
+  # site changes.
   #
   # ```ruby
   # MaquinaStream::Components.partial_for(:code_block, config: MaquinaStream.config)

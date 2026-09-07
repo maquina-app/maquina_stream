@@ -20,7 +20,7 @@ class Message < ActiveRecord::Base
   #
   # The engine appends block HTML into `#ms-msg-<sid>` and never creates that
   # element: the wrapper, the controllers on it and its repair URLs are the
-  # host's, per the DOM contract in docs/api-surface.md. It goes out twice — once
+  # host's, per the DOM contract in docs/javascript.md. It goes out twice — once
   # empty when the record opens, and once more when it seals, which is what
   # takes `data-ms-streaming` off and so stops the reveal and re-enables the
   # controls. The second one morphs, so the blocks the deltas already delivered

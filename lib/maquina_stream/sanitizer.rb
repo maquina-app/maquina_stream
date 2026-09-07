@@ -30,7 +30,7 @@ module MaquinaStream
   # *again* client-side before it reaches the DOM, because the payload came from
   # a model and model output is prompt-injectable.
   #
-  # See docs/sanitizer.md for what survives, what is dropped, and the known
+  # See docs/security.md for what survives, what is dropped, and the known
   # holes.
   class Sanitizer
     # Elements that survive: rendered markdown, plus the wrappers the post-pass

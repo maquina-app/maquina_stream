@@ -11,6 +11,8 @@ es:
       decimal_separator: ","
     streaming:
       controls_disabled: "Disponible cuando termine la respuesta"
+    deferred:
+      error: "No se pudo representar este bloque"
     shimmer:
       label: "Cargando…"
     code:

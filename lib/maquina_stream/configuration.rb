@@ -1,11 +1,11 @@
 # frozen_string_literal: true
 
 module MaquinaStream
-  # Every key documented in docs/api-surface.md, with its documented default.
+  # Every key documented in docs/configuration.md, with its documented default.
   #
   # Three keys are seams the engine cannot supply itself and that
-  # docs/api-surface.md names in prose but not in the configuration block:
-  # `find_stream`, `authorize` and `transport`. See docs/engine-contract.md.
+  # docs/configuration.md names but that have no default the engine could pick:
+  # `find_stream`, `authorize` and `transport`. See docs/repair.md.
   #
   # Reach it through MaquinaStream.configure, once, from an initializer:
   #

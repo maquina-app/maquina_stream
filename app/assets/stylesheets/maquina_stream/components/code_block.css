@@ -3,7 +3,7 @@
  * Loaded ONLY while maquina_stream renders the vendored partial. The day
  * maquina_components ships `code-block`, the resolver stops returning our
  * partial, MaquinaStream::Components.stylesheets stops listing this file, and
- * the same selectors are not defined twice. See docs/component-scope.md.
+ * the same selectors are not defined twice.
  *
  * Colour lives in the two Rouge theme stylesheets, never inline, so a dark
  * mode switch is a stylesheet swap and not a re-render.

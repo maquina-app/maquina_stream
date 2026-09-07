@@ -1,5 +1,5 @@
 /* Vendored fallback for the `snippet` component. Loaded only while the
- * vendored partial is the one rendering. See docs/component-scope.md.
+ * vendored partial is the one rendering.
  */
 [data-component="snippet"] {
   --snippet-radius: var(--surface-radius, 0.375rem);

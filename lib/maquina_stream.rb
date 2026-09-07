@@ -78,14 +78,15 @@ require "maquina_stream/engine" if defined?(Rails::Engine)
 # | MaquinaStream::TextDirection | Which way a piece of text reads |
 # | MaquinaStream::Components::Contract | The engine's half of a vendored component |
 #
-# Longer-form documentation ships in `docs/`: `engine-contract.md`,
-# `registries.md`, `interaction.md`, `deferred-renderers.md`, `sanitizer.md`,
-# `component-scope.md` and `agent-runs.md`.
+# Longer-form documentation ships in `docs/`: `getting-started.md`,
+# `configuration.md`, `streaming.md`, `repair.md`, `registries.md`,
+# `javascript.md`, `security.md` and `deferred-renderers.md`.
 module MaquinaStream
   extend Registries
 
   # Components destined for maquina_components, vendored inside the engine for
-  # now. See docs/component-scope.md.
+  # now. Everything renders through MaquinaStream::Components, so extraction is
+  # a matter of publishing the partial there and dropping the name from here.
   VENDORED_COMPONENTS = %i[attachment code_block suggestion snippet].freeze
 
   class << self

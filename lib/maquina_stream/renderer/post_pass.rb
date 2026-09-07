@@ -191,6 +191,14 @@ module MaquinaStream
           node["data-controller"] = fence.controller if fence.controller
           node["data-#{fence.controller}-payload-value"] = payload_json(fence) if fence.controller
 
+          # What the reader sees when the renderer throws. It is rendered here
+          # because JavaScript cannot read I18n: a controller that hardcodes the
+          # sentence shows one language to every host, whatever locale it asked
+          # for. The controller keeps a fallback for a block a host mounted
+          # itself, and this is what makes that fallback the exception.
+          node["data-ms-deferred-error-label"] =
+            I18n.t("maquina_stream.deferred.error", locale: locale, default: "This block could not be rendered")
+
           # Split ownership, per the DOM contract: the payload attribute is
           # server state and belongs to morph, the output element is client
           # state and belongs to the controller. The skeleton sits inside the
@@ -248,7 +256,7 @@ module MaquinaStream
 
         # The ms-table controller documents the markup it expects and emits none
         # of it itself. This is engine chrome rather than a component: there is
-        # no table entry in docs/component-scope.md, and inventing one to hold
+        # no vendored table component, and inventing one to hold
         # three buttons would be worse than drawing them here.
         def table_controls(controls)
           bar = Nokogiri::XML::Node.new("div", fragment.document)
@@ -280,7 +288,7 @@ module MaquinaStream
 
         # The host owns the locale, as in any Rails app: labels follow
         # I18n.locale. `config.locale` is the engine's own default, used when
-        # the host has expressed no preference — see docs/interaction.md.
+        # the host has expressed no preference — see docs/javascript.md.
         def locale
           I18n.locale || config.locale
         end

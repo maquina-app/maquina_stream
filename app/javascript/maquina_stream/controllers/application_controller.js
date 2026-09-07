@@ -6,12 +6,12 @@ import { Controller } from "@hotwired/stimulus"
 // in a single one:
 //
 //   1. `streaming` — the one signal that makes controls inert while a message
-//      is still being written. See docs/interaction.md.
+//      is still being written. See docs/javascript.md.
 //   2. `copyText` / `downloadText` — clipboard and download plumbing, including
 //      the insecure-context clipboard fallback.
 //
 // Nothing here ever assigns a DOM-derived or payload-derived string as HTML.
-// Per docs/sanitizer.md the sanitizer cannot tell our attributes from injected
+// Per docs/security.md the sanitizer cannot tell our attributes from injected
 // ones, so every value a controller reads is untrusted input.
 export default class ApplicationController extends Controller {
   // ---------------------------------------------------------------- streaming
@@ -31,7 +31,7 @@ export default class ApplicationController extends Controller {
   // repair could not correct it and two tabs could disagree — and the caret
   // moved to the message element, derived in CSS. Reading the caret here
   // therefore reported "not streaming" for every message, and controls were
-  // never inert. See docs/api-surface.md and docs/interaction.md.
+  // never inert. See docs/javascript.md.
   //
   // Still one source of truth, and still the server's: the host stamps the
   // attribute from `maquina_stream_open?`.

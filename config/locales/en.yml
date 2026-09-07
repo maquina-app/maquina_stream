@@ -8,6 +8,8 @@ en:
       decimal_separator: "."
     streaming:
       controls_disabled: "Available once the response finishes"
+    deferred:
+      error: "This block could not be rendered"
     shimmer:
       label: "Loading…"
     code:

@@ -6,7 +6,7 @@ ActiveRecord::Schema[8.0].define(version: 1) do
     t.text    :content, default: "", null: false
 
     # A tool call is its own streamable record, not a block inside the
-    # assistant's message. Decided 2026-09-07; see docs/agent-runs.md.
+    # assistant's message. Decided 2026-09-07; see docs/streaming.md.
     t.string  :role, default: "assistant", null: false
     t.string  :tool_name
     t.integer :stream_sequence, default: 0, null: false

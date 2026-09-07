@@ -1,6 +1,6 @@
 # maquina_stream / maquina_remend — working conventions
 
-Read `docs/api-surface.md` before writing any code. The names in it are fixed; do not invent alternatives.
+Read `docs/` before writing any code — `streaming.md` for the Streamable contract and the broadcaster, `configuration.md` for every option, `javascript.md` for the DOM contract and the Stimulus identifiers, `repair.md` for the routes and seams. The names in those documents are fixed; do not invent alternatives.
 
 ## Stack
 
@@ -22,7 +22,7 @@ Rails 8 · Ruby 3.3+ · Hotwire (Turbo 8, morph available) · Tailwind CSS 4 · 
 - **Deltas are an optimization; correctness lives in the repair path.** A correctness bug fixed inside the delta path is fixed in the wrong place.
 - **Never assign model output as raw HTML.** Payloads are prompt-injectable. Renderer output gets sanitized client-side even though the server already sanitized the document.
 - `maquina_components` is an **optional** dependency. Plain Tailwind fallbacks when it is absent.
-- **Components render through the seam, never directly.** Some components are vendored inside the engine for now and will move to `maquina_components` later. Build them to `maquina_components` conventions, use destination `data-component` names (`code-block`, never `ms-code-block`), and always render via the resolver. See `docs/component-scope.md`.
+- **Components render through the seam, never directly.** Some components are vendored inside the engine for now and will move to `maquina_components` later. Build them to `maquina_components` conventions, use destination `data-component` names (`code-block`, never `ms-code-block`), and always render via the resolver. `MaquinaStream::VENDORED_COMPONENTS` lists the extraction candidates.
 - **Do not port React prop APIs.** AI Elements components assume the AI SDK client data model (`message.parts`, `FileUIPart`). Take the visual design and DOM structure; the locals are shaped by our ActiveRecord models.
 
 ## Workflow
