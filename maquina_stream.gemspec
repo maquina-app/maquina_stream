@@ -5,7 +5,7 @@ require_relative "lib/maquina_stream/version"
 Gem::Specification.new do |spec|
   spec.name = "maquina_stream"
   spec.version = MaquinaStream::VERSION
-  spec.authors = ["Mario Chavez"]
+  spec.authors = ["Mario Alberto Chávez"]
   spec.summary = "Streaming markdown rendering for Rails, server-side."
   spec.description = "Rails engine that renders a streaming markdown buffer to HTML on the " \
                      "server and broadcasts it over Turbo Streams. Only rendered HTML reaches " \
@@ -13,7 +13,7 @@ Gem::Specification.new do |spec|
   spec.license = "MIT"
   spec.homepage = "https://github.com/maquina-app/maquina_stream"
   spec.metadata = {
-    "homepage_uri" => spec.homepage,
+    "homepage_uri" => "https://maquina.app",
     "source_code_uri" => spec.homepage,
     "changelog_uri" => "#{spec.homepage}/blob/main/CHANGELOG.md",
     "documentation_uri" => "https://rubydoc.info/gems/maquina_stream/#{spec.version}",

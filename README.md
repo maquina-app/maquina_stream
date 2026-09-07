@@ -137,6 +137,10 @@ fence strategies, the tag registry, and live pages at `/harness/chat` and
   payload until it closes. Expect no syntax colours and no diagram until the
   closing ``` arrives.
 
+## maquina
+
+Part of [maquina](https://maquina.app) — open source for Ruby and Ruby AI.
+
 ## License
 
-MIT.
+MIT, © Mario Alberto Chávez. See [LICENSE.txt](LICENSE.txt).
