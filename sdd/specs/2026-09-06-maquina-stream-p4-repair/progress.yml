@@ -43,6 +43,19 @@ dod:
       construction - suppress before the morph, resume after - and the Phase 0
       animation counter asserts 0 for every strategy. The recording itself needs
       a person.
+  - line: The repair controller itself runs in a browser against the real endpoints.
+    met: true
+    verification: >-
+      Added 2026-09-07. ms_repair_controller.js had never executed in a browser:
+      the server half, the manifest diff and a repair simulator were all tested,
+      the controller was not. /harness/repair wires it to the mounted engine.
+      In Chromium: a clean run diffs the manifest and fetches nothing; a block
+      corrupted in the DOM (content and digest) is fetched ALONE and morphed
+      back byte-identically, outerHTML equal to the original.
+    found_two_defects:
+      - "MaquinaStream.render called Renderer, not Document, so a host-rendered page carried no block ids or digests and could never be repaired."
+      - "The dummy app never loaded Turbo. window.Turbo was undefined, renderStreamMessage threw, and repair() swallowed it in the catch that exists so a failed repair is not fatal. Nothing on the page said anything was wrong."
+
   - line: Keyframe interval configurable, with a documented default and rationale.
     met: true
     verification: "config.keyframe_interval_ms, default 4000; ms-repair reads it as data-ms-repair-interval-value."
