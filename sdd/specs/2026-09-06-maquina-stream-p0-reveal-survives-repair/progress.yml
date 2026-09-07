@@ -4,8 +4,14 @@ title: Prove the reveal survives repair
 spec: spec.md
 repo: ms-spike (throwaway)
 blocks: [3, 4, 6]
-status: in_progress
+status: gate_closed_implementation_in_flight
 opened: 2026-09-06
+gate_closed: 2026-09-07
+note: >-
+  The gate is the human judgement, and it is made. What it chose is not one of
+  the three prototypes, so the engine's reveal is being built to the decision
+  rather than ported from the spike; this phase is not "complete" until that
+  ships and is verified in a browser.
 
 tasks:
   - id: 1
@@ -51,7 +57,8 @@ tasks:
       human with a real tab.
   - id: 13
     title: human review and decision
-    status: awaiting_human
+    status: done
+    reviewed: 2026-09-07
     agent_may_close: false
     prepared: >-
       docs/phase0-frames/ holds 10 frames per strategy at 120ms intervals,
@@ -73,14 +80,27 @@ tasks:
 
 dod:
   - line: One strategy chosen, reason written in the spec.
-    met: false
-    verification: human review of the recordings; agent may not close this.
+    met: true
+    verification: >-
+      Human review 2026-09-07, live against the spike at localhost:3002 with 20%
+      of delta frames dropped. NONE OF THE THREE SHIPS AS WRITTEN. The reviewer
+      preferred B on looks and could not distinguish A from B; A and B are both
+      over the plan's node-count and patch-time budgets, and the reviewer then
+      found a defect in C. What ships is C's granularity with C's geometry
+      replaced: the newly-arrived tail text is wrapped in one element, faded in,
+      and unwrapped when the animation ends. See reveal_decision below.
   - line: Specific failing behaviour of each rejected strategy documented, not just "worse".
-    met: false
-    verification: written into spec.md Decision section after review.
+    met: true
+    verification: rejected_strategies below; each entry is a behaviour, measured or observed, not a preference.
   - line: Suppression mechanism described concretely enough for Phase 4 to implement against.
-    met: false
-    verification: written into spec.md after the strategy is chosen.
+    met: true
+    verification: >-
+      Built and in use before the gate closed: ms-repair dispatches ms:suppress
+      before the repair morph and ms:resume after it, on the message element.
+      Events rather than method calls, so the strategy can change without the
+      repair path changing. On resume the reveal resets its revealed length to
+      the current text length, which is what stops a repair from re-revealing
+      text already on screen.
   - line: Reduced-motion path confirmed.
     met: true
     verification: >-
@@ -118,3 +138,62 @@ measurements:
 notes:
   - "The plan skill's prerequisites (docs/TECHNICAL_GUIDE.md, docs/UI_PATTERNS.md, docs/HOTWIRED_PATTERNS.md, /spec-driven-development) do not exist in this project; spec shaped in the HANDOFF.md folder shape instead."
   - "No Fizzy card created - board id not supplied."
+
+reveal_decision:
+  reviewed: 2026-09-07
+  reviewer: human, live against ms-spike with drop_percent 20
+  chosen: >-
+    Tail-wrap reveal. C's granularity - one element, no per-word nodes - with C's
+    mask geometry removed. The client wraps the newly-arrived trailing text of a
+    block in a single element, fades it in, and UNWRAPS it on animationend so no
+    reveal chrome is left in the DOM for a block digest to disagree about.
+  why_not_a_pure_phase_0_strategy: >-
+    Because none of the three is both correct and affordable. A and B are correct
+    in reading order and cost about 10,100 reveal-added nodes against a budget of
+    8,000; C costs none and reveals in the wrong order.
+  rejected_by_the_server_too: >-
+    Marking the new text server-side would be free on the client - the broadcaster
+    knows the delta exactly - but it puts reveal chrome inside the block's HTML,
+    and a block's digest covers its content. The chrome becomes drift the repair
+    path cannot see, which is the two-tabs-disagree bug the Phase 7 chrome removal
+    fixed. Client-side wrap-then-unwrap leaves nothing behind.
+  fallback_if_the_walk_is_too_slow: >-
+    Fade each whole block in as it first appears, with no reveal inside a block.
+    Zero added nodes and no text-node walk, at the cost of text arriving in
+    paragraph-sized chunks.
+
+rejected_strategies:
+  a:
+    what: id-keyed per-word spans, morphed
+    failure: >-
+      10,103 reveal-added DOM nodes on a 20KB message against a budget of 8,000,
+      and a 248ms patch max against a budget of 30ms - the worst maximum of the
+      three. Its only advantage over C is a per-word fade the reviewer could not
+      distinguish from B's.
+  b:
+    what: MutationObserver reveal controller
+    failure: >-
+      The only strategy that flashes the whole message on every snapshot morph
+      without the suppression seam - confirmed by the reviewer, who turned
+      suppression off and watched the content flash. It also destroys node
+      identity across a morph, and is over budget on node count (10,101), patch
+      median (42.7ms against 8ms) and patch max (147.8ms against 30ms).
+  c:
+    what: CSS-masked block reveal
+    failure: >-
+      Reveals in the wrong order. The controller sets the mask position from
+      revealedLength / textContent.length - a CHARACTER fraction - while the CSS
+      is a linear-gradient(90deg, ...), which hides by HORIZONTAL POSITION. The
+      two are unrelated once a block wraps. Measured on a 3-visual-line block in
+      the spike: every line's text ends at ~94% of the block width, so with the
+      mask edge at 75% the last ~19% of EVERY line is hidden and swept back in -
+      including the first line, read seconds earlier. It disappears as the block
+      grows only because revealedLength/length approaches 100% and the swept
+      strip shrinks, which is exactly what the reviewer saw: "C flashes a little
+      bit at the end of the 3 first rows, after that I see no flashes."
+    instrumentation_was_blind_to_it: >-
+      The animation counter asserts that no element already marked revealed began
+      an animation. C has ONE element, so "old text re-animated" was structurally
+      always zero. The pixel evidence did see it - 25-58px per frame after the
+      snapshot - and it was recorded as "the mask's gradient edge", an artifact,
+      rather than as the bug it is. A counter that cannot fail is not evidence.
