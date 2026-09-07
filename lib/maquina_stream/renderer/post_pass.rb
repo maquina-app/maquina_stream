@@ -156,15 +156,20 @@ module MaquinaStream
           # is re-sent on every frame, so its chrome is paid for over and over.
           controls = fence.open? ? {} : config.controls[:code]
 
-          ComponentCache.fetch(partial, fence.language, fence.open?, controls, fence.source) do
-            view.render(
-              partial,
-              lang: fence.language,
-              source: fence.source,
-              highlighted: html_safe(fence.highlighted),
-              open: fence.open?,
-              controls: controls
-            )
+          # The partial is generic — the engine's DOM contract and its labels
+          # are added here, at the call site, by Components::Contract. Labels
+          # are locale-dependent, so the locale is part of the key.
+          ComponentCache.fetch(partial, locale, fence.language, fence.open?, controls, fence.source) do
+            view.render(partial, Components::Contract.apply(
+              :code_block,
+              {
+                lang: fence.language,
+                source: fence.source,
+                highlighted: html_safe(fence.highlighted),
+                controls: controls
+              },
+              config: config
+            ))
           end
         end
 
@@ -208,7 +213,7 @@ module MaquinaStream
         def render_shimmer(fence)
           partial = Components.partial_for(:shimmer, config: config)
 
-          ComponentCache.fetch(partial, fence.language) do
+          ComponentCache.fetch(partial, locale, fence.language) do
             view.render(partial, label: fence.language)
           end
         end

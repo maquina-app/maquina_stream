@@ -1,9 +1,14 @@
 <%# EXTRACTION CANDIDATE → maquina_components. See docs/component-scope.md %>
-<%# locals: (command: "", label: nil, prompt: "$", variant: :default, size: :md, css_classes: "", **html_options) %>
+<%# locals: (command: "", label: nil, prompt: "$", copy_label: nil, copy_aria_label: nil, source_attributes: {}, copy_attributes: {}, variant: :default, size: :md, css_classes: "", **html_options) %>
 <%#
-  A single command with a copy button. Shares the `ms-code` copy controller
-  with Code Block, and the same raw-source carrier, so copying is exact even
-  when the visible line is decorated with a prompt.
+  A single command with a copy affordance, and the same raw-source carrier the
+  code block uses, so copying is exact even when the visible line is decorated
+  with a prompt.
+
+  Which controller reads that carrier, and what the copy button says, are the
+  caller's business: they arrive as `data:`, `source_attributes`,
+  `copy_attributes` and `copy_label`. In this engine that caller is
+  MaquinaStream::Components::Contract, which wires `ms-code`.
 %>
 <%
   command = command.to_s
@@ -17,8 +22,7 @@
     own_data: {
       component: "snippet",
       variant: variant,
-      size: size,
-      controller: "ms-code"
+      size: size
     },
     css_classes: css_classes,
     base_classes: "ms-snippet my-3 flex items-center gap-2 rounded-md border border-gray-200 bg-gray-50 px-3 py-2 font-mono text-sm dark:border-gray-800 dark:bg-gray-900"
@@ -32,12 +36,15 @@
   <span data-snippet-part="prompt" aria-hidden="true" class="select-none text-gray-400"><%= prompt %></span>
   <code data-snippet-part="command" class="flex-1 overflow-x-auto whitespace-pre"><%= command %></code>
 
-  <button type="button"
-          data-snippet-part="copy"
-          data-action="ms-code#copy"
-          class="rounded px-2 py-1 text-xs text-gray-500 hover:bg-gray-200 dark:text-gray-400 dark:hover:bg-gray-800">
-    <%= t("maquina_stream.snippet.copy", default: "Copiar") %>
-  </button>
+  <% if copy_label.present? %>
+    <button type="button"
+            data-snippet-part="copy"
+            aria-label="<%= copy_aria_label.presence || copy_label %>"
+            class="rounded px-2 py-1 text-xs text-gray-500 hover:bg-gray-200 dark:text-gray-400 dark:hover:bg-gray-800"
+            <%= tag.attributes(copy_attributes) %>>
+      <%= copy_label %>
+    </button>
+  <% end %>
 
-  <pre hidden data-ms-code-source><%= command %></pre>
+  <pre hidden <%= tag.attributes(source_attributes) %>><%= command %></pre>
 <% end %>

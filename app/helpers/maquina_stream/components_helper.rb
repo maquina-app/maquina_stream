@@ -5,8 +5,15 @@ module MaquinaStream
   # call +component+; nothing renders a vendored partial by path.
   module ComponentsHelper
     # component(:code_block, lang: "ruby", source: raw, css_classes: "…")
+    #
+    # The partial is generic; the engine's DOM contract and labels are added
+    # here, by MaquinaStream::Components::Contract. That is what lets a vendored
+    # partial leave for maquina_components without carrying `data-ms-*` or the
+    # `maquina_stream.*` locale namespace with it.
     def component(name, **locals, &block)
-      partial = MaquinaStream::Components.partial_for(name, config: maquina_stream_config)
+      config = maquina_stream_config
+      partial = MaquinaStream::Components.partial_for(name, config: config)
+      locals = MaquinaStream::Components::Contract.apply(name, locals, config: config)
 
       if block
         render(layout: partial, locals: locals, &block)

@@ -1,64 +1,67 @@
 <%# EXTRACTION CANDIDATE → maquina_components. See docs/component-scope.md %>
-<%# locals: (lang: nil, source: "", highlighted: nil, variant: :default, size: :md, css_classes: "", **html_options) %>
+<%# locals: (lang: nil, source: "", highlighted: nil, controls: {}, copy_label: nil, copy_aria_label: nil, download_label: nil, download_aria_label: nil, source_attributes: {}, copy_attributes: {}, download_attributes: {}, variant: :default, size: :md, css_classes: "", **html_options) %>
 <%#
-  The DOM contract lives in docs/api-surface.md and is fixed:
-
-    <div data-ms-code data-ms-code-lang="ruby">
-      <pre><code>…highlighted…</code></pre>
-      <pre hidden data-ms-code-source>…raw source…</pre>
-    </div>
+  A code block: a highlighted rendering plus the raw source, verbatim, for
+  whatever offers to copy or download it.
 
   This partial does not highlight. `highlighted` arrives already marked up by
-  the render pipeline (Rouge, server strategy) and is nil while the fence is
-  still open, in which case the plain source renders instead — highlighting an
-  open fence is wasted work on every frame.
+  the caller and is nil while a fence is still open, in which case the plain
+  source renders instead — highlighting an open fence is wasted work on every
+  frame.
+
+  Nothing here knows about maquina_stream. The engine's DOM contract
+  (`data-ms-code`, `data-ms-code-lang`, `data-ms-code-source`, the `ms-code`
+  controller and the `data-ms-control` stream guard — all fixed in
+  docs/api-surface.md) arrives as `data:` and as the three `*_attributes`
+  locals, from MaquinaStream::Components::Contract. Labels arrive the same way:
+  a control with no label is not rendered, because a caller that has not named
+  a button has not asked for one.
 %>
 <%
-  lang        ||= nil
+  lang        = local_assigns.fetch(:lang, nil)
   source      = source.to_s
   highlighted = local_assigns.fetch(:highlighted, nil)
   controls    = local_assigns.fetch(:controls, nil) || {}
-  variant     ||= :default
-  size        ||= :md
+  variant   ||= :default
+  size      ||= :md
+
+  copyable     = controls[:copy] && copy_label.present?
+  downloadable = controls[:download] && download_label.present?
 
   attributes = component_html_options(
     html_options,
     own_data: {
       component: "code-block",
       variant: variant,
-      size: size,
-      ms_code_lang: lang.presence,
-      controller: ("ms-code" if controls.present?)
+      size: size
     },
     css_classes: css_classes,
     base_classes: "ms-code-block relative my-4 overflow-hidden rounded-lg border border-gray-200 bg-gray-50 text-sm dark:border-gray-800 dark:bg-gray-900"
   )
 %>
-<div data-ms-code <%= tag.attributes(attributes) %>>
+<%= tag.div(**attributes) do %>
   <% if lang.present? || controls.present? %>
     <div data-code-block-part="header" class="flex items-center justify-between border-b border-gray-200 px-3 py-1.5 text-xs text-gray-500 dark:border-gray-800 dark:text-gray-400">
       <span data-code-block-part="lang"><%= lang %></span>
 
       <% if controls.present? %>
         <span data-code-block-part="controls" class="flex gap-1">
-          <% if controls[:copy] %>
+          <% if copyable %>
             <button type="button"
-                    data-ms-control
                     data-code-block-part="copy"
-                    data-action="ms-code#copy"
-                    aria-label="<%= t("maquina_stream.code.copy_code") %>"
-                    class="rounded px-2 py-0.5 hover:bg-gray-200 dark:hover:bg-gray-800">
-              <%= t("maquina_stream.code.copy") %>
+                    aria-label="<%= copy_aria_label.presence || copy_label %>"
+                    class="rounded px-2 py-0.5 hover:bg-gray-200 dark:hover:bg-gray-800"
+                    <%= tag.attributes(copy_attributes) %>>
+              <%= copy_label %>
             </button>
           <% end %>
-          <% if controls[:download] %>
+          <% if downloadable %>
             <button type="button"
-                    data-ms-control
                     data-code-block-part="download"
-                    data-action="ms-code#download"
-                    aria-label="<%= t("maquina_stream.code.download_code") %>"
-                    class="rounded px-2 py-0.5 hover:bg-gray-200 dark:hover:bg-gray-800">
-              <%= t("maquina_stream.code.download") %>
+                    aria-label="<%= download_aria_label.presence || download_label %>"
+                    class="rounded px-2 py-0.5 hover:bg-gray-200 dark:hover:bg-gray-800"
+                    <%= tag.attributes(download_attributes) %>>
+              <%= download_label %>
             </button>
           <% end %>
         </span>
@@ -67,5 +70,5 @@
   <% end %>
 
   <pre data-code-block-part="pre" class="overflow-x-auto p-3"><code data-code-block-part="code" class="font-mono"><%= highlighted.present? ? highlighted : source %></code></pre>
-  <pre hidden data-ms-code-source><%= source %></pre>
-</div>
+  <pre hidden <%= tag.attributes(source_attributes) %>><%= source %></pre>
+<% end %>

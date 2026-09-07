@@ -1,5 +1,5 @@
 <%# EXTRACTION CANDIDATE → maquina_components. See docs/component-scope.md %>
-<%# locals: (items: [], label: nil, variant: :default, size: :md, css_classes: "", **html_options) %>
+<%# locals: (items: [], label: nil, controls: {}, variant: :default, size: :md, css_classes: "", **html_options) %>
 <%#
   A row of suggestion chips above a prompt input. Server-rendered, no client
   state, no Stimulus controller: a chip is either a link the host supplied or a
@@ -16,17 +16,22 @@
   accessible name should differ from it. Anything without `text` is skipped
   rather than rendering an empty chip.
 
-  The whole row is gated on `config.controls[:suggestion][:enabled]`, so a host
-  that does not want suggestions turns them off in configuration rather than in
-  every template.
+  The whole row is gated on `controls[:enabled]`, so a caller that does not
+  want suggestions turns them off once rather than in every template. In this
+  engine the caller is MaquinaStream::Components::Contract, which reads
+  `config.controls[:suggestion]` — configuration is the engine's, not this
+  component's.
+
+  `label` names the row for assistive technology, and is a local for the same
+  reason: a generic component owns no locale namespace.
 %>
 <%
-  items   = Array(local_assigns.fetch(:items, nil)).map { |item| item.to_h.symbolize_keys }
-  items   = items.select { |item| item[:text].to_s.present? }
-  label   = local_assigns.fetch(:label, nil).presence ||
-            t("maquina_stream.suggestion.list_label", default: "Sugerencias")
-  variant ||= :default
-  size    ||= :md
+  items    = Array(local_assigns.fetch(:items, nil)).map { |item| item.to_h.symbolize_keys }
+  items    = items.select { |item| item[:text].to_s.present? }
+  label    = local_assigns.fetch(:label, nil).presence
+  controls = local_assigns.fetch(:controls, nil) || {}
+  variant  ||= :default
+  size     ||= :md
 
   chip_classes = "ms-suggestion-chip inline-flex max-w-full items-center rounded-full border border-gray-200 bg-white px-3 py-1 text-sm text-gray-700 hover:bg-gray-50 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-200 dark:hover:bg-gray-800"
 
@@ -43,7 +48,7 @@
   attributes[:role] ||= "list"
   attributes["aria-label"] ||= label
 %>
-<% if maquina_stream_config.control?(:suggestion, :enabled) && items.any? %>
+<% if controls.fetch(:enabled, true) && items.any? %>
   <%= tag.div(**attributes) do %>
     <% items.each do |item| %>
       <%= tag.div(role: "listitem", data: { suggestion_part: "item" }, class: "contents") do %>

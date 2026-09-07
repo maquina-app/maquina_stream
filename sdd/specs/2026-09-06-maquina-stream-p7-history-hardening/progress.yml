@@ -16,7 +16,7 @@ tasks:
   - { id: 7, title: dummy app demonstrating every feature, status: done, note: "Streamable model, both seams, all three fence strategies, tag registry, third host-side renderer, browser harness at /harness, history pagination at /history" }
   - { id: 8, title: README and integration guide, status: done }
   - { id: 9, title: CI matrix, status: done, note: ".github/workflows/ci.yml - ruby 3.3/3.4 x rails 8.0/8.1 for the engine, 3.1-3.4 for the gem" }
-  - { id: 10, title: tag 0.1 and open the Fragua branch, status: deferred, note: "user asked to hold on pushing to a remote or releasing" }
+  - { id: 10, title: tag 0.1 and open the Fragua branch, status: deferred, note: "remotes and metadata are in place as of 2026-09-07; pushing, tagging and releasing all await the user, and remend has to ship before the engine can stop being a path reference" }
 
 dod:
   - line: Long-session load and memory figures recorded in the spec.
@@ -42,7 +42,11 @@ dod:
       a fresh developer.
   - line: 0.1 tagged; Fragua consumes the released gem, not a path reference.
     met: false
-    verification: "Deferred at the user's request: no remote, no tag, no release."
+    verification: >-
+      Remotes configured 2026-09-07 (github.com/maquina-app/maquina_stream and
+      /maquina_remend), 0.1.0 bumped, changelogs written. Not pushed, not tagged,
+      not released - and it cannot be released in this order anyway: the engine
+      depends on maquina_remend by path, so remend ships first.
 
 resolved_2026-09-07:
   frame_budget_ms:

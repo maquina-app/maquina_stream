@@ -1,5 +1,5 @@
 <%# EXTRACTION CANDIDATE → maquina_components. See docs/component-scope.md %>
-<%# locals: (filename: nil, byte_size: nil, content_type: nil, url: nil, preview_url: nil, remove_path: nil, variant: :grid, size: :md, css_classes: "", **html_options) %>
+<%# locals: (filename: nil, byte_size: nil, content_type: nil, url: nil, preview_url: nil, remove_path: nil, controls: {}, unnamed_label: nil, download_label: nil, download_aria_label: nil, remove_label: nil, remove_aria_label: nil, remove_confirm: nil, size_units: nil, size_format: "%{value} %{unit}", decimal_separator: ".", thumbnail_attributes: {}, download_attributes: {}, remove_attributes: {}, variant: :grid, size: :md, css_classes: "", **html_options) %>
 <%#
   One attached file. The locals are ActiveStorage's own attribute names —
   `filename`, `byte_size`, `content_type` — plus the two URLs the host resolved
@@ -17,14 +17,18 @@
   The media category is derived from `content_type` here, in Ruby, never by a
   JS utility reading the DOM.
 
-  Download is hideable. An image whose blob 404s must not offer a download that
-  cannot work, so the thumbnail carries an `error->` action and the download
-  control is a target of the same controller. The behaviour is `ms-attachment`'s
-  in app/javascript; this partial only exposes the hook. The identifier is not
-  in the table in docs/api-surface.md yet — add it there when the controller lands.
+  Every label is a local, and so is every attribute that binds this markup to
+  someone's JavaScript: the thumbnail's failure hook and the download control's
+  target arrive as `thumbnail_attributes` and `download_attributes`. In this
+  engine MaquinaStream::Components::Contract supplies them (`ms-attachment`,
+  `data-ms-attachment-target`) and translates the labels; nothing about
+  maquina_stream is written down here.
 
-  Every control is gated on `config.controls[:attachment]`, so a host can drop
-  the download affordance, the remove affordance, or both.
+  `controls` switches the two affordances off individually — a control the
+  caller has not enabled, or has not named, is not rendered. An image whose
+  blob 404s must not offer a download that cannot work, which is why the
+  download control is reachable from the same controller the thumbnail reports
+  its error to.
 %>
 <%
   filename     = local_assigns.fetch(:filename, nil).to_s
@@ -33,35 +37,51 @@
   url          = local_assigns.fetch(:url, nil).presence
   preview_url  = local_assigns.fetch(:preview_url, nil).presence
   remove_path  = local_assigns.fetch(:remove_path, nil).presence
+  controls     = local_assigns.fetch(:controls, nil) || {}
   variant      = (local_assigns.fetch(:variant, nil) || :grid).to_sym
   size         ||= :md
 
-  config    = maquina_stream_config
   image     = content_type.to_s.start_with?("image/")
   thumbnail = image && preview_url
-  label     = filename.presence || t("maquina_stream.attachment.unnamed", default: "Archivo adjunto")
+  label     = filename.presence || unnamed_label
 
-  downloadable = url.present? && config.control?(:attachment, :download)
-  removable    = remove_path.present? && config.control?(:attachment, :remove)
+  downloadable = url.present? && controls.fetch(:download, true) && download_label.present?
+  removable    = remove_path.present? && controls.fetch(:remove, true) && remove_label.present?
+
+  units       = Array(size_units).presence || %w[B kB MB GB TB]
+  size_format = local_assigns.fetch(:size_format, nil).presence || "%{value} %{unit}"
+  separator   = local_assigns.fetch(:decimal_separator, nil).presence || "."
 
   human_size =
     if byte_size.present?
       bytes = Integer(byte_size)
-      units = %w[bytes kb mb gb tb]
       index = 0
       index += 1 while bytes >= 1024**(index + 1) && index < units.length - 1
       number =
         if index.zero?
           bytes.to_s
         else
-          format("%.1f", bytes.to_f / 1024**index)
-            .sub(".", t("maquina_stream.number.decimal_separator", default: ","))
+          format("%.1f", bytes.to_f / 1024**index).sub(".", separator)
         end
-      t("maquina_stream.attachment.size",
-        value: number,
-        unit: t("maquina_stream.attachment.units.#{units[index]}", default: units[index]),
-        default: "%{value} %{unit}")
+      format(size_format, value: number, unit: units[index])
     end
+
+  control_classes = "shrink-0 rounded px-2 py-1 text-xs text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
+
+  download_options = {
+    download: filename.presence,
+    data: { attachment_part: "download" },
+    "aria-label" => download_aria_label.presence || download_label,
+    class: control_classes
+  }.merge(download_attributes)
+
+  remove_options = {
+    method: :delete,
+    form: { data: { turbo_confirm: remove_confirm } },
+    data: { attachment_part: "remove" },
+    "aria-label" => remove_aria_label.presence || remove_label,
+    class: control_classes
+  }.merge(remove_attributes)
 
   layout_classes = {
     grid:   "ms-attachment--grid flex w-40 flex-col gap-2 rounded-lg border border-gray-200 bg-white p-2 text-sm dark:border-gray-800 dark:bg-gray-900",
@@ -74,9 +94,7 @@
     own_data: {
       component: "attachment",
       variant: variant,
-      size: size,
-      controller: (thumbnail ? "ms-attachment" : nil),
-      ms_attachment_content_type: content_type
+      size: size
     },
     css_classes: css_classes,
     base_classes: "ms-attachment #{layout_classes}"
@@ -88,9 +106,8 @@
          alt="<%= label %>"
          loading="lazy"
          data-attachment-part="thumbnail"
-         data-ms-attachment-target="thumbnail"
-         data-action="error->ms-attachment#thumbnailFailed"
-         class="<%= variant == :grid ? "h-24 w-full rounded object-cover" : "h-8 w-8 rounded object-cover" %>">
+         class="<%= variant == :grid ? "h-24 w-full rounded object-cover" : "h-8 w-8 rounded object-cover" %>"
+         <%= tag.attributes(thumbnail_attributes) %>>
   <% else %>
     <span data-attachment-part="icon"
           aria-hidden="true"
@@ -109,23 +126,14 @@
   </figcaption>
 
   <% if downloadable %>
-    <%= link_to url,
-          download: filename.presence,
-          data: { attachment_part: "download", ms_attachment_target: "download" },
-          "aria-label": t("maquina_stream.attachment.download_file", name: label, default: "Descargar %{name}"),
-          class: "shrink-0 rounded px-2 py-1 text-xs text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800" do %>
-      <%= t("maquina_stream.attachment.download", default: "Descargar") %>
+    <%= link_to url, download_options do %>
+      <%= download_label %>
     <% end %>
   <% end %>
 
   <% if removable %>
-    <%= button_to remove_path,
-          method: :delete,
-          form: { data: { turbo_confirm: t("maquina_stream.attachment.remove_confirm", default: "¿Eliminar este adjunto?") } },
-          data: { attachment_part: "remove" },
-          "aria-label": t("maquina_stream.attachment.remove_file", name: label, default: "Eliminar %{name}"),
-          class: "shrink-0 rounded px-2 py-1 text-xs text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800" do %>
-      <%= t("maquina_stream.attachment.remove", default: "Eliminar") %>
+    <%= button_to remove_path, remove_options do %>
+      <%= remove_label %>
     <% end %>
   <% end %>
 <% end %>

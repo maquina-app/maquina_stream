@@ -161,6 +161,59 @@ class MaquinaStream::ComponentsTest < ActiveSupport::TestCase
       sources.flat_map { |s| s.scan(/component: "([a-z-]+)"/) }.flatten.sort
   end
 
+  # ------------------------------------------------------- extraction couplings
+
+  # The three things that used to make extraction a rewrite rather than a move.
+  # A vendored partial is a maquina_components component that happens to live
+  # here: it may know about variants, parts and css_classes, and about nothing
+  # else. The engine's DOM contract, its Stimulus identifiers and its locale
+  # namespace are supplied from the call site by
+  # MaquinaStream::Components::Contract.
+  test "no vendored partial names anything that belongs to this engine" do
+    MaquinaStream::VENDORED_COMPONENTS.each do |name|
+      path = ENGINE_ROOT.join("app/views/maquina_stream/components/_#{name}.html.erb")
+      next unless path.exist?
+
+      markup = without_erb_comments(path.read)
+
+      refute_match(/data-ms-/, markup,
+        "#{name} writes the engine's DOM contract itself; pass it as `data:` from the call site")
+      refute_match(/ms-[a-z_]+#/, markup,
+        "#{name} names an engine Stimulus controller; pass the action as an attributes local")
+      refute_match(/maquina_stream/, markup,
+        "#{name} names the engine — locale keys and maquina_stream_config belong to the call site")
+      refute_match(/\bt\(|I18n/, markup,
+        "#{name} translates its own labels; a component that owns no locale namespace takes them as locals")
+    end
+  end
+
+  test "the engine's contract is what puts the DOM contract back" do
+    locals = MaquinaStream::Components::Contract.apply(:code_block, {lang: "ruby", controls: {copy: true}})
+
+    assert_equal "", locals[:data][:ms_code]
+    assert_equal "ruby", locals[:data][:ms_code_lang]
+    assert_equal "ms-code", locals[:data][:controller]
+    assert_equal({"data-ms-code-source" => ""}, locals[:source_attributes])
+    assert_predicate locals[:copy_label], :present?
+  end
+
+  test "the contract adds to a caller's data, and a caller cannot drop it" do
+    locals = MaquinaStream::Components::Contract.apply(
+      :code_block,
+      {lang: "ruby", controls: {copy: true}, data: {controller: "analytics", ms_code: "mine", testid: "cb"}}
+    )
+
+    assert_equal "ms-code analytics", locals[:data][:controller]
+    assert_equal "", locals[:data][:ms_code]
+    assert_equal "cb", locals[:data][:testid]
+  end
+
+  test "the contract leaves a component it knows nothing about alone" do
+    locals = {lines: 3}
+
+    assert_equal locals, MaquinaStream::Components::Contract.apply(:shimmer, locals)
+  end
+
   test "shimmer is the only skeleton" do
     others = Pathname.glob(ENGINE_ROOT.join("app/views/**/*.erb")).reject do |path|
       path.basename.to_s == "_shimmer.html.erb"
@@ -173,6 +226,12 @@ class MaquinaStream::ComponentsTest < ActiveSupport::TestCase
   end
 
   private
+    # Prose is not markup: a partial may explain the contract it is handed
+    # without carrying it.
+    def without_erb_comments(source)
+      source.gsub(/<%#.*?%>/m, "")
+    end
+
     def direct_partial_references(root, except:)
       Pathname.glob(root.join("{app,lib}/**/*.{rb,erb}")).filter_map do |path|
         relative = path.relative_path_from(root).to_s
@@ -206,11 +265,11 @@ class MaquinaStream::ComponentPartialsTest < ActiveSupport::TestCase
   test "code_block emits the documented DOM contract" do
     html = component(:code_block, lang: "ruby", source: "puts 1", highlighted: nil)
 
-    assert_includes html, "data-ms-code "
+    assert_includes html, %(data-ms-code="")
     assert_includes html, %(data-component="code-block")
     assert_includes html, %(data-ms-code-lang="ruby")
     assert_match(%r{<pre[^>]*><code[^>]*>puts 1</code></pre>}, html)
-    assert_match(%r{<pre hidden data-ms-code-source>puts 1</pre>}, html)
+    assert_match(%r{<pre hidden data-ms-code-source="">puts 1</pre>}, html)
   end
 
   test "code_block renders highlighted html when the fence has closed, and never highlights itself" do
@@ -219,7 +278,7 @@ class MaquinaStream::ComponentPartialsTest < ActiveSupport::TestCase
 
     assert_includes html, %(<span class="k">puts</span> 1)
     # The raw source still travels verbatim for the copy button.
-    assert_includes html, %(<pre hidden data-ms-code-source>puts 1</pre>)
+    assert_includes html, %(<pre hidden data-ms-code-source="">puts 1</pre>)
   end
 
   # The carrier is <pre hidden>, not <script type="text/plain">. A script
@@ -335,8 +394,13 @@ class MaquinaStream::ComponentPartialsTest < ActiveSupport::TestCase
     # The download control is hideable: it is a target of the same controller
     # the thumbnail reports its error to.
     assert_match(/data-controller="[^"]*ms-attachment/, html)
-    assert_includes html, %(data-action="error->ms-attachment#thumbnailFailed")
     assert_includes html, %(data-ms-attachment-target="download")
+
+    # Read through the parser: the hook arrives as an attribute value, and
+    # `error->…` is written `error-&gt;…` once it has been through tag.attributes.
+    thumbnail = Nokogiri::HTML5.fragment(html).at_css("[data-attachment-part='thumbnail']")
+
+    assert_equal "error->ms-attachment#thumbnailFailed", thumbnail["data-action"]
   end
 
   test "a non-image attachment needs no controller at all" do
