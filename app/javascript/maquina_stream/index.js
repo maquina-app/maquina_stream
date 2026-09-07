@@ -17,6 +17,7 @@
 import MsAutoscrollController from "maquina_stream/controllers/ms_autoscroll_controller"
 import MsCodeController from "maquina_stream/controllers/ms_code_controller"
 import MsLinkSafetyController from "maquina_stream/controllers/ms_link_safety_controller"
+import MsRepairController from "maquina_stream/controllers/ms_repair_controller"
 import MsTableController from "maquina_stream/controllers/ms_table_controller"
 
 export { linkSafety } from "maquina_stream/controllers/ms_link_safety_controller"
@@ -26,6 +27,7 @@ export const controllers = {
   "ms-autoscroll": MsAutoscrollController,
   "ms-code": MsCodeController,
   "ms-link-safety": MsLinkSafetyController,
+  "ms-repair": MsRepairController,
   "ms-table": MsTableController
 }
 

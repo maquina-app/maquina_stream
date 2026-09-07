@@ -114,14 +114,19 @@ module MaquinaStream
         def render_server_fence(fence)
           partial = Components.partial_for(:code_block, config: config)
 
-          ComponentCache.fetch(partial, fence.language, fence.open?, config.controls[:code], fence.source) do
+          # An open fence gets no controls. They would be inert anyway — copying
+          # half a code block is worse than not offering to — and the open block
+          # is re-sent on every frame, so its chrome is paid for over and over.
+          controls = fence.open? ? {} : config.controls[:code]
+
+          ComponentCache.fetch(partial, fence.language, fence.open?, controls, fence.source) do
             view.render(
               partial,
               lang: fence.language,
               source: fence.source,
               highlighted: html_safe(fence.highlighted),
               open: fence.open?,
-              controls: config.controls[:code]
+              controls: controls
             )
           end
         end

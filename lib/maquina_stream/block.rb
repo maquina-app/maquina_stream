@@ -12,13 +12,14 @@ module MaquinaStream
   class Block
     attr_reader :index, :markdown, :html, :line_range, :sid
 
-    def initialize(index:, markdown:, html:, line_range:, sid: nil, sealed: false)
+    def initialize(index:, markdown:, html:, line_range:, sid: nil, sealed: false, digest: nil)
       @index = index
       @markdown = markdown
       @html = html
       @line_range = line_range
       @sid = sid
       @sealed = sealed
+      @digest = digest
     end
 
     def id
@@ -29,9 +30,15 @@ module MaquinaStream
 
     def open? = !sealed?
 
-    # Digest of the rendered HTML, not of the source. The manifest compares what
-    # the browser actually has, and two different sources that render to the same
-    # HTML need no repair between them.
+    # Digest of the block's rendered CONTENT, not of the source and not of the
+    # whole element.
+    #
+    # The manifest compares what the browser actually has, so two different
+    # sources that render alike need no repair between them. Element-level
+    # attributes are excluded on purpose: a block gains `data-ms-block-state`
+    # when it seals and loses `data-ms-caret` when the tail moves past it, and
+    # neither changes what the block says. Digesting them would make every block
+    # in every message fetch itself once, for nothing.
     def digest
       @digest ||= Digest::SHA256.hexdigest(html.to_s)[0, 16]
     end
@@ -39,7 +46,7 @@ module MaquinaStream
     def seal
       self.class.new(
         index: index, markdown: markdown, html: html,
-        line_range: line_range, sid: sid, sealed: true
+        line_range: line_range, sid: sid, sealed: true, digest: digest
       )
     end
 

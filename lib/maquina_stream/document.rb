@@ -74,13 +74,26 @@ module MaquinaStream
           source_index = node["data-ms-block-index"]&.to_i || position
           range = ranges[source_index]
 
+          # The digest covers the block's content, before the element-level
+          # attributes below are stamped on. Those change when a block seals or
+          # when the caret moves past it, and neither changes what it says.
+          digest = Digest::SHA256.hexdigest("#{source_index}:#{node.inner_html}")[0, 16]
+          sealed = position < sealed_count
+
+          # The DOM contract, from docs/api-surface.md. The id is index-derived
+          # so idiomorph pairs the node instead of recreating it.
+          node["id"] = sid ? "ms-#{sid}-b#{source_index}" : "ms-b#{source_index}"
+          node["data-ms-block-digest"] = digest
+          node["data-ms-block-state"] = sealed ? "sealed" : "open"
+
           Block.new(
             index: source_index,
             markdown: slice(range),
             html: node.to_html,
             line_range: range,
             sid: sid,
-            sealed: false
+            sealed: false,
+            digest: digest
           )
         end.then { |built| apply_seal(built, sealed_count) }
       end
