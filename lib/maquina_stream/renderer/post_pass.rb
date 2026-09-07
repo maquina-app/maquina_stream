@@ -12,6 +12,11 @@ module MaquinaStream
       ELEMENT_HOOKS = %w[h1 h2 h3 h4 h5 h6 p ul ol li table blockquote pre hr img a].freeze
       ELEMENT_HOOK_SET = ELEMENT_HOOKS.to_set.freeze
 
+      # Elements that hold text of their own, and are therefore the unit the
+      # bidi algorithm should decide a direction for. Containers are left out:
+      # a <ul> takes its direction from each <li>, not the other way round.
+      DIRECTIONAL = %w[p h1 h2 h3 h4 h5 h6 li blockquote td th dt dd figcaption summary].to_set.freeze
+
       attr_reader :fragment, :markdown, :mode, :config
 
       def initialize(fragment, markdown:, mode:, config:)
@@ -64,6 +69,8 @@ module MaquinaStream
               @overrides << node if MaquinaStream.elements.key?(name.to_sym)
             end
 
+            annotate_direction(node) if DIRECTIONAL.include?(name)
+
             case name
             when "pre" then @code_blocks << node if node.at_css("> code")
             when "table" then @tables << node
@@ -95,8 +102,39 @@ module MaquinaStream
             )
 
             replacement = render_fence(fence)
-            pre.replace(replacement) if replacement
+            guard_bidi(replacement ? pre.replace(replacement) : pre, fence.source)
           end
+        end
+
+        # Right-to-left is marked; left-to-right is the default and is left
+        # unsaid, so a document in Spanish or English pays nothing for this.
+        #
+        # Nested blocks are handled by the walk itself: a <li> inside an RTL
+        # <blockquote> is visited too, and answers for its own text. That is the
+        # point of deciding per block — a quotation in Hebrew inside an English
+        # answer reads correctly without the host configuring anything.
+        def annotate_direction(node)
+          node["dir"] = "rtl" if TextDirection.of(node.text) == :rtl
+        end
+
+        # Code is the one place where the bidi algorithm is a hazard rather than
+        # a service. An override character inside a comment reorders how the
+        # code READS without changing what it MEANS, which is the whole of a
+        # Trojan Source attack — and every character here was written by a model
+        # repeating text from somewhere else.
+        #
+        # The characters are not removed: the copy button hands back what the
+        # model actually wrote, and silently altering it would be worse. The
+        # block is pinned to one direction instead, so an override cannot escape
+        # the element it sits in.
+        def guard_bidi(node, source)
+          return unless TextDirection.controls?(source)
+
+          # `replace` answers with a node set; a passthrough fence answers with
+          # the one node it left alone. Not `Array()`: Nokogiri nodes are
+          # enumerable over their ATTRIBUTES, so it silently yields nothing.
+          nodes = node.is_a?(Nokogiri::XML::NodeSet) ? node : [node]
+          nodes.each { |inserted| inserted["dir"] = "ltr" if inserted.element? }
         end
 
         def render_fence(fence)

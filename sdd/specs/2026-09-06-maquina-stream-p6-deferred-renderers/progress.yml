@@ -14,7 +14,7 @@ tasks:
   - { id: 5, title: graceful error state per renderer, status: done }
   - { id: 6, title: third renderer registered host-side in the dummy app, status: done }
   - { id: 7, title: export fallback decided and implemented once, status: done, note: "show the source the model wrote; ms-deferred#fail" }
-  - { id: 8, title: text direction per block, status: pending }
+  - { id: 8, title: text direction per block, status: done, note: "MaquinaStream::TextDirection; first strong character per block, dir=rtl emitted only when it changes something. Fences carrying bidi controls are pinned dir=ltr - Trojan Source - without rewriting the source the copy button hands back." }
   - { id: 9, title: CJK through preprocessor and parser, status: done, note: "covered by the remend real corpus and the Phase 2 golden cjk_and_emoji" }
 
 dod:
@@ -48,5 +48,4 @@ dod:
     verification: "ms-deferred#fail shows the source the model wrote; every subclass inherits it."
 
 open:
-  - "Text direction per block (task 8) is not implemented."
   - "The lazy-load claim needs one run with mermaid and katex actually pinned, watching the network panel."
