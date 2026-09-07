@@ -4,14 +4,14 @@ title: Prove the reveal survives repair
 spec: spec.md
 repo: ms-spike (throwaway)
 blocks: [3, 4, 6]
-status: gate_closed_implementation_in_flight
+status: complete_except_backgrounded_tab
 opened: 2026-09-06
 gate_closed: 2026-09-07
 note: >-
   The gate is the human judgement, and it is made. What it chose is not one of
-  the three prototypes, so the engine's reveal is being built to the decision
-  rather than ported from the spike; this phase is not "complete" until that
-  ships and is verified in a browser.
+  the three prototypes, so the engine's reveal was built to the decision rather
+  than ported from the spike. It ships as of 2026-09-07 and is verified in a
+  browser; see shipped below. Only task 12 is left, and it needs a person.
 
 tasks:
   - id: 1
@@ -197,3 +197,28 @@ rejected_strategies:
       always zero. The pixel evidence did see it - 25-58px per frame after the
       snapshot - and it was recorded as "the mask's gradient edge", an artifact,
       rather than as the bug it is. A counter that cannot fail is not evidence.
+
+shipped:
+  what: app/javascript/maquina_stream/controllers/ms_reveal_controller.js + app/assets/stylesheets/maquina_stream/reveal.css
+  gap_it_closed: >-
+    docs/api-surface.md listed an ms-reveal controller and the engine shipped
+    none. The Phase 7 chrome removal left a documented CSS hook with nothing
+    behind it, so every message rendered with no reveal at all.
+  verification: >-
+    Chromium against test/dummy/app/views/harness/reveal.html.erb, on a block
+    wrapping over TEN visual lines - the shape that breaks the mask. Twelve
+    consecutive deltas produced twelve animationstart events, every one on a
+    span[data-ms-revealing] holding EXACTLY the text just appended, and the
+    client rects of all nine preceding lines were byte-identical before and
+    after every frame. Block node count 7 -> 7, spans left behind 0. A sealed
+    message fired 0 animations across 5 appends; ms:suppress left 0 spans and 0
+    running animations with the text intact, and ms:resume revealed only the new
+    tail rather than the text suppressed during the morph; under emulated
+    prefers-reduced-motion, 0 animations, 0 spans, opacity 1, all six deltas
+    present.
+  instrumentation_note: >-
+    The harness records WHICH element animated, its text and its box, per
+    animation. The Phase 0 counter recorded only that an element already marked
+    revealed had not animated, which is why it was blind to C's defect. The
+    measurement that matters is "did any text already on screen move or fade",
+    and it is now asserted directly.
