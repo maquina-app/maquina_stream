@@ -50,7 +50,7 @@ end
 
 ```ruby
 MaquinaStream.configure do |c|
-  c.frame_budget_ms      = 250        # restated in Phase 3; see below
+  c.frame_budget_ms      = 100        # restated in Phase 3, moved again in Phase 7
   c.keyframe_interval_ms = 4_000
   c.seal_lag             = 2          # never seal block N until N+seal_lag opens
   c.locale               = :es
@@ -78,10 +78,25 @@ MaquinaStream.configure do |c|
 end
 ```
 
-`frame_budget_ms` was 60. Measured on a 20KB message at a realistic token
-cadence, 60ms costs 3.37x the rendered document in bandwidth and 250ms costs
-1.20x — a factor of three traded for 190ms of coalescing, which the word-level
-reveal covers. The budget stays host-configurable; the default moved.
+`frame_budget_ms` was 60, then 250, and is 100. Coalescing only saves bytes
+when frames arrive faster than the budget, so what it costs depends entirely on
+how the text arrives — measured on a 20KB message, against the rendered
+document:
+
+| arrival | 60ms | 100ms | 150ms | 250ms |
+|---|---|---|---|---|
+| token, 4 chars / 25ms | 3.03x | 2.34x | 1.65x | 1.08x |
+| batch, 40 chars / 200ms | 1.07x | 1.07x | 1.07x | 0.89x |
+| step, 2000 chars / 1s | 1.17x | 1.17x | 1.17x | 1.17x |
+
+250ms was chosen against token arrival, where it is the only column inside the
+1.5x budget. Under the batched arrival this engine is built for it buys nothing
+— and it silently merges two steps into one frame, which costs the per-step
+feedback that is the point of streaming a step at all. The default is 100ms.
+
+A host whose model emits token by token pays 2.34x at that default and should
+raise its own `frame_budget_ms`; `broadcaster_test.rb` pins all three rows, so
+the trade-off fails loudly rather than drifting.
 
 Theme names are Rouge's own. **Corrected in Phase 2:** the default read
 `"github_dark"`, which Rouge does not define — the registry has `github.dark`

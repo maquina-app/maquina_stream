@@ -37,15 +37,27 @@ class BroadcasterTest < ActiveSupport::TestCase
   # number actually measured — not a claim that the plan's DoD line is met. It
   # is not: see sdd/specs/.../p3.../progress.yml.
   # docs/plan.md now budgets 1.5x the RENDERED document, restated from "2.5x
-  # message size" which sat below the 5.51x floor. At the 250ms default the
-  # broadcaster measures 1.20x.
+  # message size" which sat below the 5.51x floor.
   OVERHEAD_BUDGET = 1.5
 
-  test "bandwidth stays under 1.5x the rendered document" do
+  # The default moved to 100ms on 2026-09-07, for per-step feedback under the
+  # batched arrival this is built for. The budget is not free at every arrival
+  # shape, and the three tests below pin the whole trade-off rather than the one
+  # number that flatters it:
+  #
+  #   arrival            60ms   100ms   150ms   250ms
+  #   token 4ch/25ms     3.03x   2.34x   1.65x   1.08x
+  #   batch 40ch/200ms   1.07x   1.07x   1.07x   0.89x
+  #   step 2000ch/1s     1.17x   1.17x   1.17x   1.17x
+  #
+  # Coalescing only saves bytes when frames arrive faster than the budget. Under
+  # batched arrival they do not, so the budget buys nothing there and costs
+  # nothing — and 250ms was silently merging two steps into one frame.
+  test "bandwidth stays under 1.5x the rendered document at batched arrival" do
     markdown = large_message
     floor = MaquinaStream::Renderer.call(markdown, mode: :static).to_s.bytesize
 
-    stream_at_token_cadence(markdown)
+    stream_at_batch_cadence(markdown)
 
     overhead = @recorder.total_bytes.to_f / floor
 
@@ -54,6 +66,28 @@ class BroadcasterTest < ActiveSupport::TestCase
       Rendered HTML floor: #{floor} bytes. Overhead: #{overhead.round(2)}x.
       Against the raw markdown that is #{@recorder.ratio_against(markdown).round(2)}x.
     MESSAGE
+  end
+
+  # Pinned, not hidden. A host whose model emits token by token pays 2.34x at
+  # the default, and the fix is its own frame_budget_ms, not a code change here.
+  test "token-by-token arrival costs more than the budget at the default" do
+    markdown = large_message
+    floor = MaquinaStream::Renderer.call(markdown, mode: :static).to_s.bytesize
+
+    stream_at_token_cadence(markdown)
+
+    assert_operator @recorder.total_bytes.to_f / floor, :>, OVERHEAD_BUDGET,
+      "if this passes, the trade-off documented above no longer exists and the default should be revisited"
+  end
+
+  test "raising the budget brings token arrival back inside it" do
+    MaquinaStream.configure { |c| c.frame_budget_ms = 250 }
+    markdown = large_message
+    floor = MaquinaStream::Renderer.call(markdown, mode: :static).to_s.bytesize
+
+    stream_at_token_cadence(markdown)
+
+    assert_operator @recorder.total_bytes.to_f / floor, :<, OVERHEAD_BUDGET
   end
 
   test "the sequence is monotonic across every frame" do
@@ -144,8 +178,17 @@ class BroadcasterTest < ActiveSupport::TestCase
       @broadcaster.seal!
     end
 
-    # Four characters per token, one token every 25ms - roughly what a model
-    # emits, and the cadence the frame budget has to cope with.
+    # What a batched provider and a Nexo step look like: text arrives in useful
+    # pieces, slower than the frame budget, so every piece is its own frame.
+    def stream_at_batch_cadence(markdown)
+      markdown.chars.each_slice(40).with_index do |slice, index|
+        @broadcaster.append(slice.join, now: index * 200)
+      end
+      @broadcaster.seal!
+    end
+
+    # Four characters per token, one token every 25ms - roughly what an
+    # unbatched model emits, and the cadence the frame budget has to cope with.
     def stream_at_token_cadence(markdown)
       markdown.chars.each_slice(4).with_index do |slice, index|
         @broadcaster.append(slice.join, now: index * 25)

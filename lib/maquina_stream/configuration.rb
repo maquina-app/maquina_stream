@@ -56,7 +56,7 @@ module MaquinaStream
       :find_stream, :authorize, :transport
 
     def initialize
-      @frame_budget_ms = 250
+      @frame_budget_ms = 100
       @keyframe_interval_ms = 4_000
       # How many recent sealed blocks a manifest carries in full. Everything
       # older is covered by one rollup digest, which is what keeps the payload

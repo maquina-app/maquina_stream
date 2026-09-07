@@ -24,6 +24,15 @@ group :development, :test do
   gem "puma"
 end
 
+# The dummy app streams from a real model client, because a fixture string
+# proves the engine works against a fixture string. `ruby_llm-test` supplies a
+# provider that returns stubbed chunks, so the same path is deterministic under
+# test; ollama drives it for real. See test/dummy/app/models/message.rb.
+group :development, :test do
+  gem "ruby_llm"
+  gem "ruby_llm-test", require: false
+end
+
 group :development, :test do
   gem "standard", "~> 1.0"
   gem "herb", require: false
