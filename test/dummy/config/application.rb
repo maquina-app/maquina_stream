@@ -33,5 +33,10 @@ module Dummy
     # Phase 5 Stimulus controllers; nothing in the engine depends on it.
     config.paths.add "app/controllers", eager_load: true
     config.paths.add "app/views"
+
+    # Spanish is this project's default locale (CLAUDE.md); the dummy host says
+    # so the way any host would, rather than the engine imposing it.
+    config.i18n.default_locale = :es
+    config.i18n.available_locales = %i[es en]
   end
 end

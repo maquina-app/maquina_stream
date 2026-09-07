@@ -185,13 +185,54 @@ module MaquinaStream
         end
 
         def wrap_tables
+          controls = config.controls[:table] || {}
+          interactive = controls.values.any?
+
           tables.each do |table|
             wrapper = Nokogiri::XML::Node.new("div", fragment.document)
             wrapper["data-ms-table"] = ""
-            wrapper["data-controller"] = "ms-table" if config.controls.dig(:table, :copy)
+            wrapper["data-controller"] = "ms-table" if interactive
             table.replace(wrapper)
+            wrapper.add_child(table_controls(controls)) if interactive
             wrapper.add_child(table)
+            table["data-ms-table-target"] = "table" if interactive
           end
+        end
+
+        # The ms-table controller documents the markup it expects and emits none
+        # of it itself. This is engine chrome rather than a component: there is
+        # no table entry in docs/component-scope.md, and inventing one to hold
+        # three buttons would be worse than drawing them here.
+        def table_controls(controls)
+          bar = Nokogiri::XML::Node.new("div", fragment.document)
+          bar["data-ms-table-part"] = "controls"
+
+          if controls[:copy]
+            table_button(bar, "copy", "markdown", :copy_markdown)
+            table_button(bar, "copy", "csv", :copy_csv)
+          end
+          table_button(bar, "download", "csv", :download_csv) if controls[:download]
+          table_button(bar, "toggleFullscreen", nil, :fullscreen) if controls[:fullscreen]
+
+          bar
+        end
+
+        def table_button(bar, action, format, key)
+          node = Nokogiri::XML::Node.new("button", fragment.document)
+          node["type"] = "button"
+          node["data-action"] = "ms-table##{action}"
+          node["data-ms-table-format-param"] = format if format
+          label = I18n.t("maquina_stream.table.#{key}", locale: locale, default: key.to_s.tr("_", " "))
+          node["aria-label"] = label
+          node.content = label
+          bar.add_child(node)
+        end
+
+        # The host owns the locale, as in any Rails app: labels follow
+        # I18n.locale. `config.locale` is the engine's own default, used when
+        # the host has expressed no preference — see docs/interaction.md.
+        def locale
+          I18n.locale || config.locale
         end
 
         # A registered tag is rendered through its partial with only the
