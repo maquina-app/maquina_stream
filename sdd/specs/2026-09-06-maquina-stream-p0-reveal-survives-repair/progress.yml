@@ -4,7 +4,7 @@ title: Prove the reveal survives repair
 spec: spec.md
 repo: ms-spike (throwaway)
 blocks: [3, 4, 6]
-status: complete_except_backgrounded_tab
+status: complete
 opened: 2026-09-06
 gate_closed: 2026-09-07
 note: >-
