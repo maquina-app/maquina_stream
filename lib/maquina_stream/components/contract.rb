@@ -84,10 +84,10 @@ module MaquinaStream
             source_attributes: {"data-ms-code-source" => ""},
             copy_attributes: {"data-ms-control" => "", "data-action" => "ms-code#copy"},
             download_attributes: {"data-ms-control" => "", "data-action" => "ms-code#download"},
-            copy_label: translate("code.copy", "Copiar"),
-            copy_aria_label: translate("code.copy_code", "Copiar el código"),
-            download_label: translate("code.download", "Descargar"),
-            download_aria_label: translate("code.download_code", "Descargar el código")
+            copy_label: translate("code.copy", "Copy"),
+            copy_aria_label: translate("code.copy_code", "Copy the code"),
+            download_label: translate("code.download", "Download"),
+            download_aria_label: translate("code.download_code", "Download the code")
           }
         end
 
@@ -96,29 +96,35 @@ module MaquinaStream
             data: {controller: "ms-code"},
             source_attributes: {"data-ms-code-source" => ""},
             copy_attributes: {"data-action" => "ms-code#copy"},
-            copy_label: translate("snippet.copy", "Copiar"),
-            copy_aria_label: translate("snippet.copy_command", "Copiar el comando")
+            copy_label: translate("snippet.copy", "Copy"),
+            copy_aria_label: translate("snippet.copy_command", "Copy the command")
           }
         end
+
+        # A `translate` default is only ever reached when a host has neither
+        # locale loaded, so it is the language of last resort and is English —
+        # es.yml and en.yml are where the real strings live, and Spanish being
+        # the engine's DEFAULT LOCALE is a matter of which file I18n reads, not
+        # of which language is compiled into the source.
 
         # The host renders attachments, so the engine's control switches are
         # read here rather than in the partial: a generic component does not
         # know what MaquinaStream.config is.
         def attachment(locals, config)
-          label = presence(locals[:filename].to_s) || translate("attachment.unnamed", "Archivo adjunto")
+          label = presence(locals[:filename].to_s) || translate("attachment.unnamed", "Attachment")
           thumbnail = locals[:content_type].to_s.start_with?("image/") && presence(locals[:preview_url])
 
           {
             controls: config.controls[:attachment],
-            unnamed_label: translate("attachment.unnamed", "Archivo adjunto"),
-            download_label: translate("attachment.download", "Descargar"),
-            download_aria_label: translate("attachment.download_file", "Descargar %{name}", name: label),
-            remove_label: translate("attachment.remove", "Eliminar"),
-            remove_aria_label: translate("attachment.remove_file", "Eliminar %{name}", name: label),
-            remove_confirm: translate("attachment.remove_confirm", "¿Eliminar este adjunto?"),
+            unnamed_label: translate("attachment.unnamed", "Attachment"),
+            download_label: translate("attachment.download", "Download"),
+            download_aria_label: translate("attachment.download_file", "Download %{name}", name: label),
+            remove_label: translate("attachment.remove", "Remove"),
+            remove_aria_label: translate("attachment.remove_file", "Remove %{name}", name: label),
+            remove_confirm: translate("attachment.remove_confirm", "Remove this attachment?"),
             size_units: size_units,
             size_format: translate("attachment.size", "%{value} %{unit}"),
-            decimal_separator: translate("number.decimal_separator", ","),
+            decimal_separator: translate("number.decimal_separator", "."),
             data: {
               controller: ("ms-attachment" if thumbnail),
               ms_attachment_content_type: presence(locals[:content_type])
@@ -138,7 +144,7 @@ module MaquinaStream
         def suggestion(config)
           {
             controls: config.controls[:suggestion],
-            label: translate("suggestion.list_label", "Sugerencias")
+            label: translate("suggestion.list_label", "Suggestions")
           }
         end
 

@@ -212,7 +212,12 @@ export default class extends ApplicationController {
     this.notify("render-failed", { controller: this.identifier, error: String(error) })
   }
 
+  // The server renders the label, translated, into the data attribute. This
+  // fallback is only reached when a host renders the block without one, so it
+  // is the language of last resort rather than the engine's default locale —
+  // JavaScript cannot read I18n, and hardcoding Spanish here would show Spanish
+  // to a host that never asked for it.
   get errorLabel() {
-    return this.element.dataset.msDeferredErrorLabel || "No se pudo representar este bloque."
+    return this.element.dataset.msDeferredErrorLabel || "This block could not be rendered."
   }
 }

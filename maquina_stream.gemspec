@@ -21,7 +21,12 @@ Gem::Specification.new do |spec|
 
   spec.required_ruby_version = ">= 3.3"
 
-  spec.files = Dir["{app,config,lib}/**/*", "docs/**/*", "CLAUDE.md"]
+  # docs/ is filtered rather than globbed: this repository also holds the plan,
+  # the design seed and the phase specs it was built from, and none of those
+  # document the gem to someone who installs it.
+  spec.files = Dir["{app,config,lib}/**/*"] + Dir["docs/*.md"].reject { |path|
+    %w[plan design remend-patterns spike-sourcepos].include?(File.basename(path, ".md"))
+  } + ["README.md", "CHANGELOG.md", "LICENSE.txt"].select { |file| File.exist?(file) }
   spec.require_paths = ["lib"]
 
   spec.add_dependency "rails", ">= 8.0"

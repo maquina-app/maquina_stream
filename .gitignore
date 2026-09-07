@@ -9,3 +9,13 @@
 /test/dummy/tmp/*
 /test/dummy/storage/*
 Gemfile.lock
+
+# Working record, not the gem's documentation. These stay on disk and out of
+# both the repository and the packaged gem: sdd/ is the phase-by-phase
+# verification log, and these four docs are the seeds this project was built
+# from rather than anything a user of the gem needs.
+/sdd/
+/docs/plan.md
+/docs/design.md
+/docs/remend-patterns.md
+/docs/spike-sourcepos.md
