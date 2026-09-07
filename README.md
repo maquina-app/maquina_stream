@@ -82,6 +82,23 @@ worth knowing about:
 | `seal_lag` | `2` | A block freezes only once two later blocks exist, because markdown reinterprets backwards. The pointer additionally stops at a block with an unresolved link reference. |
 | `keyframe_interval_ms` | `4000` | How often the client reconciles against the manifest, which is a few hundred bytes whatever the message weighs. |
 
+## History
+
+A sealed message is immutable, so render it through the cache:
+
+```erb
+<%= MaquinaStream.render(message) %>
+```
+
+Cached by buffer digest once sealed, rendered live while open, and a new key if
+a host edits it. A 20KB message costs 95ms to render and 0.05ms to serve from
+cache; a page of fifty goes from 4.7s to 2.4ms.
+
+Pagination is the host's — which messages, in what order — and the dummy app
+shows the pattern at `/history`: a lazy Turbo Frame at the top of each page
+loads the page above it on scroll, so history grows upward without a
+pagination bar.
+
 ## Documentation
 
 | Document | What it covers |
@@ -104,7 +121,7 @@ fence strategies, the tag registry, and a browser harness at `/harness`.
 | Render | 20.3ms per frame for a 20KB message |
 | Bandwidth | 1.25x the rendered document (budget 1.5x) |
 | Manifest | 1.5-1.8KB for messages from 2KB to 100KB |
-| History | 500 messages rendered in 387ms, 0.77ms each |
+| History | 500 messages rendered in 387ms, 0.77ms each; a sealed message serves from cache in 0.05ms |
 | Preprocessor | 0.32ms for an 8KB buffer |
 | Convergence | 30% of frames dropped, 8 seeds, every run converges |
 
