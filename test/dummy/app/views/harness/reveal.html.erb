@@ -16,11 +16,20 @@
 <div id="ms-msg-reveal" data-controller="ms-reveal" data-ms-streaming><%= @html %></div>
 
 <p id="reveal-controls">
+  <button type="button" id="reveal-stream">Empezar a transmitir</button>
   <button type="button" id="reveal-append">Append to block 0</button>
   <button type="button" id="reveal-suppress">ms:suppress</button>
   <button type="button" id="reveal-resume">ms:resume</button>
   <button type="button" id="reveal-seal">Seal it</button>
 </p>
+
+<!-- For the one Phase 0 check no agent can run: what a backgrounded tab does.
+     Playwright fires no visibilitychange, and neither the removed CDP override
+     nor Page.setWebLifecycleState produces one, so this needs a real tab.
+     Start the stream, switch away for a few seconds, switch back, and read the
+     counters: the question is whether the text that arrived while you were gone
+     appears already revealed, or animates itself in on your return. -->
+<p id="reveal-readout" aria-live="polite"></p>
 
 <script type="module">
   const message = document.getElementById("ms-msg-reveal")
@@ -101,6 +110,65 @@
     }
     return block.textContent.length
   }
+
+  // A stream, rather than one delta per click. The backgrounded-tab question
+  // cannot be asked without one: text has to keep arriving while nobody is
+  // looking at it.
+  const FRAGMENTS = [
+    " El informe continúa con una frase más.",
+    " Cada fragmento llega como llegaría una trama.",
+    " El texto se envuelve en varias líneas visuales.",
+    " Y así la cola crece mientras nadie mira."
+  ]
+
+  const readout = document.getElementById("reveal-readout")
+  const streamButton = document.getElementById("reveal-stream")
+  let timer = null
+  let delivered = 0
+  let deliveredHidden = 0
+  let animatedAfterReturn = 0
+  let returnedAt = 0
+
+  // An animation that starts within a second of the tab becoming visible again
+  // is the thing to look for: it means text that arrived while the tab was
+  // hidden is being revealed now, in front of the reader, rather than simply
+  // being there.
+  message.addEventListener("animationstart", () => {
+    if (returnedAt && performance.now() - returnedAt < 1000) animatedAfterReturn += 1
+  })
+
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) {
+      returnedAt = performance.now()
+      report()
+    }
+  })
+
+  function report() {
+    readout.textContent =
+      `fragmentos: ${delivered} · llegados con la pestaña oculta: ${deliveredHidden} · ` +
+      `animaciones al volver: ${animatedAfterReturn}`
+  }
+
+  function tick() {
+    window.appendDelta(FRAGMENTS[delivered % FRAGMENTS.length])
+    delivered += 1
+    if (document.hidden) deliveredHidden += 1
+    report()
+  }
+
+  streamButton.addEventListener("click", () => {
+    if (timer) {
+      clearInterval(timer)
+      timer = null
+      streamButton.textContent = "Empezar a transmitir"
+      return
+    }
+
+    timer = setInterval(tick, 450)
+    streamButton.textContent = "Detener"
+    report()
+  })
 
   document.getElementById("reveal-append").addEventListener("click", () => {
     window.appendDelta(" Y aquí llega el siguiente fragmento del texto.")

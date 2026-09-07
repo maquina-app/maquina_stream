@@ -29,7 +29,13 @@ tasks:
 
 dod:
   - line: Full keyboard and screen reader pass completed with findings fixed, not logged.
-    met: partial
+    met: true
+    screen_reader: >-
+      DONE 2026-09-07. The user ran the harness with a screen reader and reported
+      it works. That closes the half no agent can close: axe-core reports zero
+      WCAG 2.0/2.1 A and AA violations on /harness, on /harness with the link
+      dialog open, and on /history, but axe cannot hear whether what is announced
+      makes sense, and asserting that an aria-label exists is not hearing it.
     verification: >-
       Keyboard half DONE in Chromium against the harness: 17 controls, every one
       reachable, named and with a visible focus ring; copy returns raw source,
@@ -71,6 +77,16 @@ regression_found_and_fixed_2026-09-07:
     marker. Browser-verified: 6/6 controls disabled while streaming, 0/6 sealed,
     and sealing re-enables them live.
 
-remaining_for_a_human:
-  - "Screen reader pass at http://localhost:3001/harness."
-  - "Clipboard in Firefox and Safari. Chromium is covered INCLUDING the insecure-context fallback: with navigator.clipboard removed and isSecureContext false, copyText falls through to execCommand, copies the source exactly, and leaves no stray textarea."
+browser_coverage:
+  chromium: >-
+    Automated, including the insecure-context fallback: with navigator.clipboard
+    removed and isSecureContext false, copyText falls through to execCommand,
+    copies the source exactly, and leaves no stray textarea.
+  chrome: "Manual, by the user 2026-09-07. Works."
+  safari: "Manual, by the user 2026-09-07. Works."
+  firefox: >-
+    NOT TESTED, and not testable here - the user has no Firefox installed. The
+    risk is specific rather than general: Firefox gates navigator.clipboard.write
+    behind a user gesture more strictly than Chromium, and our fallback path is
+    only exercised when navigator.clipboard is absent, not when it rejects. If a
+    Firefox report ever comes back, that is the first thing to look at.
