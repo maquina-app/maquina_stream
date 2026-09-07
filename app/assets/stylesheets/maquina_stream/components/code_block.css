@@ -1,0 +1,30 @@
+/* Vendored fallback for the `code-block` component.
+ *
+ * Loaded ONLY while maquina_stream renders the vendored partial. The day
+ * maquina_components ships `code-block`, the resolver stops returning our
+ * partial, MaquinaStream::Components.stylesheets stops listing this file, and
+ * the same selectors are not defined twice. See docs/component-scope.md.
+ *
+ * Colour lives in the two Rouge theme stylesheets, never inline, so a dark
+ * mode switch is a stylesheet swap and not a re-render.
+ */
+[data-component="code-block"] {
+  --code-block-radius: var(--surface-radius, 0.5rem);
+
+  position: relative;
+  border-radius: var(--code-block-radius);
+}
+
+[data-component="code-block"] [data-code-block-part="pre"] {
+  margin: 0;
+  overflow-x: auto;
+}
+
+[data-component="code-block"] [data-code-block-part="code"] {
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  tab-size: 2;
+}
+
+[data-component="code-block"] script[data-ms-code-source] {
+  display: none;
+}

@@ -31,7 +31,10 @@ module MaquinaStream
             require_action_view!
 
             lookup = ActionView::LookupContext.new(view_paths)
-            ActionView::Base.with_empty_template_cache.new(lookup, {}, nil)
+            view = ActionView::Base.with_empty_template_cache.new(lookup, {}, nil)
+            # Components render through the seam, and the seam is a helper.
+            view.extend(MaquinaStream::ComponentsHelper)
+            view
           end
         end
 

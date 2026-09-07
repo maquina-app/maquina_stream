@@ -83,13 +83,19 @@ module MaquinaStream
         # skeleton is the shimmer component; there is no ad-hoc placeholder
         # markup anywhere in the engine.
         def render_client_fence(fence)
-          return view.render("maquina_stream/components/shimmer", label: fence.language) if fence.open?
+          return render_shimmer(fence) if fence.open?
 
           node = Nokogiri::XML::Node.new("div", fragment.document)
           node["data-controller"] = fence.controller if fence.controller
           node["data-#{fence.controller}-payload-value"] = JSON.generate(fence.payload) if fence.controller
-          node.inner_html = view.render("maquina_stream/components/shimmer", label: fence.language)
+          node.inner_html = render_shimmer(fence)
           node.to_html
+        end
+
+        # The one skeleton, resolved through the seam like every other
+        # component. Nothing here names a partial path.
+        def render_shimmer(fence)
+          view.render(Components.partial_for(:shimmer, config: config), label: fence.language)
         end
 
         def language_of(code)

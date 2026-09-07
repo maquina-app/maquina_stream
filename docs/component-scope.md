@@ -21,7 +21,40 @@ Every vendored partial carries a header comment:
 <%# EXTRACTION CANDIDATE → maquina_components. See docs/component-scope.md %>
 ```
 
-`lib/maquina_stream/vendored_components.rb` lists them. When the list empties, the seam's fallback branch is deleted.
+`MaquinaStream::VENDORED_COMPONENTS` (in `lib/maquina_stream.rb`) lists them. When the list empties, the seam's fallback branch is deleted.
+
+## What is built (Phase 2)
+
+The resolver lives in `lib/maquina_stream/components.rb`; the view side is `component(...)` in `app/helpers/maquina_stream/components_helper.rb`.
+
+```ruby
+MaquinaStream::Components.partial_for(:code_block, config: MaquinaStream.config)
+# => "maquina_components/code_block"        when the gem is present AND defines it
+# => "maquina_stream/components/code_block" otherwise
+
+MaquinaStream::Components.vendored?(:code_block)   # => true
+MaquinaStream::Components.engine_owned?(:shimmer)  # => true
+```
+
+Resolution falls back to the vendored partial when the gem is absent, when the gem is present but does not define that component, and when `config.components` is `:plain`. Engine-owned components never resolve to the gem at all. `MaquinaStream::Components.stylesheets` returns the fallback stylesheets that are actually active — a component the gem serves loads none of ours, so the selectors are never defined twice.
+
+| Partial | `data-component` | Status |
+|---|---|---|
+| `app/views/maquina_stream/components/_code_block.html.erb` | `code-block` | vendored, extract later |
+| `app/views/maquina_stream/components/_snippet.html.erb` | `snippet` | vendored, extract later |
+| `app/views/maquina_stream/components/_shimmer.html.erb` | `shimmer` | engine-owned, permanent |
+| `app/views/maquina_stream/components/_source_citation.html.erb` | `source-citation` | engine-owned, permanent |
+
+`attachment` and `suggestion` are still unbuilt; they are listed in `VENDORED_COMPONENTS` and have no partial or stylesheet yet.
+
+Stylesheets are one per component under `app/assets/stylesheets/maquina_stream/components/`, and the host loads what `component_stylesheets` reports.
+
+`test/maquina_stream/components_test.rb` holds the seam's guarantees, including the direct-render check: it greps `{app,lib}/**/*.{rb,erb}` for a component partial path named next to a `render`, allowing only the resolver, the helper and the test itself. A companion test plants a violating template in a temporary tree and asserts the same check reports it, so the guard cannot rot into a tautology.
+
+Two attribute shapes the vendored partials emit have to survive `MaquinaStream::Sanitizer` or the fallback CSS stops matching:
+
+- `<script type="text/plain" data-ms-code-source>` — the raw-source carrier from the DOM contract in `docs/api-surface.md`. A `<script>` element is a raw-text element, so the source is not HTML-escaped inside it (entities would not decode); the only sequence that can terminate it, `</script`, is escaped to `<\/script` and `ms-code` reverses that on read.
+- `data-<component>-part` — the `maquina_components` part convention (`data-code-block-part`, `data-shimmer-part`, …).
 
 ## The eight
 
@@ -38,8 +71,8 @@ Every vendored partial carries a header comment:
 
 | Component | Why |
 |---|---|
-| **Shimmer** | The skeleton for open blocks and unrendered deferred payloads. Pure CSS, zero JS, server-rendered. Closes the "skeleton" ambiguity in Phases 2 and 6. |
-| **Sources / Inline Citation** | The reference implementation of `register_tag :source`. Model emits `<source id="123">Title</source>`; the Nokogiri pass swaps it for a partial. Satisfies Phase 2's registry-example DoD with a real case. |
+| **Shimmer** | The skeleton for open blocks and unrendered deferred payloads. Pure CSS, zero JS, server-rendered. Closes the "skeleton" ambiguity in Phases 2 and 6. Built; a test asserts no other engine template carries placeholder markup. |
+| **Sources / Inline Citation** | The reference implementation of `register_tag :source`. Model emits `<source id="123">Title</source>`; the Nokogiri pass swaps it for a partial. Satisfies Phase 2's registry-example DoD with a real case. Built as `source_citation`: it renders a link when the host resolved one, plain text when it did not, and escapes a model-supplied title. |
 | **Conversation download** | Not a component — a utility, already Phase 7's export task. Read Vercel's `messagesToMarkdown` for the formatter-hook shape before writing ours. The scroll half is `ms-autoscroll` in Phase 5. |
 
 ### Conditional

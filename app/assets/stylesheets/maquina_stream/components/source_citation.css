@@ -1,0 +1,14 @@
+/* Engine-owned and permanent: the reference implementation of
+ * `register_tag :source`.
+ */
+[data-component="source-citation"] {
+  --source-citation-radius: var(--surface-radius, 0.25rem);
+
+  border-radius: var(--source-citation-radius);
+  line-height: 1.2;
+  vertical-align: baseline;
+}
+
+[data-component="source-citation"] [data-source-citation-part="index"] {
+  font-variant-numeric: tabular-nums;
+}

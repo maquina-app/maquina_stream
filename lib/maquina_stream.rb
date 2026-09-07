@@ -12,6 +12,7 @@ require "maquina_stream/broadcaster"
 require "maquina_stream/frame"
 require "maquina_stream/manifest"
 require "maquina_stream/sanitizer"
+require "maquina_stream/components"
 require "maquina_stream/engine" if defined?(Rails::Engine)
 
 module MaquinaStream

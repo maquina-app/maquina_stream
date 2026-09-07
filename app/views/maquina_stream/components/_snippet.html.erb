@@ -1,0 +1,43 @@
+<%# EXTRACTION CANDIDATE → maquina_components. See docs/component-scope.md %>
+<%# locals: (command: "", label: nil, prompt: "$", variant: :default, size: :md, css_classes: "", **html_options) %>
+<%#
+  A single command with a copy button. Shares the `ms-code` copy controller
+  with Code Block, and the same raw-source carrier, so copying is exact even
+  when the visible line is decorated with a prompt.
+%>
+<%
+  command = command.to_s
+  label   = local_assigns.fetch(:label, nil)
+  prompt  = local_assigns.fetch(:prompt, "$")
+  variant ||= :default
+  size    ||= :md
+
+  attributes = component_html_options(
+    html_options,
+    own_data: {
+      component: "snippet",
+      variant: variant,
+      size: size,
+      controller: "ms-code"
+    },
+    css_classes: css_classes,
+    base_classes: "ms-snippet my-3 flex items-center gap-2 rounded-md border border-gray-200 bg-gray-50 px-3 py-2 font-mono text-sm dark:border-gray-800 dark:bg-gray-900"
+  )
+%>
+<%= tag.div(**attributes) do %>
+  <% if label.present? %>
+    <span data-snippet-part="label" class="font-sans text-xs text-gray-500 dark:text-gray-400"><%= label %></span>
+  <% end %>
+
+  <span data-snippet-part="prompt" aria-hidden="true" class="select-none text-gray-400"><%= prompt %></span>
+  <code data-snippet-part="command" class="flex-1 overflow-x-auto whitespace-pre"><%= command %></code>
+
+  <button type="button"
+          data-snippet-part="copy"
+          data-action="ms-code#copy"
+          class="rounded px-2 py-1 text-xs text-gray-500 hover:bg-gray-200 dark:text-gray-400 dark:hover:bg-gray-800">
+    <%= t("maquina_stream.snippet.copy", default: "Copiar") %>
+  </button>
+
+  <script type="text/plain" data-ms-code-source><%= component_script_source(command) %></script>
+<% end %>

@@ -1,0 +1,42 @@
+<%# Engine-owned, permanent. NOT an extraction candidate — see docs/component-scope.md %>
+<%# locals: (id: nil, title: nil, href: nil, index: nil, variant: :default, size: :md, css_classes: "", **html_options) %>
+<%#
+  The reference implementation of `register_tag :source`. The model emits
+  <source id="123">Título</source>; the Nokogiri post-pass swaps that node for
+  this partial with the tag's attributes as locals.
+
+  `href` is whatever the host's finder resolved — the engine never dereferences
+  a model-supplied id itself, and an unresolved citation still renders, as
+  text, rather than vanishing.
+%>
+<%
+  id      = local_assigns.fetch(:id, nil).presence
+  title   = local_assigns.fetch(:title, nil).presence
+  href    = local_assigns.fetch(:href, nil).presence
+  index   = local_assigns.fetch(:index, nil)
+  variant ||= :default
+  size    ||= :md
+  label   = title || id || t("maquina_stream.source_citation.unknown", default: "Fuente")
+
+  attributes = component_html_options(
+    html_options,
+    own_data: {
+      component: "source-citation",
+      variant: variant,
+      size: size,
+      ms_source_id: id
+    },
+    css_classes: css_classes,
+    base_classes: "ms-source-citation inline-flex items-baseline gap-1 rounded border border-gray-200 px-1.5 text-xs text-gray-600 dark:border-gray-800 dark:text-gray-300"
+  )
+%>
+<%= tag.span(**attributes) do %>
+  <% if index.present? %>
+    <span data-source-citation-part="index" class="font-mono text-gray-400"><%= index %></span>
+  <% end %>
+  <% if href %>
+    <%= link_to label, href, data: { source_citation_part: "link" }, class: "underline underline-offset-2" %>
+  <% else %>
+    <span data-source-citation-part="label"><%= label %></span>
+  <% end %>
+<% end %>

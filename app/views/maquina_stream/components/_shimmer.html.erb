@@ -1,0 +1,36 @@
+<%# Engine-owned, permanent. NOT an extraction candidate — see docs/component-scope.md %>
+<%# locals: (lines: 3, variant: :default, size: :md, label: nil, css_classes: "", **html_options) %>
+<%#
+  The one skeleton in the engine: open blocks and deferred payloads that have
+  not rendered yet. No ad-hoc placeholder markup exists anywhere else; if a
+  new state needs a skeleton, it renders this.
+%>
+<%
+  lines   = Integer(local_assigns.fetch(:lines, 3))
+  variant ||= :default
+  size    ||= :md
+  label   = local_assigns.fetch(:label, nil).presence ||
+            t("maquina_stream.shimmer.label", default: "Cargando…")
+
+  attributes = component_html_options(
+    html_options,
+    own_data: {
+      component: "shimmer",
+      variant: variant,
+      size: size
+    },
+    css_classes: css_classes,
+    base_classes: "ms-shimmer my-3 flex w-full flex-col gap-2"
+  )
+  attributes[:role]  ||= "status"
+  attributes["aria-busy"] ||= "true"
+  attributes["aria-live"] ||= "polite"
+%>
+<%= tag.div(**attributes) do %>
+  <span class="sr-only"><%= label %></span>
+  <% lines.times do |line| %>
+    <span data-shimmer-part="line"
+          aria-hidden="true"
+          class="ms-shimmer-line block h-3 rounded bg-gray-200 dark:bg-gray-800 <%= line == lines - 1 ? "w-2/3" : "w-full" %>"></span>
+  <% end %>
+<% end %>
