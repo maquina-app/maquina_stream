@@ -114,16 +114,9 @@
   // A stream, rather than one delta per click. The backgrounded-tab question
   // cannot be asked without one: text has to keep arriving while nobody is
   // looking at it.
-  const FRAGMENTS = [
-    " El informe continúa con una frase más.",
-    " Cada fragmento llega como llegaría una trama.",
-    " El texto se envuelve en varias líneas visuales.",
-    " Y así la cola crece mientras nadie mira."
-  ]
-
   const readout = document.getElementById("reveal-readout")
   const streamButton = document.getElementById("reveal-stream")
-  let timer = null
+  let source = null
   let delivered = 0
   let deliveredHidden = 0
   let animatedAfterReturn = 0
@@ -162,10 +155,10 @@
       `animaciones al volver: ${animatedAfterReturn} · de ellas repetidas: ${replayedHidden} · ${verdict}`
   }
 
-  function tick() {
-    // Each fragment is numbered, so a span animating on return can be traced to
-    // the moment its text arrived rather than merely counted.
-    const text = `${FRAGMENTS[delivered % FRAGMENTS.length]} [${delivered}]`
+  function tick(fragment) {
+    // Each fragment is numbered by the server, so a span animating on return can
+    // be traced to the moment its text arrived rather than merely counted.
+    const text = ` ${fragment}`
     window.appendDelta(text)
     delivered += 1
 
@@ -177,15 +170,21 @@
     report()
   }
 
+  // Server-sent, not setInterval. A browser throttles timers in a hidden tab -
+  // Chrome to roughly once a minute - so a timer-driven harness simply STOPS
+  // when the reader looks away, and the question "what happens to text that
+  // arrives while nobody is watching" can never be asked. Real frames are
+  // pushed by the server, and a push reaches a hidden tab like any other.
   streamButton.addEventListener("click", () => {
-    if (timer) {
-      clearInterval(timer)
-      timer = null
+    if (source) {
+      source.close()
+      source = null
       streamButton.textContent = "Empezar a transmitir"
       return
     }
 
-    timer = setInterval(tick, 450)
+    source = new EventSource("<%= harness_reveal_stream_path %>")
+    source.addEventListener("message", (event) => tick(event.data))
     streamButton.textContent = "Detener"
     report()
   })

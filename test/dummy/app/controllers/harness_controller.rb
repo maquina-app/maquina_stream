@@ -5,6 +5,14 @@
 #
 #   bin/rails server   (from test/dummy)  →  http://localhost:3000/harness
 class HarnessController < ActionController::Base
+  # For the backgrounded-tab check only. A browser throttles setInterval in a
+  # hidden tab - Chrome to about once a minute - so a timer-driven harness stops
+  # delivering the moment the reader looks away, and cannot ask what happens to
+  # text that arrives while nobody is watching. Real frames do not arrive on a
+  # timer; they are pushed by the server, and a push is delivered to a hidden
+  # tab like any other. This streams them.
+  include ActionController::Live
+
   layout "application"
 
   MARKDOWN = <<~'MD'
@@ -79,6 +87,30 @@ class HarnessController < ActionController::Base
     @html = MaquinaStream::Document.new(
       REVEAL, config: MaquinaStream.config, sid: "reveal", mode: :streaming
     ).blocks.map(&:html).join("\n").html_safe
+  end
+
+  # Server-sent events rather than Action Cable: the question here is only
+  # whether the reveal replays text that arrived unseen, and SSE answers it with
+  # no cable, no subscription and no channel in the way.
+  def reveal_stream
+    response.headers["Content-Type"] = "text/event-stream"
+    response.headers["Cache-Control"] = "no-cache"
+
+    fragments = [
+      "El informe continúa con una frase más.",
+      "Cada fragmento llega como llegaría una trama.",
+      "El texto se envuelve en varias líneas visuales.",
+      "Y así la cola crece mientras nadie mira."
+    ]
+
+    40.times do |index|
+      response.stream.write("data: #{fragments[index % fragments.length]} [#{index}]\n\n")
+      sleep 0.45
+    end
+  rescue ActionController::Live::ClientDisconnected, IOError
+    # The reader closed the tab or navigated away. Nothing to do.
+  ensure
+    response.stream.close
   end
 
   def show

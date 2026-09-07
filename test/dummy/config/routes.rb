@@ -8,5 +8,6 @@ Rails.application.routes.draw do
   get "harness/repair" => "harness#repair", :as => :harness_repair
   get "harness/deferred" => "harness#deferred", :as => :harness_deferred
   get "harness/reveal" => "harness#reveal", :as => :harness_reveal
+  get "harness/reveal/stream" => "harness#reveal_stream", :as => :harness_reveal_stream
   get "history" => "history#index", :as => :history
 end

@@ -61,6 +61,18 @@ tasks:
       produced 0 animations; returning produced 0; the next genuinely new
       fragment animated alone, holding only its own text, and all three hidden
       fragments were present unrevealed. The user then ran it in a real tab.
+    harness_was_lying: >-
+      The user's second report - "it stops streaming when I switch tab, but
+      after I came back it does continue with animation" - was about the harness,
+      not the engine. It drove the stream with setInterval, and a browser
+      throttles timers in a hidden tab (Chrome to roughly once a minute), so the
+      stream STOPPED the moment the reader looked away. Nothing arrived unseen,
+      so nothing could be replayed, and what animated on return was simply the
+      timer resuming. The harness now streams over server-sent events, which is
+      what a real frame does: the server pushes, and a push reaches a hidden tab
+      like any other. Re-measured through SSE: 233 characters across 5 fragments
+      arrived while hidden, 3 animations fired after returning, and 0 of them
+      held text that arrived unseen.
     false_alarm: >-
       The user reported "append animates after switching back", and the
       instrumentation was to blame rather than the controller. It counted any
