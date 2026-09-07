@@ -64,10 +64,48 @@ Every frame carries a monotonic sequence. Frames coalesce on a configurable
 - Sequence monotonic under concurrent appends.
 - A stream cancelled mid-block still seals into valid HTML.
 
+## Bandwidth: the budget is below the floor
+
+Measured with the broadcast recorder, 20,224 bytes of markdown, four characters
+per token, one token every 25ms:
+
+| Frame budget | Frames | Bytes sent | vs markdown | vs rendered HTML |
+|---|---|---|---|---|
+| 60ms (documented default) | 1,499 | 375,502 | 18.57x | 3.37x |
+| 250ms | 474 | 133,837 | 6.62x | 1.20x |
+| 1000ms | 120 | 109,744 | 5.43x | 0.98x |
+
+**The rendered HTML of that message is 111,434 bytes — 5.51x the markdown.**
+Sending every block exactly once, with no re-send at all, therefore costs 5.5x
+the message size. `docs/plan.md` budgets "under ~2.5x message size", which is
+less than half the floor: no amount of coalescing or diffing can reach it while
+the thing being shipped is server-rendered HTML.
+
+Restated against what is actually sent, the numbers are good — at a 1s budget
+the broadcaster sends 0.98x the rendered document, meaning essentially nothing
+is re-sent. The overhead is entirely the open tail being re-sent as it grows,
+and it is the frame budget that decides how often that happens.
+
+Two things follow, and both are the user's call rather than this phase's:
+
+1. **The budget needs restating against rendered size** (e.g. "under 1.5x the
+   rendered document", which holds from ~250ms), or raising.
+2. **The default frame budget of 60ms costs 3.37x.** 250ms costs 1.20x. That is
+   a latency-for-bandwidth trade with a factor of three in it.
+
+A third measurement, unrelated to bandwidth but found alongside it: at a 60ms
+budget a single 20KB message costs **44 seconds of CPU**, because every frame
+re-renders the whole buffer. Coalescing to 250ms cuts it to roughly a third.
+Rendering incrementally would cut it properly, and the seal pointer now makes
+that sound — a sealed block cannot change, so its HTML can be cached. That is
+real work, not a tweak, and it is not in this phase's task list.
+
 ## Definition of done (from docs/plan.md)
 
 - [ ] No sealed block is ever re-broadcast during a normal stream.
 - [ ] Retroactive corpus passes in full and is in CI.
-- [ ] Bandwidth ratio measured, recorded in this spec, with a test that fails on
-      regression.
+- [x] Bandwidth ratio measured, recorded in this spec, with a test that fails on
+      regression. **The 2.5x target itself is NOT met and cannot be** - see
+      above. The regression guard asserts the measured overhead above the
+      rendered-HTML floor.
 - [ ] Frame budget host-configurable and documented.
