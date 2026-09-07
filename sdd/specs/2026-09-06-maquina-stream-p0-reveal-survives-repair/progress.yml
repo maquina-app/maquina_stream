@@ -10,40 +10,45 @@ opened: 2026-09-06
 tasks:
   - id: 1
     title: ms-spike skeleton, route, fixtures
-    status: pending
+    status: done
   - id: 2
     title: TokenEmitter, delta frames, monotonic seq
-    status: pending
+    status: done
   - id: 3
     title: forced mid-stream snapshot morph
-    status: pending
+    status: done
   - id: 4
     title: frame dropping
-    status: pending
+    status: done
   - id: 5
     title: instrumentation panel and animation event counter
-    status: pending
+    status: done
   - id: 6
     title: strategy A - id-keyed per-word spans
-    status: pending
+    status: done
   - id: 7
     title: strategy B - MutationObserver reveal
-    status: pending
+    status: done
   - id: 8
     title: strategy C - CSS-masked block reveal
-    status: pending
+    status: done
   - id: 9
     title: reveal suppression flag
-    status: pending
+    status: done
   - id: 10
     title: 20KB measurement run
-    status: pending
+    status: done
   - id: 11
     title: prefers-reduced-motion path
-    status: pending
+    status: done
   - id: 12
     title: backgrounded tab restore
-    status: pending
+    status: blocked
+    note: >-
+      Not verifiable headlessly. Playwright fires no visibilitychange, and
+      neither Emulation.setPageVisibilityOverride (removed from CDP) nor
+      Page.setWebLifecycleState frozen produces one. Counter is wired; needs a
+      human with a real tab.
   - id: 13
     title: human review and decision
     status: pending
@@ -60,14 +65,38 @@ dod:
     met: false
     verification: written into spec.md after the strategy is chosen.
   - line: Reduced-motion path confirmed.
-    met: false
-    verification: task 11.
+    met: true
+    verification: >-
+      prefers-reduced-motion emulated in Chromium: 0 animationstart events and
+      the complete message rendered, on all three strategies.
 
 measurements:
-  node_count_20kb: null       # budget ~8000
-  patch_median_ms: null       # budget < 8
-  patch_max_ms: null          # budget < 30
-  reanimations_after_snapshot: null   # budget 0
+  fixture: 20KB / 3368 words, 12 words per frame, 10ms interval, snapshots at frames 80 and 180
+  driver: Chromium via Playwright against the ms-spike dev server, 2026-09-06
+  budgets: { node_count: 8000, patch_median_ms: 8, patch_max_ms: 30, old_text_reanimated: 0 }
+  strategy_a:
+    node_count_20kb: 10103    # over budget
+    patch_median_ms: 0.4
+    patch_max_ms: 248         # over budget
+    old_text_reanimated: 0
+    survives_without_suppression: true
+    node_identity_across_morph: preserved
+  strategy_b:
+    node_count_20kb: 10101    # over budget
+    patch_median_ms: 42.7     # over budget
+    patch_max_ms: 147.8       # over budget
+    old_text_reanimated: 0    # with suppression; 374 with it off
+    survives_without_suppression: false
+    node_identity_across_morph: destroyed
+  strategy_c:
+    node_count_20kb: 1
+    patch_median_ms: 1.1
+    patch_max_ms: 2.0
+    old_text_reanimated: 0
+    survives_without_suppression: true
+    node_identity_across_morph: not applicable
+  convergence: 40% of delta frames dropped, 34 gaps detected, full message restored by the final seal
+  reduced_motion: 0 animations and complete text on all three strategies
 
 notes:
   - "The plan skill's prerequisites (docs/TECHNICAL_GUIDE.md, docs/UI_PATTERNS.md, docs/HOTWIRED_PATTERNS.md, /spec-driven-development) do not exist in this project; spec shaped in the HANDOFF.md folder shape instead."
