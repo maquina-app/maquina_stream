@@ -1,0 +1,62 @@
+phase: 4
+slug: repair
+title: "Repair: manifest, keyframes, convergence"
+spec: spec.md
+repo: maquina_stream
+depends_on: [0, 3]
+blocks: [7]
+status: complete_except_phase_0_gate
+opened: 2026-09-06
+
+tasks:
+  - { id: 1, title: manifest endpoint, status: done }
+  - { id: 2, title: partial block fetch endpoint, status: done }
+  - { id: 3, title: repair controller - sequence, gaps, manifest diff, silent morph, status: done }
+  - { id: 4, title: "trigger: final seal", status: done }
+  - { id: 5, title: "trigger: sequence gap", status: done }
+  - { id: 6, title: "trigger: reconnect and tab visible", status: done }
+  - { id: 7, title: "trigger: periodic keyframe", status: done }
+  - { id: 8, title: suppression seam wired for the Phase 0 strategy, status: done, note: "dispatched as ms:suppress / ms:resume events so any of the three strategies works" }
+  - { id: 9, title: split ownership for client-deferred blocks, status: done, note: "payload attribute to morph, output element data-turbo-permanent - Phase 2" }
+  - { id: 10, title: block ids and digests stamped per the DOM contract, status: done }
+  - { id: 11, title: chaos harness (frame dropper), status: done, file: test/support/frame_dropper.rb }
+
+dod:
+  - line: Every chaos-test run converges.
+    met: true
+    verification: >-
+      repair_test.rb drops 30% of frames across 8 seeds and asserts the repaired
+      client DOM equals the statically rendered document, block for block. Each
+      seed asserts it actually dropped something, so a run that proves nothing
+      fails rather than passes.
+  - line: Manifest payload size independent of message length, with a test asserting it.
+    met: true
+    verification: >-
+      1521B / 1711B / 1762B for 2KB / 20KB / 100KB messages - a 1.16x growth
+      against a 50x message. Listing every sealed block first measured
+      1850B / 17540B / 88538B, which tracked length almost exactly; the manifest
+      is now windowed (last 50 sealed blocks) plus one rollup digest.
+  - line: No strobing on repair, verified by recording as in Phase 0.
+    met: false
+    verification: >-
+      BLOCKED on the Phase 0 human review. The mechanism is built and silent by
+      construction - suppress before the morph, resume after - and the Phase 0
+      animation counter asserts 0 for every strategy. The recording itself needs
+      a person.
+  - line: Keyframe interval configurable, with a documented default and rationale.
+    met: true
+    verification: "config.keyframe_interval_ms, default 4000; ms-repair reads it as data-ms-repair-interval-value."
+
+design_changes:
+  - "The manifest is windowed. design.md claimed 'a few hundred bytes regardless of message size'; measured, listing every sealed block gave 88KB for a 100KB message, sent every keyframe - the bandwidth problem the manifest exists to prevent."
+  - "Block digests cover the block's CONTENT, not the whole element. data-ms-block-state changes when a block seals and data-ms-caret moves as the tail advances; digesting them would make every block in every message fetch itself once, for nothing."
+  - "An open block renders no controls. They are inert while streaming by design, and the open block is re-sent every frame - shipping its chrome repeatedly took bandwidth from 1.20x to 1.50x of the rendered document. Now 1.248x."
+
+phase_0_assumption:
+  strategy: C
+  rationale: >-
+    A and B each blow budgets docs/plan.md sets (node count, patch time); C is
+    the only strategy inside all of them, and the plan's own kill criterion says
+    ship C if nothing survives cleanly. THIS DOES NOT CLOSE THE GATE. The
+    suppression seam is event-based so a different human decision is a
+    configuration change, not a rewrite.
