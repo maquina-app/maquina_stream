@@ -5,9 +5,22 @@
   this page is the real one; nothing here is stubbed.
 </p>
 
-<section id="static" data-controller="ms-link-safety">
+<section id="static"
+         data-controller="ms-link-safety"
+         data-action="click->ms-link-safety#intercept">
   <h2>Sealed message</h2>
   <div id="ms-msg-harness"><%= @html %></div>
+
+  <dialog data-ms-link-safety-target="dialog" aria-labelledby="link-safety-title">
+    <h3 id="link-safety-title"><%= t("maquina_stream.link_safety.title", default: "¿Salir del sitio?") %></h3>
+    <p data-ms-link-safety-target="url"></p>
+    <label>
+      <input type="checkbox" data-ms-link-safety-target="remember">
+      <%= t("maquina_stream.link_safety.remember", default: "Confiar en este sitio") %>
+    </label>
+    <button type="button" data-action="ms-link-safety#confirm"><%= t("maquina_stream.link_safety.confirm", default: "Continuar") %></button>
+    <button type="button" data-action="ms-link-safety#cancel"><%= t("maquina_stream.link_safety.cancel", default: "Cancelar") %></button>
+  </dialog>
 </section>
 
 <section id="streaming">
@@ -17,7 +30,9 @@
 
 <section id="autoscroll">
   <h2>Autoscroll</h2>
-  <div id="scroller" data-controller="ms-autoscroll" data-ms-autoscroll-target="viewport">
+  <div id="scroller"
+       data-controller="ms-autoscroll"
+       data-action="scroll->ms-autoscroll#track wheel->ms-autoscroll#release touchmove->ms-autoscroll#release">
     <div id="scroller-content"><p>Contenido inicial.</p></div>
   </div>
   <button type="button" id="append-line">Append a line</button>
