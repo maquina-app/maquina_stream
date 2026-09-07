@@ -1,4 +1,4 @@
-import ApplicationController from "./application_controller"
+import ApplicationController from "maquina_stream/controllers/application_controller"
 
 // The host seam for the allowlist. It is a function, so it cannot live in a
 // data attribute — and it must not: an allowlist an injected fragment can

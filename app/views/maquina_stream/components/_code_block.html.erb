@@ -17,6 +17,7 @@
   lang        ||= nil
   source      = source.to_s
   highlighted = local_assigns.fetch(:highlighted, nil)
+  controls    = local_assigns.fetch(:controls, nil) || {}
   variant     ||= :default
   size        ||= :md
 
@@ -26,16 +27,40 @@
       component: "code-block",
       variant: variant,
       size: size,
-      ms_code_lang: lang.presence
+      ms_code_lang: lang.presence,
+      controller: ("ms-code" if controls.present?)
     },
     css_classes: css_classes,
     base_classes: "ms-code-block relative my-4 overflow-hidden rounded-lg border border-gray-200 bg-gray-50 text-sm dark:border-gray-800 dark:bg-gray-900"
   )
 %>
 <div data-ms-code <%= tag.attributes(attributes) %>>
-  <% if lang.present? %>
+  <% if lang.present? || controls.present? %>
     <div data-code-block-part="header" class="flex items-center justify-between border-b border-gray-200 px-3 py-1.5 text-xs text-gray-500 dark:border-gray-800 dark:text-gray-400">
       <span data-code-block-part="lang"><%= lang %></span>
+
+      <% if controls.present? %>
+        <span data-code-block-part="controls" class="flex gap-1">
+          <% if controls[:copy] %>
+            <button type="button"
+                    data-code-block-part="copy"
+                    data-action="ms-code#copy"
+                    aria-label="<%= t("maquina_stream.code.copy_code") %>"
+                    class="rounded px-2 py-0.5 hover:bg-gray-200 dark:hover:bg-gray-800">
+              <%= t("maquina_stream.code.copy") %>
+            </button>
+          <% end %>
+          <% if controls[:download] %>
+            <button type="button"
+                    data-code-block-part="download"
+                    data-action="ms-code#download"
+                    aria-label="<%= t("maquina_stream.code.download_code") %>"
+                    class="rounded px-2 py-0.5 hover:bg-gray-200 dark:hover:bg-gray-800">
+              <%= t("maquina_stream.code.download") %>
+            </button>
+          <% end %>
+        </span>
+      <% end %>
     </div>
   <% end %>
 

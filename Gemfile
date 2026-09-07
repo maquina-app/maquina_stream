@@ -19,6 +19,7 @@ group :development, :test do
   # `app/javascript` to a browser so the Stimulus controllers can be driven.
   # See test/dummy/app/views/harness and docs/interaction.md.
   gem "importmap-rails"
+  gem "stimulus-rails"
   gem "propshaft"
   gem "puma"
 end

@@ -26,7 +26,7 @@ module MaquinaStream
       table thead tbody tfoot tr td th caption colgroup col
       pre code kbd samp var
       blockquote figure figcaption details summary section article aside
-      a img
+      a img button
       em strong b i u s del ins mark small sub sup q abbr dfn cite time wbr
       input
     ].to_set.freeze
@@ -36,7 +36,7 @@ module MaquinaStream
     # (SVG/MathML) subtree whose parsing rules are not HTML's.
     DROP_WITH_CONTENT = %w[
       script style svg math template noscript iframe frame frameset object
-      embed applet param form button select option optgroup textarea label
+      embed applet param form select option optgroup textarea label
       fieldset legend base link meta head title html body audio video source
       track canvas map area portal dialog marquee plaintext xmp listing
     ].to_set.freeze
@@ -47,6 +47,14 @@ module MaquinaStream
 
     ELEMENT_ATTRIBUTES = {
       "a" => %w[href target rel hreflang type],
+      # The component controls are buttons, so button cannot be dropped
+      # wholesale. It is allowed with a deliberately short attribute list: no
+      # `name`, `value`, `form`, `formaction` or `formmethod`, so an injected
+      # button cannot submit anything, and `type` is forced to "button" below.
+      # Behaviour still comes only from `data-action`, which is already
+      # restricted to the ms- namespace, and every ms- controller treats its own
+      # values as untrusted.
+      "button" => %w[type disabled aria-pressed aria-expanded aria-controls],
       "img" => %w[src alt width height loading decoding],
       "ol" => %w[start reversed type],
       "li" => %w[value],
@@ -192,6 +200,11 @@ module MaquinaStream
       end
 
       def scrub_attributes(node, name)
+        # A button never submits. Even allowing `type` through, the only value
+        # it may hold is "button": an injected `type="submit"` inside a host
+        # form would otherwise submit it.
+        node["type"] = "button" if name == "button"
+
         node.attribute_nodes.each do |attr|
           attr_name = attr.name.downcase
           qualified = attr.namespace ? "#{attr.namespace.prefix}:#{attr_name}" : attr_name

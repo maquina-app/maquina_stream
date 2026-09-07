@@ -14,6 +14,7 @@ require "action_view/railtie"
 begin
   require "propshaft"
   require "importmap-rails"
+  require "stimulus-rails"
 rescue LoadError
   # Running without the harness gems. The suite still passes.
 end

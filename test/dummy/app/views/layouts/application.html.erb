@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <title>maquina_stream harness</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <%= javascript_importmap_tags %>
+    <style>
+      body { font-family: system-ui, sans-serif; margin: 0; padding: 2rem; line-height: 1.6; }
+      [data-ms-code] { border: 1px solid #ddd; border-radius: 6px; margin: 1rem 0; }
+      [data-ms-code] pre { padding: 0.75rem; overflow-x: auto; }
+      [data-ms-table] { overflow-x: auto; }
+      table { border-collapse: collapse; }
+      td, th { border: 1px solid #ddd; padding: 0.25rem 0.5rem; }
+      button:focus-visible, a:focus-visible { outline: 3px solid #0b5fff; outline-offset: 2px; }
+      #scroller { height: 12rem; overflow-y: auto; border: 1px solid #ddd; padding: 0.5rem; }
+    </style>
+  </head>
+  <body><%= yield %></body>
+</html>

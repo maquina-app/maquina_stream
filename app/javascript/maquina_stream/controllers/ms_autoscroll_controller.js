@@ -1,4 +1,4 @@
-import ApplicationController from "./application_controller"
+import ApplicationController from "maquina_stream/controllers/application_controller"
 
 // `ms-autoscroll` — keep the bottom of a growing message in view while it
 // streams, and get out of the way the instant the user scrolls up.

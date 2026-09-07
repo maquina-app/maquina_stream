@@ -1,0 +1,34 @@
+<h1>maquina_stream — harness</h1>
+
+<p>
+  Fixture for the keyboard, screen reader and clipboard passes. Every control on
+  this page is the real one; nothing here is stubbed.
+</p>
+
+<section id="static" data-controller="ms-link-safety">
+  <h2>Sealed message</h2>
+  <div id="ms-msg-harness"><%= @html %></div>
+</section>
+
+<section id="streaming">
+  <h2>Streaming message (controls must be inert)</h2>
+  <div id="ms-msg-streaming"><%= @streaming_html %></div>
+</section>
+
+<section id="autoscroll">
+  <h2>Autoscroll</h2>
+  <div id="scroller" data-controller="ms-autoscroll" data-ms-autoscroll-target="viewport">
+    <div id="scroller-content"><p>Contenido inicial.</p></div>
+  </div>
+  <button type="button" id="append-line">Append a line</button>
+</section>
+
+<script type="module">
+  // Drives the autoscroll pane the way a stream would, so a person can scroll
+  // up mid-stream and watch whether it fights them.
+  document.getElementById("append-line").addEventListener("click", () => {
+    const p = document.createElement("p")
+    p.textContent = `Línea ${document.querySelectorAll("#scroller-content p").length}`
+    document.getElementById("scroller-content").append(p)
+  })
+</script>

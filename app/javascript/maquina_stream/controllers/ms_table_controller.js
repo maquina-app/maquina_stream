@@ -1,4 +1,4 @@
-import ApplicationController from "./application_controller"
+import ApplicationController from "maquina_stream/controllers/application_controller"
 
 // `ms-table` — copy and download a rendered table as markdown, CSV or TSV, and
 // toggle fullscreen.
