@@ -1,0 +1,74 @@
+phase: 0
+slug: reveal-survives-repair
+title: Prove the reveal survives repair
+spec: spec.md
+repo: ms-spike (throwaway)
+blocks: [3, 4, 6]
+status: in_progress
+opened: 2026-09-06
+
+tasks:
+  - id: 1
+    title: ms-spike skeleton, route, fixtures
+    status: pending
+  - id: 2
+    title: TokenEmitter, delta frames, monotonic seq
+    status: pending
+  - id: 3
+    title: forced mid-stream snapshot morph
+    status: pending
+  - id: 4
+    title: frame dropping
+    status: pending
+  - id: 5
+    title: instrumentation panel and animation event counter
+    status: pending
+  - id: 6
+    title: strategy A - id-keyed per-word spans
+    status: pending
+  - id: 7
+    title: strategy B - MutationObserver reveal
+    status: pending
+  - id: 8
+    title: strategy C - CSS-masked block reveal
+    status: pending
+  - id: 9
+    title: reveal suppression flag
+    status: pending
+  - id: 10
+    title: 20KB measurement run
+    status: pending
+  - id: 11
+    title: prefers-reduced-motion path
+    status: pending
+  - id: 12
+    title: backgrounded tab restore
+    status: pending
+  - id: 13
+    title: human review and decision
+    status: pending
+    agent_may_close: false
+
+dod:
+  - line: One strategy chosen, reason written in the spec.
+    met: false
+    verification: human review of the recordings; agent may not close this.
+  - line: Specific failing behaviour of each rejected strategy documented, not just "worse".
+    met: false
+    verification: written into spec.md Decision section after review.
+  - line: Suppression mechanism described concretely enough for Phase 4 to implement against.
+    met: false
+    verification: written into spec.md after the strategy is chosen.
+  - line: Reduced-motion path confirmed.
+    met: false
+    verification: task 11.
+
+measurements:
+  node_count_20kb: null       # budget ~8000
+  patch_median_ms: null       # budget < 8
+  patch_max_ms: null          # budget < 30
+  reanimations_after_snapshot: null   # budget 0
+
+notes:
+  - "The plan skill's prerequisites (docs/TECHNICAL_GUIDE.md, docs/UI_PATTERNS.md, docs/HOTWIRED_PATTERNS.md, /spec-driven-development) do not exist in this project; spec shaped in the HANDOFF.md folder shape instead."
+  - "No Fizzy card created - board id not supplied."
