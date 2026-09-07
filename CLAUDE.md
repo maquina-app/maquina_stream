@@ -1,28 +1,31 @@
 # maquina_stream — working conventions
 
-A Rails engine. It renders streaming markdown server-side and broadcasts it over Turbo.
-Tail repair comes from the `maquina_remend` gem, consumed as a published dependency.
+A Rails engine: renders streaming markdown server-side, broadcasts it over Turbo.
+Tail repair comes from `maquina_remend`, consumed as a published gem — never vendored,
+never a path: dependency.
 
-Read `docs/` before writing any code — `streaming.md` for the Streamable contract and the
-broadcaster, `configuration.md` for every option, `javascript.md` for the DOM contract and
-the Stimulus identifiers, `repair.md` for the routes and seams. The names in those
-documents are fixed; do not invent alternatives.
+Read the doc before writing code in its area. The names in these documents are fixed;
+do not invent alternatives.
 
-## Stack
-
-Rails 8 · Ruby 3.3+ · Hotwire (Turbo 8, morph available) · Tailwind CSS 4 · Importmaps,
-**no Node build step** · Solid Queue / Cache / Cable · Minitest with fixtures.
+| Doc | Read before |
+|---|---|
+| `docs/streaming.md` | the Streamable contract, the broadcaster, `stream_for:` |
+| `docs/configuration.md` | any option — it lists every one |
+| `docs/javascript.md` | the DOM contract and Stimulus identifiers |
+| `docs/repair.md` | the repair routes and seams |
+| `docs/security.md` | sanitization, payload handling |
+| `docs/registries.md` | registering renderers or components |
+| `docs/deferred-renderers.md` | client-deferred leaf nodes |
 
 ## Non-negotiables
 
 - **Minitest with fixtures.** Never RSpec. Never FactoryBot.
-- **No service objects.** Rich models, thin controllers. Plain POROs where a model doesn't
-  fit — not an `app/services` layer.
-- **NoBuild.** No package.json, no bundler, no npm dependency. JavaScript ships via
+- **No service objects.** Rich models, thin controllers, plain POROs where a model
+  doesn't fit — not an `app/services` layer. A solution needing a framework-shaped
+  abstraction is the wrong solution.
+- **NoBuild.** No package.json, no JS bundler, no npm dependency. JavaScript ships via
   importmap; third-party libraries are pinned and lazily imported.
 - **Spanish is the default locale.** English is the secondary translation.
-- **Vanilla Rails.** Convention over configuration. If a solution needs a framework-shaped
-  abstraction to work, it is the wrong solution.
 
 ## This project specifically
 
@@ -53,14 +56,13 @@ The host app for tests is `test/dummy`.
 
 ## Workflow
 
-One phase per session. Each has an SDD spec folder under
-`sdd/specs/YYYY-MM-DD-p<n>-<slug>/` with `progress.yml`. Shape → Tasks →
-Implement → Verify.
+One phase per session: Shape → Tasks → Implement → Verify, with the phase's
+progress tracked alongside its spec.
 
 Do not start a phase whose predecessors' DoD is unmet. Do not mark a DoD line met without
-the verification that backs it — if a verification needs a harness that doesn't exist yet,
-build the harness or say it is missing. Reporting a phase complete on unverified criteria
-is the single worst outcome here.
+the verification that backs it — if the verification needs a harness that doesn't exist,
+build it or say it's missing. Reporting a phase complete on unverified criteria is the
+single worst outcome here.
 
 ## Commit style
 
