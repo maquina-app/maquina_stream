@@ -188,10 +188,14 @@ module MaquinaStream
 
         # The only difference between streaming and static output. The parity
         # test strips these and demands the rest be byte-identical.
+        #
+        # The caret marks the block still being written. Static output has none,
+        # which is what removes it at seal: the sealed message renders in static
+        # mode, the tail's HTML changes, and the final frame carries that change.
         def annotate_reveal
-          fragment.children.each do |node|
-            node["data-ms-reveal"] = "" if node.element?
-          end
+          elements = fragment.children.select(&:element?)
+          elements.each { |node| node["data-ms-reveal"] = "" }
+          elements.last&.[]=("data-ms-caret", "")
         end
 
         def strip_sourcepos

@@ -28,6 +28,7 @@ module MaquinaStream
       maquina_stream_buffer
       maquina_stream_append
       maquina_stream_sequence
+      maquina_stream_advance
       maquina_stream_open?
       maquina_stream_seal!
       maquina_stream_target
@@ -93,6 +94,17 @@ module MaquinaStream
 
       def maquina_stream_sequence
         maquina_stream_read(SEQUENCE_COLUMN, :maquina_stream_sequence).to_i
+      end
+
+      # Added in Phase 3. The sequence is documented as "incremented per frame",
+      # but the Broadcaster cannot write host state directly without
+      # contradicting "host owns persistence" - so it asks, through the
+      # contract, and the host's database does the incrementing atomically.
+      # That is also what keeps it monotonic under concurrent appends.
+      def maquina_stream_advance
+        maquina_stream_require_column!(SEQUENCE_COLUMN, :maquina_stream_advance)
+        self.class.where(id: id).update_all("#{SEQUENCE_COLUMN} = #{SEQUENCE_COLUMN} + 1")
+        reload.maquina_stream_sequence
       end
 
       def maquina_stream_open?

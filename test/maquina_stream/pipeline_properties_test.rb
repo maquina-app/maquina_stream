@@ -82,7 +82,7 @@ class PipelinePropertiesTest < ActiveSupport::TestCase
 
   private
     def strip_reveal(html)
-      html.gsub(/ data-ms-reveal=""/, "")
+      html.gsub(/ data-ms-reveal=""/, "").gsub(/ data-ms-caret=""/, "")
     end
 
     def measure
