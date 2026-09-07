@@ -13,7 +13,7 @@ class HistoryTest < ActionDispatch::IntegrationTest
 
   test "a sealed message renders from cache on every load after the first" do
     message = messages(:sealed)
-    message.update!(content: "# Uno\n\nDos.", stream_status: "complete")
+    message.update!(content: "# One\n\nTwo.", stream_status: "complete")
 
     first = MaquinaStream.render(message)
     misses_after_first = MaquinaStream::ComponentCache.stats[:misses]
@@ -26,7 +26,7 @@ class HistoryTest < ActionDispatch::IntegrationTest
 
   test "an open message is never cached, because it is about to change" do
     message = messages(:streaming)
-    message.update!(content: "a medias", stream_status: "open")
+    message.update!(content: "half done", stream_status: "open")
 
     size_before = MaquinaStream::ComponentCache.size
     2.times { MaquinaStream.render(message) }
@@ -34,9 +34,9 @@ class HistoryTest < ActionDispatch::IntegrationTest
     assert_equal size_before, MaquinaStream::ComponentCache.size,
       "an open message must not be cached at all; it would serve a stale frame"
 
-    message.update!(content: "a medias, y más")
+    message.update!(content: "half done, and more")
 
-    assert_includes MaquinaStream.render(message), "y más"
+    assert_includes MaquinaStream.render(message), "and more"
   end
 
   test "editing a sealed message invalidates its cached render" do
@@ -44,11 +44,11 @@ class HistoryTest < ActionDispatch::IntegrationTest
     message.update!(content: "original", stream_status: "complete")
     before = MaquinaStream.render(message)
 
-    message.update!(content: "corregido")
+    message.update!(content: "corrected")
 
     refute_equal before, MaquinaStream.render(message),
       "the cache key is the buffer digest, so an edit is a different key"
-    assert_includes MaquinaStream.render(message), "corregido"
+    assert_includes MaquinaStream.render(message), "corrected"
   end
 
   # --------------------------------------------------------------- pagination
@@ -99,7 +99,7 @@ class HistoryTest < ActionDispatch::IntegrationTest
     def create_history(count)
       Message.delete_all
       count.times do |n|
-        Message.create!(content: "# Mensaje #{n}\n\nCuerpo #{n}.", stream_sequence: n, stream_status: "complete")
+        Message.create!(content: "# Message #{n}\n\nBody #{n}.", stream_sequence: n, stream_status: "complete")
       end
     end
 end

@@ -25,7 +25,7 @@ class AgentShapesTest < ActiveSupport::TestCase
     thinking_frames = BroadcastRecorder.new
     tool_frames = BroadcastRecorder.new
 
-    stream(thinking, "Voy a leer el archivo.", thinking_frames)
+    stream(thinking, "I am going to read the file.", thinking_frames)
     stream(tool, "```json\n{\"path\": \"config/routes.rb\"}\n```", tool_frames)
 
     # Independent sequences, independent seals. One step failing does not
@@ -48,8 +48,8 @@ class AgentShapesTest < ActiveSupport::TestCase
   # for, and one subscription per conversation is the point. What has to differ
   # is where their frames land in the DOM.
   test "steps share a cable stream but never a DOM target" do
-    first = Message.create!(content: "uno", stream_status: "open")
-    second = Message.create!(content: "dos", stream_status: "open")
+    first = Message.create!(content: "one", stream_status: "open")
+    second = Message.create!(content: "two", stream_status: "open")
 
     assert_equal first.maquina_stream_target, second.maquina_stream_target,
       "steps of one conversation belong on one subscription"
@@ -72,13 +72,13 @@ class AgentShapesTest < ActiveSupport::TestCase
     frames = BroadcastRecorder.new
 
     stream(message, <<~MD, frames)
-      Voy a leer el archivo.
+      I am going to read the file.
 
       ```tool_result
-      config/routes.rb: 12 líneas
+      config/routes.rb: 12 lines
       ```
 
-      El archivo define dos rutas.
+      The file defines two routes.
     MD
 
     document = MaquinaStream::Document.new(message.content, sid: message.maquina_stream_id, mode: :static)
@@ -96,10 +96,10 @@ class AgentShapesTest < ActiveSupport::TestCase
     message = Message.create!(content: "", stream_sequence: 0, stream_status: "open")
     broadcaster = MaquinaStream::Broadcaster.new(message, transport: BroadcastRecorder.new)
 
-    broadcaster.append("Primer paso.\n\n", now: 0)
+    broadcaster.append("First step.\n\n", now: 0)
     first_pass = MaquinaStream::Document.new(message.content, sid: message.maquina_stream_id).blocks.first.digest
 
-    broadcaster.append("```tool_result\nsalida\n```\n\nSegundo paso.", now: 1_000)
+    broadcaster.append("```tool_result\noutput\n```\n\nSecond step.", now: 1_000)
     broadcaster.seal!
 
     after = MaquinaStream::Document.new(message.content, sid: message.maquina_stream_id).blocks.first.digest

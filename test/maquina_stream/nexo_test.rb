@@ -48,12 +48,12 @@ class NexoTest < ActiveSupport::TestCase
     agent = ScriptedAgent.new(
       [
         [:tool_call, ToolCall.new(name: "read_file", arguments: {path: "README.md"})],
-        [:tool_result, ToolResult.new(name: "read_file", content: "# Título\n")]
+        [:tool_result, ToolResult.new(name: "read_file", content: "# Title\n")]
       ],
-      "Leí el archivo.\n"
+      "I read the file.\n"
     )
 
-    records = Message.stream_agent_run(agent, "lee el readme", conversation_id: 7, broadcaster: recorder)
+    records = Message.stream_agent_run(agent, "read the readme", conversation_id: 7, broadcaster: recorder)
 
     assert_equal %w[tool assistant], records.map(&:role)
     assert_equal "read_file", records.first.tool_name
@@ -64,7 +64,7 @@ class NexoTest < ActiveSupport::TestCase
     end
 
     assert_includes records.first.maquina_stream_buffer, "README.md"
-    assert_includes records.last.maquina_stream_buffer, "Leí el archivo"
+    assert_includes records.last.maquina_stream_buffer, "I read the file"
   end
 
   test "two tool calls open two streams, and one sealing does not seal the other" do
@@ -75,10 +75,10 @@ class NexoTest < ActiveSupport::TestCase
         [:tool_result, ToolResult.new(name: "glob", content: "a.rb\nb.rb\n")],
         [:tool_result, ToolResult.new(name: "grep", content: "3 matches\n")]
       ],
-      "Listo.\n"
+      "Done.\n"
     )
 
-    records = Message.stream_agent_run(agent, "busca", conversation_id: 8, broadcaster: recorder)
+    records = Message.stream_agent_run(agent, "search", conversation_id: 8, broadcaster: recorder)
     tools = records.select { |r| r.role == "tool" }
 
     assert_equal %w[glob grep], tools.map(&:tool_name)
@@ -92,10 +92,10 @@ class NexoTest < ActiveSupport::TestCase
   test "a tool that never returns is sealed as errored, not left open" do
     agent = ScriptedAgent.new(
       [[:tool_call, ToolCall.new(name: "shell", arguments: {cmd: "sleep 1000"})]],
-      "No pude terminar.\n"
+      "I could not finish.\n"
     )
 
-    records = Message.stream_agent_run(agent, "corre", conversation_id: 9, broadcaster: recorder)
+    records = Message.stream_agent_run(agent, "run", conversation_id: 9, broadcaster: recorder)
     tool = records.find { |r| r.role == "tool" }
 
     assert_equal "errored", tool.reload.stream_status
@@ -105,10 +105,10 @@ class NexoTest < ActiveSupport::TestCase
   test "a tool result with no announced call still gets a record" do
     agent = ScriptedAgent.new(
       [[:tool_result, ToolResult.new(name: "cached_lookup", content: "42\n")]],
-      "Ya lo tenía.\n"
+      "I already had it.\n"
     )
 
-    records = Message.stream_agent_run(agent, "busca", conversation_id: 10, broadcaster: recorder)
+    records = Message.stream_agent_run(agent, "search", conversation_id: 10, broadcaster: recorder)
 
     assert_equal %w[tool assistant], records.map(&:role)
     assert_includes records.first.maquina_stream_buffer, "42"
@@ -120,10 +120,10 @@ class NexoTest < ActiveSupport::TestCase
         [:tool_call, ToolCall.new(name: "read_file", arguments: {path: "a.rb"})],
         [:tool_result, ToolResult.new(name: "read_file", content: "puts 1\n")]
       ],
-      "Hecho.\n"
+      "Done.\n"
     )
 
-    tool = Message.stream_agent_run(agent, "lee", conversation_id: 11, broadcaster: recorder).first
+    tool = Message.stream_agent_run(agent, "read", conversation_id: 11, broadcaster: recorder).first
     html = MaquinaStream.render(tool).to_s
 
     assert_includes html, "data-ms-code"
@@ -133,17 +133,17 @@ class NexoTest < ActiveSupport::TestCase
   # The real class, so the bridge is written against Nexo's actual signature
   # rather than against what this test believes it to be.
   test "a real Nexo agent streams its answer" do
-    RubyLLM::Test.stub_response("Revisé el módulo.\n")
+    RubyLLM::Test.stub_response("I reviewed the module.\n")
 
     agent = Class.new(Nexo::Agent) do
       model "gpt-4.1-nano"
-      instructions "Eres breve."
+      instructions "Be brief."
     end.new
 
-    records = Message.stream_agent_run(agent, "revisa", conversation_id: 12, broadcaster: recorder)
+    records = Message.stream_agent_run(agent, "review", conversation_id: 12, broadcaster: recorder)
 
     assert_equal %w[assistant], records.map(&:role)
-    assert_includes records.last.maquina_stream_buffer, "Revisé el módulo"
+    assert_includes records.last.maquina_stream_buffer, "I reviewed the module"
   end
 
   private

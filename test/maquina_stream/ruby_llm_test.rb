@@ -29,18 +29,18 @@ class RubyLlmTest < ActiveSupport::TestCase
   teardown { RubyLLM::Test.reset }
 
   test "a message streams from a chat and seals" do
-    RubyLLM::Test.stub_response("# Informe\n\nUn párrafo con **negrita**.\n")
+    RubyLLM::Test.stub_response("# Report\n\nA paragraph with **bold**.\n")
 
     message = Message.create!(conversation_id: 1)
-    message.stream_from(RubyLLM.chat(model: "gpt-4.1-nano"), "Escribe un informe", broadcaster: recorder_for(message))
+    message.stream_from(RubyLLM.chat(model: "gpt-4.1-nano"), "Write a report", broadcaster: recorder_for(message))
 
     assert_equal "complete", message.reload.stream_status
     refute message.maquina_stream_open?
-    assert_includes message.maquina_stream_buffer, "**negrita**"
+    assert_includes message.maquina_stream_buffer, "**bold**"
 
     document = Nokogiri::HTML5.fragment(MaquinaStream.render(message))
 
-    assert_equal "Informe", document.at_css("h1").text
+    assert_equal "Report", document.at_css("h1").text
     assert document.at_css("strong")
   end
 
@@ -48,7 +48,7 @@ class RubyLlmTest < ActiveSupport::TestCase
     RubyLLM::Test.stub_response("<script>alert(1)</script>\n\n[x](javascript:alert(1))\n")
 
     message = Message.create!(conversation_id: 1)
-    message.stream_from(RubyLLM.chat(model: "gpt-4.1-nano"), "hola", broadcaster: recorder_for(message))
+    message.stream_from(RubyLLM.chat(model: "gpt-4.1-nano"), "hello", broadcaster: recorder_for(message))
 
     html = MaquinaStream.render(message).to_s
 
@@ -57,10 +57,10 @@ class RubyLlmTest < ActiveSupport::TestCase
   end
 
   test "an unterminated response still renders, because remend repairs it first" do
-    RubyLLM::Test.stub_response("Un **párrafo a medio")
+    RubyLLM::Test.stub_response("A **paragraph cut in ha")
 
     message = Message.create!(conversation_id: 1)
-    message.stream_from(RubyLLM.chat(model: "gpt-4.1-nano"), "hola", broadcaster: recorder_for(message))
+    message.stream_from(RubyLLM.chat(model: "gpt-4.1-nano"), "hello", broadcaster: recorder_for(message))
 
     document = Nokogiri::HTML5.fragment(MaquinaStream.render(message))
 
@@ -68,11 +68,11 @@ class RubyLlmTest < ActiveSupport::TestCase
   end
 
   test "the broadcaster is a seam, so the bytes a chat costs can be counted" do
-    RubyLLM::Test.stub_response("Uno.\n\nDos.\n\nTres.\n")
+    RubyLLM::Test.stub_response("One.\n\nTwo.\n\nThree.\n")
 
     message = Message.create!(conversation_id: 1)
     recorder = MaquinaStream::Broadcaster.new(message, transport: BroadcastRecorder.new)
-    message.stream_from(RubyLLM.chat(model: "gpt-4.1-nano"), "cuenta", broadcaster: recorder)
+    message.stream_from(RubyLLM.chat(model: "gpt-4.1-nano"), "count", broadcaster: recorder)
 
     assert_operator recorder.transport.sent.length, :>=, 1
     assert recorder.transport.sent.last.final,
@@ -92,7 +92,7 @@ class RubyLlmTest < ActiveSupport::TestCase
     # No response is stubbed, so the provider raises — the shape of a model that
     # times out or refuses mid-answer.
     assert_raises(RubyLLM::Test::Errors::NoResponseProvidedError) do
-      message.stream_from(RubyLLM.chat(model: "gpt-4.1-nano"), "hola")
+      message.stream_from(RubyLLM.chat(model: "gpt-4.1-nano"), "hello")
     end
 
     assert_equal "errored", message.reload.stream_status
@@ -101,14 +101,14 @@ class RubyLlmTest < ActiveSupport::TestCase
 
   test "a tool call is its own record, and streams the same way" do
     RubyLLM::Test.stub_responses(
-      "Consulto el clima.",
+      "Checking the weather.",
       "```json\n{\"temp\": 21}\n```\n"
     )
 
     chat = RubyLLM.chat(model: "gpt-4.1-nano")
 
     answer = Message.create!(conversation_id: 99, role: "assistant")
-    answer.stream_from(chat, "¿Qué tiempo hace?", broadcaster: recorder_for(answer))
+    answer.stream_from(chat, "What is the weather?", broadcaster: recorder_for(answer))
 
     tool = Message.create!(conversation_id: 99, role: "tool", tool_name: "weather")
     tool.stream_from(chat, "weather(city: 'CDMX')", broadcaster: recorder_for(tool))

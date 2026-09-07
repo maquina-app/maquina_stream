@@ -112,7 +112,7 @@ class ControllersTest < ActiveSupport::TestCase
   # block is drift the digest cannot see (docs/api-surface.md, Phase 7).
 
   test "every top-level block carries the marker ms-reveal binds to" do
-    blocks = document_blocks("Primero.\n\nSegundo.\n\nTercero.\n")
+    blocks = document_blocks("First.\n\nSecond.\n\nThird.\n")
 
     refute_empty blocks
 
@@ -123,7 +123,7 @@ class ControllersTest < ActiveSupport::TestCase
   end
 
   test "the server leaves no reveal chrome on a block" do
-    blocks = document_blocks("Primero, con texto suficiente.\n\nSegundo.\n")
+    blocks = document_blocks("First, with enough text.\n\nSecond.\n")
 
     blocks.each do |block|
       assert_empty block.css("[data-ms-revealing]"),
@@ -134,7 +134,7 @@ class ControllersTest < ActiveSupport::TestCase
   end
 
   test "the reveal changes nothing between streaming and static output" do
-    markdown = "Un párrafo largo que se revela mientras llega.\n\nY otro.\n"
+    markdown = "A long paragraph that reveals itself as it arrives.\n\nAnd another.\n"
 
     assert_equal MaquinaStream::Renderer.call(markdown, mode: :static),
       MaquinaStream::Renderer.call(markdown, mode: :streaming),

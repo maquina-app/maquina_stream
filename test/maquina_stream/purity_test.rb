@@ -15,7 +15,7 @@ class PurityTest < ActiveSupport::TestCase
       raise "a Rails application booted" if defined?(Rails.application) && Rails.application
 
       MaquinaStream.register_fence "ruby", strategy: :server
-      print MaquinaStream::Renderer.call("# Título\\n\\n```ruby\\nputs 1\\n```")
+      print MaquinaStream::Renderer.call("# Résumé\n\n```ruby\nputs 1\n```")
     RUBY
 
     output = IO.popen([RbConfig.ruby, "-I", lib_path, "-e", script], err: %i[child out], &:read)

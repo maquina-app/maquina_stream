@@ -337,12 +337,12 @@ class MaquinaStream::ComponentPartialsTest < ActiveSupport::TestCase
   end
 
   test "source_citation renders a link when the host resolved one" do
-    html = component(:source_citation, id: "123", title: "Informe anual", href: "https://example.com/a", index: 1)
+    html = component(:source_citation, id: "123", title: "Annual report", href: "https://example.com/a", index: 1)
 
     assert_includes html, %(data-component="source-citation")
     assert_includes html, %(data-ms-source-id="123")
     assert_includes html, %(href="https://example.com/a")
-    assert_includes html, "Informe anual"
+    assert_includes html, "Annual report"
   end
 
   test "source_citation still renders when nothing resolved" do
@@ -360,12 +360,12 @@ class MaquinaStream::ComponentPartialsTest < ActiveSupport::TestCase
   # has been imported and the server-rendered decision has been lost.
   test "attachment renders from ActiveStorage attributes" do
     html = component(:attachment,
-      filename: "informe.pdf", byte_size: 20_480, content_type: "application/pdf",
-      url: "https://example.com/informe.pdf")
+      filename: "report.pdf", byte_size: 20_480, content_type: "application/pdf",
+      url: "https://example.com/report.pdf")
 
     assert_includes html, %(data-component="attachment")
     assert_includes html, %(data-attachment-part="filename")
-    assert_includes html, "informe.pdf"
+    assert_includes html, "report.pdf"
     assert_includes html, "application/pdf"
     assert_includes html, "20"
     assert_includes html, %(data-attachment-part="download")
@@ -494,13 +494,13 @@ class MaquinaStream::ComponentPartialsTest < ActiveSupport::TestCase
   test "the suggestion row is disableable wholesale" do
     MaquinaStream.config.controls = {suggestion: {enabled: false}}
 
-    assert_equal "", component(:suggestion, items: [{text: "Hola", href: "/a"}]).strip
+    assert_equal "", component(:suggestion, items: [{text: "Hello", href: "/a"}]).strip
   end
 
   test "every control off is one expression" do
     MaquinaStream.config.controls = false
 
-    assert_equal "", component(:suggestion, items: [{text: "Hola", href: "/a"}]).strip
+    assert_equal "", component(:suggestion, items: [{text: "Hello", href: "/a"}]).strip
     refute_includes component(:attachment, filename: "a.pdf", url: "/a.pdf"),
       %(data-attachment-part="download")
   end

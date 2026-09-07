@@ -33,7 +33,7 @@ class ReplayTest < ActiveSupport::TestCase
   end
 
   test "every block the client holds carries the digest the server would compute" do
-    live = RepairSimulator.new(@message).repair(stream("# Uno\n\nDos.\n\nTres.\n\nCuatro."))
+    live = RepairSimulator.new(@message).repair(stream("# One\n\nTwo.\n\nThree.\n\nFour."))
     truth = RepairSimulator.new(@message).truth
 
     truth.each do |id, html|
@@ -51,13 +51,13 @@ class ReplayTest < ActiveSupport::TestCase
   # repair path would be dead code nobody noticed, and if this test is ever
   # "fixed" by making deltas complete, the bandwidth budget goes with it.
   test "the delta stream alone leaves the client diverged" do
-    live = stream("# Informe de estado
+    live = stream("# Status report for the week
 
-Un párrafo.
+A paragraph.
 
-Otro párrafo.
+Another paragraph.
 
-Y otro más.")
+And one more.")
     truth = RepairSimulator.new(@message).truth
 
     diverged = truth.reject { |id, html| live[id] == html }
@@ -67,20 +67,20 @@ Y otro más.")
   end
 
   test "a cancelled stream replays into the partial state it ended in" do
-    stream("# Informe\n\nUn párrafo completo.\n\nOtro que se corta a mit", status: :cancelled)
+    stream("# Report\n\nA complete paragraph.\n\nAnother that cuts off mid", status: :cancelled)
 
     assert_equal "cancelled", @message.reload.stream_status
     assert_equal :cancelled, @message.maquina_stream_status
 
     html = MaquinaStream::Renderer.call(@message.content, mode: :static)
 
-    assert_includes html, "Un párrafo completo"
-    assert_includes html, "se corta a mit", "the partial tail is part of the record, not something to hide"
+    assert_includes html, "A complete paragraph"
+    assert_includes html, "cuts off mid", "the partial tail is part of the record, not something to hide"
   end
 
   test "every seal status is recorded and readable" do
     %i[complete cancelled errored timed_out].each do |status|
-      @message.update!(content: "texto", stream_status: "open")
+      @message.update!(content: "text", stream_status: "open")
       @message.maquina_stream_seal!(status: status)
 
       assert_equal status, @message.maquina_stream_status
@@ -95,30 +95,30 @@ Y otro más.")
   # ---------------------------------------------------------------- export
 
   test "export returns the buffer as markdown" do
-    @message.update!(content: "# Título\n\nTexto.\n", stream_status: "complete")
+    @message.update!(content: "# Title\n\nText from a café.\n", stream_status: "complete")
 
-    assert_equal "# Título\n\nTexto.\n", MaquinaStream::Export.markdown(@message)
+    assert_equal "# Title\n\nText from a café.\n", MaquinaStream::Export.markdown(@message)
   end
 
   test "export repairs a buffer that was cut mid-token" do
-    @message.update!(content: "Un párrafo con **negrita a medias", stream_status: "cancelled")
+    @message.update!(content: "A paragraph with **half-finished bold", stream_status: "cancelled")
 
     exported = MaquinaStream::Export.markdown(@message)
 
-    assert_includes exported, "**negrita a medias**", "an export of a cancelled stream is still markdown"
+    assert_includes exported, "**half-finished bold**", "an export of a cancelled stream is still markdown"
   end
 
   test "export annotates a stream that did not finish" do
-    @message.update!(content: "texto", stream_status: "cancelled")
+    @message.update!(content: "text", stream_status: "cancelled")
 
     assert_match(/cancel/i, MaquinaStream::Export.markdown(@message))
     refute_match(/cancel/i, MaquinaStream::Export.markdown(@message, annotate: false))
   end
 
   test "export leaves a complete message unannotated" do
-    @message.update!(content: "texto\n", stream_status: "complete")
+    @message.update!(content: "text\n", stream_status: "complete")
 
-    assert_equal "texto\n", MaquinaStream::Export.markdown(@message)
+    assert_equal "text\n", MaquinaStream::Export.markdown(@message)
   end
 
   test "deferred content exports as its source, which is the Phase 6 fallback" do

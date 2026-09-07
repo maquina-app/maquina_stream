@@ -12,18 +12,18 @@ class GoldenTest < ActiveSupport::TestCase
   GOLDEN_DIR = File.expand_path("../fixtures/golden", __dir__)
 
   CASES = {
-    "paragraph_and_inline" => "Un párrafo con **negrita**, *cursiva*, `código` y [enlace](https://example.com).",
-    "headings" => "# uno\n\n## dos\n\n### tres",
-    "nested_list" => "- primero\n  - anidado con `código`\n- segundo",
+    "paragraph_and_inline" => "A paragraph with **bold**, *italic*, `code` and [link](https://example.com).",
+    "headings" => "# one\n\n## two\n\n### three",
+    "nested_list" => "- first\n  - nested with `code`\n- second",
     "table" => "| a | b |\n|---|---|\n| 1 | 2 |",
-    "blockquote" => "> una cita\n> en dos líneas",
-    "code_block_closed" => "```ruby\ndef saludar\n  puts \"hola\"\nend\n```",
-    "code_block_open" => "```ruby\ndef saludar\n  puts \"ho",
-    "code_block_passthrough" => "```text\nsin resaltado\n```",
+    "blockquote" => "> a quote\n> in two lines",
+    "code_block_closed" => "```ruby\ndef greet\n  puts \"hello\"\nend\n```",
+    "code_block_open" => "```ruby\ndef greet\n  puts \"he",
+    "code_block_passthrough" => "```text\nno highlighting\n```",
     "client_fence_open" => "```mermaid\ngraph TD",
     "client_fence_closed" => "```mermaid\ngraph TD; A-->B;\n```",
-    "streaming_tail_repaired" => "un párrafo con **negrita a medias",
-    "cjk_and_emoji" => "日本語とEnglishが同じ行に混在する 🎉 con **negrita**"
+    "streaming_tail_repaired" => "a paragraph with **half-finished bold",
+    "cjk_and_emoji" => "日本語とEnglishが同じ行に混在する 🎉 with **bold**"
   }.freeze
 
   setup do

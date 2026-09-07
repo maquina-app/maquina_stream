@@ -145,7 +145,7 @@ module MaquinaStream
       #
       # A block often takes its final form in the very frame that opens the one
       # below it — a heading completes as the paragraph after it begins — and so
-      # stops being the tail while the client still holds "Informe de est".
+      # stops being the tail while the client still holds "Status rep".
       # Sending it once more at that handover was measured: it costs a full
       # extra copy of the message, 1.248x -> 2.41x, because it happens once per
       # block. The repair path already fixes it for free, because that change is

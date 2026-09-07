@@ -40,15 +40,15 @@ class SealingTest < ActiveSupport::TestCase
   # the block safe - the pointer has to stop at it instead.
   test "a block with an unresolved reference never seals, however many blocks follow" do
     unresolved = <<~MD
-      Consulta la [documentación][docs] para más detalle.
+      See the [documentation][docs] for more detail.
 
-      Uno.
+      One.
 
-      Dos.
+      Two.
 
-      Tres.
+      Three.
 
-      Cuatro.
+      Four.
     MD
 
     document = MaquinaStream::Document.new(unresolved, sid: "m1")
@@ -62,11 +62,11 @@ class SealingTest < ActiveSupport::TestCase
   end
 
   test "a half-arrived definition does not count as resolved" do
-    partial = "Ver [docs][docs].\n\nUno.\n\nDos.\n\n[docs]:"
+    partial = "See [docs][docs].\n\nOne.\n\nTwo.\n\n[docs]:"
 
     assert_empty MaquinaStream::Document.new(partial, sid: "m1").sealed_blocks
 
-    truncated_url = "Ver [docs][docs].\n\nUno.\n\nDos.\n\n[docs]: https://exa"
+    truncated_url = "See [docs][docs].\n\nOne.\n\nTwo.\n\n[docs]: https://exa"
 
     assert_empty MaquinaStream::Document.new(truncated_url, sid: "m1").sealed_blocks,
       "a truncated destination still resolves to the wrong host when it completes"
@@ -97,7 +97,7 @@ class SealingTest < ActiveSupport::TestCase
   end
 
   test "seal lag is host configurable" do
-    markdown = "# uno\n\ndos\n\ntres\n\ncuatro\n\ncinco"
+    markdown = "# one\n\ntwo\n\nthree\n\nfour\n\nfive"
 
     MaquinaStream.configure { |c| c.seal_lag = 4 }
     document = MaquinaStream::Document.new(markdown)
@@ -106,15 +106,15 @@ class SealingTest < ActiveSupport::TestCase
   end
 
   test "nothing is sealed while the document is shorter than the lag" do
-    document = MaquinaStream::Document.new("solo un párrafo")
+    document = MaquinaStream::Document.new("just one paragraph")
 
     assert_empty document.sealed_blocks
     assert_equal 1, document.blocks.length
   end
 
   test "block ids are index derived, never content derived" do
-    first = MaquinaStream::Document.new("# uno\n\ndos", sid: "m1").blocks
-    second = MaquinaStream::Document.new("# uno cambiado\n\ndos", sid: "m1").blocks
+    first = MaquinaStream::Document.new("# one\n\ntwo", sid: "m1").blocks
+    second = MaquinaStream::Document.new("# one changed\n\ntwo", sid: "m1").blocks
 
     assert_equal first.map(&:id), second.map(&:id),
       "an id that moves when the content changes makes morph delete and recreate the node"
@@ -122,7 +122,7 @@ class SealingTest < ActiveSupport::TestCase
   end
 
   test "a stream cancelled mid-block still seals into valid html" do
-    cancelled = "# Título\n\nUn párrafo completo.\n\nOtro párrafo que se corta a mit"
+    cancelled = "# Title\n\nA complete paragraph.\n\nAnother paragraph that cuts off mid"
     document = MaquinaStream::Document.new(cancelled, sid: "m1")
 
     assert_operator document.blocks.length, :>=, 3

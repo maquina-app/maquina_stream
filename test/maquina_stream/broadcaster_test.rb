@@ -91,7 +91,7 @@ class BroadcasterTest < ActiveSupport::TestCase
   end
 
   test "the sequence is monotonic across every frame" do
-    stream("# uno\n\ndos\n\ntres\n\ncuatro\n\ncinco\n\nseis")
+    stream("# one\n\ntwo\n\nthree\n\nfour\n\nfive\n\nsix")
 
     assert_equal @recorder.sequences.sort, @recorder.sequences, "frames went out with a sequence that moved backwards"
     assert_equal @recorder.sequences.uniq, @recorder.sequences, "two frames shared a sequence number"
@@ -101,9 +101,9 @@ class BroadcasterTest < ActiveSupport::TestCase
     other = MaquinaStream::Broadcaster.new(@message, transport: @recorder)
 
     6.times do |n|
-      @broadcaster.append("bloque #{n}\n\n")
+      @broadcaster.append("block #{n}\n\n")
       @broadcaster.broadcast(now: n * 1_000)
-      other.append("otro #{n}\n\n")
+      other.append("other #{n}\n\n")
       other.broadcast(now: n * 1_000)
     end
 
@@ -112,7 +112,7 @@ class BroadcasterTest < ActiveSupport::TestCase
   end
 
   test "frames coalesce inside the budget instead of going out per token" do
-    10.times { |n| @broadcaster.append("palabra#{n} ") }
+    10.times { |n| @broadcaster.append("word#{n} ") }
 
     # Every append landed inside one frame budget, so at most the first one went
     # out; the rest are still pending.
@@ -124,11 +124,11 @@ class BroadcasterTest < ActiveSupport::TestCase
   end
 
   test "the final seal always flushes, however recently a frame went out" do
-    @broadcaster.append("un párrafo\n\n")
+    @broadcaster.append("a paragraph\n\n")
     @broadcaster.broadcast(now: 0)
     before = @recorder.frames
 
-    @broadcaster.append("otro párrafo")
+    @broadcaster.append("another paragraph")
     @broadcaster.seal!
 
     assert_operator @recorder.frames, :>, before, "the final seal must always go out"
@@ -138,7 +138,7 @@ class BroadcasterTest < ActiveSupport::TestCase
   # the last one by looking at it. When it went missing nothing failed: the
   # stream just never told anyone it had finished.
   test "the final seal frame is marked as final on the wire" do
-    @broadcaster.append("un párrafo\n\n", now: 0)
+    @broadcaster.append("a paragraph\n\n", now: 0)
     @broadcaster.seal!
 
     refute_predicate @recorder.sent.first, :final, "an ordinary frame must not claim to be the seal"
@@ -146,7 +146,7 @@ class BroadcasterTest < ActiveSupport::TestCase
   end
 
   test "sealing a message with nothing pending still announces the seal" do
-    @broadcaster.append("texto", now: 0)
+    @broadcaster.append("text", now: 0)
     @broadcaster.broadcast(now: 0)
     before = @recorder.frames
 
@@ -157,13 +157,13 @@ class BroadcasterTest < ActiveSupport::TestCase
   end
 
   test "the host owns persistence: append writes through the contract" do
-    @broadcaster.append("texto")
+    @broadcaster.append("text")
 
-    assert_equal "texto", @message.reload.content
+    assert_equal "text", @message.reload.content
   end
 
   test "sealing moves the record's status" do
-    @broadcaster.append("texto")
+    @broadcaster.append("text")
     @broadcaster.seal!(status: :cancelled)
 
     assert_equal "cancelled", @message.reload.stream_status

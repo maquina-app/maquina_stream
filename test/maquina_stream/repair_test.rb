@@ -40,7 +40,7 @@ class RepairTest < ActiveSupport::TestCase
   end
 
   test "a client that missed everything converges from a cold manifest" do
-    stream("# Uno\n\nDos.\n\nTres.\n\nCuatro.\n\nCinco.")
+    stream("# One\n\nTwo.\n\nThree.\n\nFour.\n\nFive.")
 
     repaired = repair({})
 
@@ -48,7 +48,7 @@ class RepairTest < ActiveSupport::TestCase
   end
 
   test "the manifest asks for nothing when the client is already correct" do
-    stream("# Uno\n\nDos.\n\nTres.\n\nCuatro.")
+    stream("# One\n\nTwo.\n\nThree.\n\nFour.")
 
     manifest = MaquinaStream::Manifest.for(@message)
 
@@ -56,7 +56,7 @@ class RepairTest < ActiveSupport::TestCase
   end
 
   test "the manifest asks only for the blocks that actually differ" do
-    stream("# Uno\n\nDos.\n\nTres.\n\nCuatro.")
+    stream("# One\n\nTwo.\n\nThree.\n\nFour.")
 
     manifest = MaquinaStream::Manifest.for(@message)
     stale = manifest.entries.map.with_index { |(id, digest), index| (index == 1) ? [id, "stale"] : [id, digest] }
@@ -84,7 +84,7 @@ class RepairTest < ActiveSupport::TestCase
   end
 
   test "sealed blocks only: the open tail is never in the manifest" do
-    stream("# Uno\n\nDos.\n\nTres.\n\nCuatro.")
+    stream("# One\n\nTwo.\n\nThree.\n\nFour.")
 
     document = MaquinaStream::Document.new(@message.content, sid: @message.maquina_stream_id)
     manifest_ids = MaquinaStream::Manifest.for(@message).entries.map(&:first)

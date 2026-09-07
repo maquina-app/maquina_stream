@@ -42,7 +42,7 @@ class MultiTabTest < ActiveSupport::TestCase
     # frame is built once and published to a stream name. A per-tab broadcaster
     # would re-render the whole buffer per tab per frame, which is the mistake
     # this asserts against.
-    "# Uno\n\nDos.\n\nTres.\n\nCuatro.".chars.each_slice(8).with_index do |slice, index|
+    "# One\n\nTwo.\n\nThree.\n\nFour.".chars.each_slice(8).with_index do |slice, index|
       broadcaster.append(slice.join, now: index * (MaquinaStream.config.frame_budget_ms + 1))
     end
     broadcaster.seal!
@@ -58,7 +58,7 @@ class MultiTabTest < ActiveSupport::TestCase
   end
 
   test "a tab that joins late repairs to the full message rather than the tail" do
-    stream_to([BroadcastRecorder.new], "# Uno\n\nDos.\n\nTres.\n\nCuatro.\n\nCinco.")
+    stream_to([BroadcastRecorder.new], "# One\n\nTwo.\n\nThree.\n\nFour.\n\nFive.")
 
     # A tab opened after the stream finished has nothing at all.
     late = RepairSimulator.new(@message).repair({})

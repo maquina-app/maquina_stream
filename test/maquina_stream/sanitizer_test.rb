@@ -63,11 +63,11 @@ module MaquinaStream
 
     test "rendered markdown survives intact" do
       html = <<~HTML
-        <h2 id="ms-1-b0">Título</h2>
-        <p>Texto con <strong>negrita</strong>, <em>cursiva</em> y <code>código</code>.</p>
-        <ul><li>uno</li><li>dos</li></ul>
+        <h2 id="ms-1-b0">Title</h2>
+        <p>Text with <strong>bold</strong>, <em>italic</em> and <code>code</code>.</p>
+        <ul><li>one</li><li>two</li></ul>
         <table><thead><tr><th scope="col">a</th></tr></thead><tbody><tr><td colspan="2">b</td></tr></tbody></table>
-        <blockquote><p>cita</p></blockquote>
+        <blockquote><p>a quote</p></blockquote>
         <pre><code class="language-ruby">puts 1</code></pre>
       HTML
 
@@ -113,7 +113,7 @@ module MaquinaStream
     end
 
     test "a same document fragment link survives" do
-      assert_includes Sanitizer.call(%(<a href="#seccion">x</a>)), 'href="#seccion"'
+      assert_includes Sanitizer.call(%(<a href="#section">x</a>)), 'href="#section"'
     end
 
     test "external links get noopener and noreferrer" do
@@ -166,11 +166,11 @@ module MaquinaStream
     end
 
     test "the tasklist checkbox survives and is always disabled" do
-      output = Sanitizer.call(%(<li><input type="checkbox" checked> tarea</li>))
+      output = Sanitizer.call(%(<li><input type="checkbox" checked> task</li>))
 
       assert_includes output, "<input"
       assert_includes output, "disabled"
-      assert_includes output, "tarea"
+      assert_includes output, "task"
     end
 
     test "text inside a fenced code block survives verbatim" do

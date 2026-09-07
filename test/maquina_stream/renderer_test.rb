@@ -21,11 +21,11 @@ class RendererTest < ActiveSupport::TestCase
   end
 
   test "renders markdown to sanitized html" do
-    html = MaquinaStream::Renderer.call("# Título\n\nUn párrafo con **negrita**.")
+    html = MaquinaStream::Renderer.call("# Title\n\nA paragraph with **bold**.")
 
     assert_includes html, "<h1"
-    assert_includes html, "Título"
-    assert_includes html, "<strong>negrita</strong>"
+    assert_includes html, "Title"
+    assert_includes html, "<strong>bold</strong>"
   end
 
   test "runs outside a rails request with no stubbing" do
@@ -42,7 +42,7 @@ class RendererTest < ActiveSupport::TestCase
   end
 
   test "repairs the streaming tail before parsing" do
-    html = MaquinaStream::Renderer.call("un **negrita a medias")
+    html = MaquinaStream::Renderer.call("a **half-finished bold")
 
     assert_includes html, "<strong>"
   end
@@ -111,14 +111,14 @@ class RendererTest < ActiveSupport::TestCase
   end
 
   test "elements carry their styling hook" do
-    document = Nokogiri::HTML5.fragment(MaquinaStream::Renderer.call("## dos\n\ntexto"))
+    document = Nokogiri::HTML5.fragment(MaquinaStream::Renderer.call("## two\n\ntext"))
 
     assert_equal "h2", document.at_css("h2")["data-ms-element"]
     assert_equal "p", document.at_css("p")["data-ms-element"]
   end
 
   test "source positions do not leak into rendered output" do
-    refute_includes MaquinaStream::Renderer.call("# título"), "data-sourcepos"
+    refute_includes MaquinaStream::Renderer.call("# title"), "data-sourcepos"
   end
 
   test "streaming and static differ only in reveal attributes" do

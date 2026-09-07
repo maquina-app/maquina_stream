@@ -24,10 +24,10 @@ class MaquinaStream::StreamableTest < ActiveSupport::TestCase
     message = messages(:streaming)
     original = message.content
 
-    message.maquina_stream_append(" más texto")
+    message.maquina_stream_append(" more text")
 
-    assert_equal "#{original} más texto", message.maquina_stream_buffer
-    assert_equal "#{original} más texto", message.reload.content
+    assert_equal "#{original} more text", message.maquina_stream_buffer
+    assert_equal "#{original} more text", message.reload.content
   end
 
   test "sequence is an integer" do

@@ -21,10 +21,10 @@ class RegistriesExampleTest < ActiveSupport::TestCase
   end
 
   test "a passthrough fence is untouched" do
-    document = render("```text\ntal cual\n```")
+    document = render("```text\nas is\n```")
 
     assert_nil document.at_css("[data-ms-code]")
-    assert_includes document.text, "tal cual"
+    assert_includes document.text, "as is"
   end
 
   test "a client fence defers to its controller once closed" do
@@ -38,22 +38,22 @@ class RegistriesExampleTest < ActiveSupport::TestCase
   end
 
   test "the source tag renders through its component with only its registered attributes" do
-    markdown = %(Según la fuente <source id="3" href="https://example.com/a" title="Un artículo" onclick="alert(1)"></source>.)
+    markdown = %(According to the source <source id="3" href="https://example.com/a" title="An article" onclick="alert(1)"></source>.)
     document = render(markdown)
 
     citation = document.at_css("[data-component='source-citation']")
 
     assert citation, "the registered tag must render through its partial"
-    assert_includes citation.text, "Un artículo"
+    assert_includes citation.text, "An article"
     assert_nil citation["onclick"], "an attribute the registration does not list must never reach the partial"
     assert_includes document.to_html, "https://example.com/a"
   end
 
   test "an unregistered tag does not survive" do
-    document = render(%(texto <danger id="1">contenido</danger> más texto))
+    document = render(%(text <danger id="1">content</danger> more text))
 
     assert_nil document.at_css("danger")
-    assert_includes document.text, "más texto"
+    assert_includes document.text, "more text"
   end
 
   private
