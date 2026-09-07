@@ -56,6 +56,21 @@ found_in_the_browser:
   - "The table wrapper mounted ms-table with no controls at all. The controller documents the markup it expects and emits none of it; the post pass now draws it."
   - "Controllers imported ./application_controller relatively, which 404s under importmap+propshaft. They use the pinned specifier now."
 
+regression_found_and_fixed_2026-09-07:
+  what: >-
+    "Controls inert while streaming" was dead on both sides. The Phase 7 chrome
+    change moved the caret off blocks, and ApplicationController#streaming still
+    read data-ms-caret, so it reported "not streaming" for every message. The
+    guard also disables [data-ms-control], which nothing emitted.
+  how_found: >-
+    Looking for reachable work on the Firefox/Safari clipboard line, not by any
+    test. Nothing failed when it broke: the controls simply stayed live.
+  fixed: >-
+    The guard reads data-ms-streaming on the message element, every engine
+    control carries data-ms-control, and controllers_test.rb now pins the
+    marker. Browser-verified: 6/6 controls disabled while streaming, 0/6 sealed,
+    and sealing re-enables them live.
+
 remaining_for_a_human:
   - "Screen reader pass at http://localhost:3001/harness."
-  - "Clipboard in Firefox and Safari, including the insecure-context fallback (Chromium is covered)."
+  - "Clipboard in Firefox and Safari. Chromium is covered INCLUDING the insecure-context fallback: with navigator.clipboard removed and isSecureContext false, copyText falls through to execCommand, copies the source exactly, and leaves no stray textarea."

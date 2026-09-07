@@ -76,6 +76,23 @@ class ControllersTest < ActiveSupport::TestCase
     assert_nil document.at_css("[data-action='ms-code#download']")
   end
 
+  # The Ruby half of "controls inert while streaming". The JavaScript half is
+  # verified in a browser (docs/interaction.md); this pins the marker the guard
+  # depends on, because when it went missing nothing failed — the controls
+  # simply stayed live through every stream.
+  test "every rendered control is marked for the stream guard" do
+    document = render("```ruby\nputs 1\n```\n\n| a |\n|---|\n| 1 |")
+
+    actions = document.css("[data-action^='ms-code'], [data-action^='ms-table']")
+
+    refute_empty actions
+
+    actions.each do |control|
+      assert control.attribute("data-ms-control"),
+        "#{control["data-action"]} is not marked data-ms-control, so it stays clickable mid-stream"
+    end
+  end
+
   test "control labels follow the host's locale" do
     document = I18n.with_locale(:en) { render("| a |\n|---|\n| 1 |") }
 
