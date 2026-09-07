@@ -1,0 +1,73 @@
+# English is the secondary translation. It must stay complete: every key in
+# es.yml exists here with the same shape, and
+# test/maquina_stream/locales_test.rb fails the build when one is missing —
+# a silent fallback to Spanish inside an English UI is a bug, not a default.
+en:
+  maquina_stream:
+    number:
+      decimal_separator: "."
+    streaming:
+      controls_disabled: "Available once the response finishes"
+    shimmer:
+      label: "Loading…"
+    code:
+      copy: "Copy"
+      copy_code: "Copy the code"
+      copied: "Code copied"
+      copy_failed: "Couldn't copy"
+      download: "Download"
+      download_code: "Download the code"
+      language: "Language: %{name}"
+    snippet:
+      copy: "Copy"
+      copy_command: "Copy the command"
+      copied: "Command copied"
+      copy_failed: "Couldn't copy"
+    table:
+      copy: "Copy"
+      copy_markdown: "Copy as Markdown"
+      copy_csv: "Copy as CSV"
+      copy_tsv: "Copy as TSV"
+      copied: "Table copied"
+      copy_failed: "Couldn't copy"
+      download: "Download"
+      download_csv: "Download as CSV"
+      download_markdown: "Download as Markdown"
+      fullscreen: "Full screen"
+      exit_fullscreen: "Exit full screen"
+    image:
+      download: "Download"
+      download_image: "Download the image %{name}"
+      failed: "The image could not be loaded"
+    link_safety:
+      title: "You are leaving this site"
+      body: "This link goes to %{host}, an external site. Do you want to continue?"
+      host: "Destination"
+      confirm: "Continue"
+      cancel: "Cancel"
+      always_allow: "Always allow this site"
+      external_link: "External link to %{host}"
+      close: "Close"
+    autoscroll:
+      scroll_to_bottom: "Go to the end"
+      following: "Following the response"
+    source_citation:
+      unknown: "Source"
+      link_title: "Open the source %{name}"
+    attachment:
+      unnamed: "Attachment"
+      download: "Download"
+      download_file: "Download %{name}"
+      remove: "Remove"
+      remove_file: "Remove %{name}"
+      remove_confirm: "Remove this attachment?"
+      size: "%{value} %{unit}"
+      units:
+        bytes: "B"
+        kb: "kB"
+        mb: "MB"
+        gb: "GB"
+        tb: "TB"
+    suggestion:
+      list_label: "Suggestions"
+      chip_label: "Use the suggestion: %{text}"

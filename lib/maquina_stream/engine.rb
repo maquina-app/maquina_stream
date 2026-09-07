@@ -11,5 +11,26 @@ module MaquinaStream
         require "maquina_stream/streamable"
       end
     end
+
+    # NoBuild: the engine's JavaScript ships as source and is served by the
+    # asset pipeline, pinned into the host's importmap. There is no package.json
+    # and no npm dependency anywhere in this gem.
+    #
+    # Both initializers are no-ops when the host has neither propshaft/sprockets
+    # nor importmap-rails: the engine's Ruby side does not require them.
+    initializer "maquina_stream.assets" do |app|
+      next unless app.config.respond_to?(:assets)
+
+      app.config.assets.paths << root.join("app/javascript")
+      app.config.assets.paths << root.join("app/assets/stylesheets")
+    end
+
+    initializer "maquina_stream.importmap", before: "importmap" do |app|
+      next unless app.config.respond_to?(:importmap)
+
+      app.config.importmap.paths << root.join("config/importmap.rb")
+      # Cache-bust the host's importmap when engine JavaScript changes in dev.
+      app.config.importmap.cache_sweepers << root.join("app/javascript")
+    end
   end
 end

@@ -1,0 +1,32 @@
+/* Vendored fallback for the `suggestion` component. Loaded only while the
+ * vendored partial is the one rendering. See docs/component-scope.md.
+ *
+ * No JavaScript and no client state: a chip is a link or a form submission, so
+ * everything here is shape and focus.
+ */
+[data-component="suggestion"] {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--suggestion-gap, 0.5rem);
+}
+
+[data-component="suggestion"] [data-suggestion-part="chip"] {
+  --suggestion-radius: 9999px;
+
+  border-radius: var(--suggestion-radius);
+  cursor: pointer;
+  white-space: nowrap;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* button_to wraps its button in a form; the chip must still sit in the row. */
+[data-component="suggestion"] form {
+  display: contents;
+}
+
+[data-component="suggestion"] [data-suggestion-part="chip"]:focus-visible {
+  outline: var(--focus-ring-width, 2px) solid var(--focus-ring-color, currentColor);
+  outline-offset: 2px;
+}

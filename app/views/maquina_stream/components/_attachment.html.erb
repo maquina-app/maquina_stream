@@ -1,0 +1,131 @@
+<%# EXTRACTION CANDIDATE → maquina_components. See docs/component-scope.md %>
+<%# locals: (filename: nil, byte_size: nil, content_type: nil, url: nil, preview_url: nil, remove_path: nil, variant: :grid, size: :md, css_classes: "", **html_options) %>
+<%#
+  One attached file. The locals are ActiveStorage's own attribute names —
+  `filename`, `byte_size`, `content_type` — plus the two URLs the host resolved
+  (`url` for the blob, `preview_url` for a variant). AI Elements' Attachment
+  takes a `FileUIPart`; that is the AI SDK's client-side model and importing it
+  would fight the server-rendered decision. We take the visual design, not the
+  props. See the conversion warning in docs/component-scope.md.
+
+  Three variants:
+
+    :grid    a card — thumbnail (images) or icon glyph, then name and meta
+    :inline  a compact pill for flowing next to text
+    :list    a full-width row, name and meta on one line
+
+  The media category is derived from `content_type` here, in Ruby, never by a
+  JS utility reading the DOM.
+
+  Download is hideable. An image whose blob 404s must not offer a download that
+  cannot work, so the thumbnail carries an `error->` action and the download
+  control is a target of the same controller. The behaviour is `ms-attachment`'s
+  in app/javascript; this partial only exposes the hook. The identifier is not
+  in the table in docs/api-surface.md yet — add it there when the controller lands.
+
+  Every control is gated on `config.controls[:attachment]`, so a host can drop
+  the download affordance, the remove affordance, or both.
+%>
+<%
+  filename     = local_assigns.fetch(:filename, nil).to_s
+  byte_size    = local_assigns.fetch(:byte_size, nil)
+  content_type = local_assigns.fetch(:content_type, nil).presence
+  url          = local_assigns.fetch(:url, nil).presence
+  preview_url  = local_assigns.fetch(:preview_url, nil).presence
+  remove_path  = local_assigns.fetch(:remove_path, nil).presence
+  variant      = (local_assigns.fetch(:variant, nil) || :grid).to_sym
+  size         ||= :md
+
+  config    = maquina_stream_config
+  image     = content_type.to_s.start_with?("image/")
+  thumbnail = image && preview_url
+  label     = filename.presence || t("maquina_stream.attachment.unnamed", default: "Archivo adjunto")
+
+  downloadable = url.present? && config.control?(:attachment, :download)
+  removable    = remove_path.present? && config.control?(:attachment, :remove)
+
+  human_size =
+    if byte_size.present?
+      bytes = Integer(byte_size)
+      units = %w[bytes kb mb gb tb]
+      index = 0
+      index += 1 while bytes >= 1024**(index + 1) && index < units.length - 1
+      number =
+        if index.zero?
+          bytes.to_s
+        else
+          format("%.1f", bytes.to_f / 1024**index)
+            .sub(".", t("maquina_stream.number.decimal_separator", default: ","))
+        end
+      t("maquina_stream.attachment.size",
+        value: number,
+        unit: t("maquina_stream.attachment.units.#{units[index]}", default: units[index]),
+        default: "%{value} %{unit}")
+    end
+
+  layout_classes = {
+    grid:   "ms-attachment--grid flex w-40 flex-col gap-2 rounded-lg border border-gray-200 bg-white p-2 text-sm dark:border-gray-800 dark:bg-gray-900",
+    inline: "ms-attachment--inline inline-flex max-w-full items-center gap-2 rounded-full border border-gray-200 bg-gray-50 px-3 py-1 text-xs dark:border-gray-800 dark:bg-gray-900",
+    list:   "ms-attachment--list flex w-full items-center gap-3 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm dark:border-gray-800 dark:bg-gray-900"
+  }.fetch(variant, "ms-attachment--grid flex w-40 flex-col gap-2 rounded-lg border border-gray-200 bg-white p-2 text-sm dark:border-gray-800 dark:bg-gray-900")
+
+  attributes = component_html_options(
+    html_options,
+    own_data: {
+      component: "attachment",
+      variant: variant,
+      size: size,
+      controller: (thumbnail ? "ms-attachment" : nil),
+      ms_attachment_content_type: content_type
+    },
+    css_classes: css_classes,
+    base_classes: "ms-attachment #{layout_classes}"
+  )
+%>
+<%= tag.figure(**attributes) do %>
+  <% if thumbnail %>
+    <img src="<%= preview_url %>"
+         alt="<%= label %>"
+         loading="lazy"
+         data-attachment-part="thumbnail"
+         data-ms-attachment-target="thumbnail"
+         data-action="error->ms-attachment#thumbnailFailed"
+         class="<%= variant == :grid ? "h-24 w-full rounded object-cover" : "h-8 w-8 rounded object-cover" %>">
+  <% else %>
+    <span data-attachment-part="icon"
+          aria-hidden="true"
+          class="flex h-8 w-8 shrink-0 items-center justify-center rounded bg-gray-100 text-xs font-medium uppercase text-gray-500 dark:bg-gray-800 dark:text-gray-400">
+      <%= File.extname(filename).delete_prefix(".").first(4).presence || "•" %>
+    </span>
+  <% end %>
+
+  <figcaption data-attachment-part="meta" class="flex min-w-0 flex-1 flex-col">
+    <span data-attachment-part="filename" class="truncate font-medium text-gray-900 dark:text-gray-100" title="<%= label %>"><%= label %></span>
+    <% if human_size || content_type %>
+      <span data-attachment-part="details" class="truncate text-xs text-gray-500 dark:text-gray-400">
+        <%= [ human_size, content_type ].compact.join(" · ") %>
+      </span>
+    <% end %>
+  </figcaption>
+
+  <% if downloadable %>
+    <%= link_to url,
+          download: filename.presence,
+          data: { attachment_part: "download", ms_attachment_target: "download" },
+          "aria-label": t("maquina_stream.attachment.download_file", name: label, default: "Descargar %{name}"),
+          class: "shrink-0 rounded px-2 py-1 text-xs text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800" do %>
+      <%= t("maquina_stream.attachment.download", default: "Descargar") %>
+    <% end %>
+  <% end %>
+
+  <% if removable %>
+    <%= button_to remove_path,
+          method: :delete,
+          form: { data: { turbo_confirm: t("maquina_stream.attachment.remove_confirm", default: "¿Eliminar este adjunto?") } },
+          data: { attachment_part: "remove" },
+          "aria-label": t("maquina_stream.attachment.remove_file", name: label, default: "Eliminar %{name}"),
+          class: "shrink-0 rounded px-2 py-1 text-xs text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800" do %>
+      <%= t("maquina_stream.attachment.remove", default: "Eliminar") %>
+    <% end %>
+  <% end %>
+<% end %>

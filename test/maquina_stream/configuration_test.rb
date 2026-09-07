@@ -21,12 +21,57 @@ class MaquinaStream::ConfigurationTest < ActiveSupport::TestCase
     assert_equal ["*"], c.allowed_image_prefixes
     assert c.allow_data_images
 
-    assert_equal({
-      code:  { copy: true, download: true },
-      table: { copy: true, download: true, fullscreen: true },
-      image: { download: true },
-      link_safety: true
-    }, c.controls)
+    # The four documented groups, with their documented defaults, plus the two
+    # Phase 5 components' own controls.
+    assert_equal({ copy: true, download: true }, c.controls[:code])
+    assert_equal({ copy: true, download: true, fullscreen: true }, c.controls[:table])
+    assert_equal({ download: true }, c.controls[:image])
+    assert_equal true, c.controls[:link_safety]
+    assert_equal({ download: true, remove: true }, c.controls[:attachment])
+    assert_equal({ enabled: true }, c.controls[:suggestion])
+  end
+
+  test "a control is switchable one at a time, and the rest stay as they were" do
+    MaquinaStream.configure { |c| c.controls = { code: { copy: false } } }
+    c = MaquinaStream.config
+
+    assert_not c.control?(:code, :copy)
+    assert c.control?(:code, :download)
+    assert c.control?(:table, :fullscreen)
+    assert c.control?(:link_safety)
+  end
+
+  test "disabling everything is one expression" do
+    MaquinaStream.configure { |c| c.controls = false }
+    c = MaquinaStream.config
+
+    MaquinaStream::Configuration::DEFAULT_CONTROLS.each_key do |group|
+      assert_not c.control?(group), "#{group} survived a wholesale disable"
+    end
+
+    MaquinaStream.configure { |c| c.controls = true }
+
+    assert MaquinaStream.config.control?(:table, :copy)
+  end
+
+  test "control? answers for a group and for one control" do
+    c = MaquinaStream.config
+
+    assert c.control?(:code, :copy)
+    assert c.control?(:code), "a group with anything enabled is enabled"
+    assert_not c.control?(:code, :nonexistent)
+
+    c.controls = { code: { copy: false, download: false } }
+
+    assert_not c.control?(:code), "a group with nothing left enabled is disabled"
+  end
+
+  test "link_safety is a flag, not a group, and reads the same way" do
+    assert MaquinaStream.config.control?(:link_safety)
+
+    MaquinaStream.configure { |c| c.controls = { link_safety: false } }
+
+    assert_not MaquinaStream.config.control?(:link_safety)
   end
 
   test "configure yields the config and keeps the assignment" do

@@ -1,0 +1,35 @@
+/* Vendored fallback for the `attachment` component. Loaded only while the
+ * vendored partial is the one rendering. See docs/component-scope.md.
+ *
+ * Layout is Tailwind, in the partial. What lives here is what a utility class
+ * cannot express: the variant shapes, truncation of a long filename, and the
+ * hidden state the download control takes when its image fails to load.
+ */
+[data-component="attachment"] {
+  --attachment-radius: var(--surface-radius, 0.5rem);
+
+  border-radius: var(--attachment-radius);
+}
+
+[data-component="attachment"][data-variant="inline"] {
+  --attachment-radius: 9999px;
+}
+
+[data-component="attachment"] [data-attachment-part="filename"],
+[data-component="attachment"] [data-attachment-part="details"] {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+[data-component="attachment"] [data-attachment-part="thumbnail"] {
+  object-fit: cover;
+  background-color: var(--attachment-thumbnail-bg, rgb(0 0 0 / 0.04));
+}
+
+/* `ms-attachment` sets this when the thumbnail errors: a blob that will not
+ * load must not offer a download that cannot work.
+ */
+[data-component="attachment"] [data-attachment-part="download"][hidden] {
+  display: none;
+}

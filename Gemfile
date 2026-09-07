@@ -14,4 +14,11 @@ gem "turbo-rails"
 group :development, :test do
   gem "rake"
   gem "minitest"
+
+  # Harness only. The engine ships no JavaScript build step; these serve its
+  # `app/javascript` to a browser so the Stimulus controllers can be driven.
+  # See test/dummy/app/views/harness and docs/interaction.md.
+  gem "importmap-rails"
+  gem "propshaft"
+  gem "puma"
 end

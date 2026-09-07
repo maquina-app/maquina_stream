@@ -1,0 +1,76 @@
+# Español es el idioma por defecto del motor. Cada etiqueta de control y cada
+# nombre accesible vive aquí; ningún texto visible se escribe en línea en una
+# plantilla o en un controlador Stimulus.
+#
+# test/maquina_stream/locales_test.rb exige que es.yml y en.yml tengan
+# exactamente el mismo conjunto de claves: una traducción que falta rompe la
+# compilación en vez de degradarse en silencio.
+es:
+  maquina_stream:
+    number:
+      decimal_separator: ","
+    streaming:
+      controls_disabled: "Disponible cuando termine la respuesta"
+    shimmer:
+      label: "Cargando…"
+    code:
+      copy: "Copiar"
+      copy_code: "Copiar el código"
+      copied: "Código copiado"
+      copy_failed: "No se pudo copiar"
+      download: "Descargar"
+      download_code: "Descargar el código"
+      language: "Lenguaje: %{name}"
+    snippet:
+      copy: "Copiar"
+      copy_command: "Copiar el comando"
+      copied: "Comando copiado"
+      copy_failed: "No se pudo copiar"
+    table:
+      copy: "Copiar"
+      copy_markdown: "Copiar como Markdown"
+      copy_csv: "Copiar como CSV"
+      copy_tsv: "Copiar como TSV"
+      copied: "Tabla copiada"
+      copy_failed: "No se pudo copiar"
+      download: "Descargar"
+      download_csv: "Descargar como CSV"
+      download_markdown: "Descargar como Markdown"
+      fullscreen: "Pantalla completa"
+      exit_fullscreen: "Salir de pantalla completa"
+    image:
+      download: "Descargar"
+      download_image: "Descargar la imagen %{name}"
+      failed: "La imagen no se pudo cargar"
+    link_safety:
+      title: "Vas a salir del sitio"
+      body: "Este enlace lleva a %{host}, un sitio externo. ¿Quieres continuar?"
+      host: "Destino"
+      confirm: "Continuar"
+      cancel: "Cancelar"
+      always_allow: "Permitir siempre este sitio"
+      external_link: "Enlace externo a %{host}"
+      close: "Cerrar"
+    autoscroll:
+      scroll_to_bottom: "Ir al final"
+      following: "Siguiendo la respuesta"
+    source_citation:
+      unknown: "Fuente"
+      link_title: "Abrir la fuente %{name}"
+    attachment:
+      unnamed: "Archivo adjunto"
+      download: "Descargar"
+      download_file: "Descargar %{name}"
+      remove: "Eliminar"
+      remove_file: "Eliminar %{name}"
+      remove_confirm: "¿Eliminar este adjunto?"
+      size: "%{value} %{unit}"
+      units:
+        bytes: "B"
+        kb: "kB"
+        mb: "MB"
+        gb: "GB"
+        tb: "TB"
+    suggestion:
+      list_label: "Sugerencias"
+      chip_label: "Usar la sugerencia: %{text}"

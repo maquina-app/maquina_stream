@@ -40,12 +40,19 @@ Resolution falls back to the vendored partial when the gem is absent, when the g
 
 | Partial | `data-component` | Status |
 |---|---|---|
+| `app/views/maquina_stream/components/_attachment.html.erb` | `attachment` | vendored, extract later |
 | `app/views/maquina_stream/components/_code_block.html.erb` | `code-block` | vendored, extract later |
 | `app/views/maquina_stream/components/_snippet.html.erb` | `snippet` | vendored, extract later |
+| `app/views/maquina_stream/components/_suggestion.html.erb` | `suggestion` | vendored, extract later |
 | `app/views/maquina_stream/components/_shimmer.html.erb` | `shimmer` | engine-owned, permanent |
 | `app/views/maquina_stream/components/_source_citation.html.erb` | `source-citation` | engine-owned, permanent |
 
-`attachment` and `suggestion` are still unbuilt; they are listed in `VENDORED_COMPONENTS` and have no partial or stylesheet yet.
+All six are built (Phase 5 added `attachment` and `suggestion`), each with its
+own stylesheet. `attachment` renders three variants — `grid`, `inline`, `list` —
+from ActiveStorage's own attribute names, and `suggestion` is a server-rendered
+chip row with no client state and no Stimulus controller. Every control either
+one of them offers is switchable through `config.controls`; see
+`lib/maquina_stream/configuration.rb`, where the shape is documented.
 
 Stylesheets are one per component under `app/assets/stylesheets/maquina_stream/components/`, and the host loads what `component_stylesheets` reports.
 

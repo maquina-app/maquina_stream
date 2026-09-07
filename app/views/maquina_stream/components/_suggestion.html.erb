@@ -1,0 +1,68 @@
+<%# EXTRACTION CANDIDATE → maquina_components. See docs/component-scope.md %>
+<%# locals: (items: [], label: nil, variant: :default, size: :md, css_classes: "", **html_options) %>
+<%#
+  A row of suggestion chips above a prompt input. Server-rendered, no client
+  state, no Stimulus controller: a chip is either a link the host supplied or a
+  form submission the host supplied, and the page it lands on decides what
+  happens next.
+
+  `items` is an array of hashes shaped by the host, not by the AI SDK:
+
+    { text: "Resume el hilo", href: prompts_path }                     → link
+    { text: "Resume el hilo", href: prompts_path, method: :post,
+      params: { prompt: "Resume el hilo" } }                           → form
+
+  `text` is the chip's visible label; a hash may carry `:label` when the
+  accessible name should differ from it. Anything without `text` is skipped
+  rather than rendering an empty chip.
+
+  The whole row is gated on `config.controls[:suggestion][:enabled]`, so a host
+  that does not want suggestions turns them off in configuration rather than in
+  every template.
+%>
+<%
+  items   = Array(local_assigns.fetch(:items, nil)).map { |item| item.to_h.symbolize_keys }
+  items   = items.select { |item| item[:text].to_s.present? }
+  label   = local_assigns.fetch(:label, nil).presence ||
+            t("maquina_stream.suggestion.list_label", default: "Sugerencias")
+  variant ||= :default
+  size    ||= :md
+
+  chip_classes = "ms-suggestion-chip inline-flex max-w-full items-center rounded-full border border-gray-200 bg-white px-3 py-1 text-sm text-gray-700 hover:bg-gray-50 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-200 dark:hover:bg-gray-800"
+
+  attributes = component_html_options(
+    html_options,
+    own_data: {
+      component: "suggestion",
+      variant: variant,
+      size: size
+    },
+    css_classes: css_classes,
+    base_classes: "ms-suggestion flex flex-wrap gap-2"
+  )
+  attributes[:role] ||= "list"
+  attributes["aria-label"] ||= label
+%>
+<% if maquina_stream_config.control?(:suggestion, :enabled) && items.any? %>
+  <%= tag.div(**attributes) do %>
+    <% items.each do |item| %>
+      <%= tag.div(role: "listitem", data: { suggestion_part: "item" }, class: "contents") do %>
+        <% if item[:method].present? && item[:method].to_sym != :get %>
+          <%= button_to item[:text],
+                item[:href],
+                method: item[:method],
+                params: item[:params],
+                data: { suggestion_part: "chip" },
+                "aria-label": item[:label].presence || item[:text],
+                class: chip_classes %>
+        <% else %>
+          <%= link_to item[:text],
+                item[:href],
+                data: { suggestion_part: "chip" },
+                "aria-label": item[:label].presence || item[:text],
+                class: chip_classes %>
+        <% end %>
+      <% end %>
+    <% end %>
+  <% end %>
+<% end %>
