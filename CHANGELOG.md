@@ -26,6 +26,13 @@ browser.
   carrying bidi control characters are pinned, against Trojan Source.
 - **History** — sealed messages are frozen and fragment-cached by buffer digest;
   1942x on a warm cache.
+- **Generators** — `maquina_stream:install` wires the engine into a host (the
+  initializer, the mount, the Turbo and engine importmap pins, the Stimulus
+  registration, the stylesheets) and `maquina_stream:streamable Message` makes
+  one model streamable (the migration, generated from the `Streamable` contract
+  itself, and the macro). Idempotent, non-destructive, and loud about anything
+  they cannot do. Both seams stay the host's: `authorize` is generated as a stub
+  that denies.
 - Spanish default locale, English secondary. No Node build step anywhere.
 
 Not yet released: `maquina_remend` is still a path reference.

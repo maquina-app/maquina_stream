@@ -1,0 +1,121 @@
+# frozen_string_literal: true
+
+# maquina_stream. Every option is listed with the default it already has, so
+# uncomment only what you are changing. The full reference, with the measured
+# cost of each cadence setting, is in docs/configuration.md.
+MaquinaStream.configure do |c|
+  # ---------------------------------------------------------------------------
+  # Host seams. The engine resolves nothing and authorizes nothing on its own,
+  # and the two below are the reason. Both are stubs: fill them in.
+  # ---------------------------------------------------------------------------
+
+  # Turns a stream id into a record. `rails g maquina_stream:streamable Message`
+  # rewrites this line for you; until then it raises, which is what an unset
+  # `find_stream` does too — a silent nil would look like a missing record
+  # rather than a missing seam.
+  c.find_stream = ->(sid) { raise NotImplementedError, "maquina_stream: c.find_stream is still the generated stub" }
+
+  # STUB, AND THE ONE THING THIS GENERATOR WILL NOT GUESS FOR YOU.
+  #
+  # As written it denies every repair request — exactly what an unset
+  # `authorize` does. That is the safe failure and a broken feature both: the
+  # browser can never repair a message until you replace it, and a message that
+  # loses a frame stays wrong until the page reloads.
+  #
+  # It receives the record `find_stream` returned and the ActionDispatch
+  # request, and answers whether this request may see this record. Something
+  # like:
+  #
+  #   c.authorize = ->(record, request) do
+  #     record.conversation.member?(request.session[:user_id])
+  #   end
+  #
+  # Guessing this is how an engine leaks other people's messages, so it guesses
+  # nothing.
+  c.authorize = ->(record, request) { false }
+
+  # Which transport Broadcaster's default emitter uses. `:turbo_streams` is the
+  # only value the engine ships; the seam exists so SSE is possible without the
+  # broadcaster knowing about it.
+  # c.transport = :turbo_streams
+
+  # ---------------------------------------------------------------------------
+  # Streaming cadence
+  # ---------------------------------------------------------------------------
+
+  # How long appends coalesce before one frame goes out. The one number worth
+  # thinking about: if your provider streams token by token you pay 2.34x the
+  # document size at 100ms and 1.08x at 250ms, and the reveal animation covers
+  # the coarser cadence. If your text arrives in batches or whole steps,
+  # raising it buys nothing. Measurements in docs/configuration.md.
+  # c.frame_budget_ms = 100
+
+  # How many blocks must open after a block before it may freeze. Markdown
+  # reinterprets backwards — a paragraph becomes a heading when its underline
+  # arrives — so a block near the tail is still moving.
+  # c.seal_lag = 2
+
+  # How often the client reconciles its DOM against the manifest, in ms.
+  # c.keyframe_interval_ms = 4_000
+
+  # How many recent sealed blocks a manifest carries in full. Everything older
+  # is covered by one rollup digest, which is what bounds the payload by the
+  # window instead of by the message.
+  # c.manifest_window = 50
+
+  # ---------------------------------------------------------------------------
+  # Presentation
+  # ---------------------------------------------------------------------------
+
+  # Fallback locale for the engine's own labels when I18n.locale is unset.
+  # Spanish and English both ship complete.
+  # c.locale = :es
+
+  # `:maquina` renders through maquina_components when that gem is installed
+  # and defines a component; `:plain` forces the engine's own Tailwind fallback
+  # even when the gem is present.
+  # c.components = :maquina
+
+  # Rouge theme names for the two generated highlighting stylesheets. Names are
+  # Rouge's own — `github.light`, not `github_light`. Changing them means
+  # re-running `bin/rails maquina_stream:themes`.
+  # c.themes = {light: "github.light", dark: "github.dark"}
+
+  # Which interactive affordances render. A hash merges onto the defaults one
+  # level deep; `false` turns everything off, `true` turns everything back on.
+  # c.controls = {code: {download: false}}
+
+  # ---------------------------------------------------------------------------
+  # URL hardening. Read by the sanitizer, the last pass before any HTML leaves
+  # the server. Every one of these loosens or tightens what a *model* may put
+  # in an href or a src, and model output is prompt-injectable.
+  # ---------------------------------------------------------------------------
+
+  # Base for resolving relative URLs. nil leaves a relative URL relative.
+  # c.default_origin = nil
+
+  # The only schemes that survive.
+  # c.allowed_protocols = %w[http https mailto]
+
+  # "*" allows any destination. A list of prefixes strips the href off every
+  # link not starting with one; the text stays.
+  # c.allowed_link_prefixes = ["*"]
+
+  # The same, for images. An image whose src does not survive is removed
+  # entirely: a broken rectangle carrying an attacker-chosen alt is worse than
+  # nothing.
+  # c.allowed_image_prefixes = ["*"]
+
+  # Whether data: image URLs survive. Only base64 rasters ever do;
+  # data:image/svg+xml is refused whatever this is set to.
+  # c.allow_data_images = true
+end
+
+# Fences and tags the renderer should know about beyond CommonMark. See
+# docs/registries.md and docs/deferred-renderers.md.
+#
+# MaquinaStream.register_fence "ruby", strategy: :server
+# MaquinaStream.register_fence "mermaid",
+#   strategy: :client,
+#   controller: "ms-diagram",
+#   payload: ->(source, info) { {source: source, info: info} }

@@ -1,0 +1,21 @@
+# frozen_string_literal: true
+
+# The columns MaquinaStream::Streamable generates its contract methods from.
+# `<%= buffer_column %>` holds the raw markdown the model writes; the other two are the
+# contract's own, and their names come from Streamable rather than from here.
+class <%= migration_class_name %> < ActiveRecord::Migration[<%= migration_version %>]
+  def change
+<% if create_table? -%>
+    create_table :<%= table_name %> do |t|
+<% missing_columns.each do |column| -%>
+      t.<%= column[:type] %> :<%= column[:name] %>, null: <%= column[:null] %>, default: <%= column[:default].inspect %>
+<% end -%>
+      t.timestamps
+    end
+<% else -%>
+<% missing_columns.each do |column| -%>
+    add_column :<%= table_name %>, :<%= column[:name] %>, :<%= column[:type] %>, null: <%= column[:null] %>, default: <%= column[:default].inspect %>
+<% end -%>
+<% end -%>
+  end
+end

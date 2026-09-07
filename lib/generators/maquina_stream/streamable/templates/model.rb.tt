@@ -1,0 +1,4 @@
+# frozen_string_literal: true
+
+class <%= class_name %> < ApplicationRecord
+<%= model_macro %>end

@@ -1,6 +1,7 @@
 # Getting started
 
-From `bundle add maquina_stream` to a message streaming into a browser.
+From `bundle add maquina_stream` to a message streaming into a browser: two
+commands, two seams you fill in yourself, one view.
 
 ## 1. Install
 
@@ -13,50 +14,55 @@ Rails 8, Ruby 3.3+. The engine pulls in `maquina_remend`, `commonmarker`,
 `nokogiri` and `rouge`. `maquina_components` is optional; without it the engine
 renders its own Tailwind fallbacks.
 
-Mount the engine. It contributes two `GET` routes — the repair path — and
-nothing else:
+It ships no migrations and no models. **The host owns persistence.**
 
-```ruby
-# config/routes.rb
-Rails.application.routes.draw do
-  mount MaquinaStream::Engine => "/maquina_stream"
-end
+**Turbo is required.** Repair applies Turbo Stream morphs, and with
+`window.Turbo` undefined every repair fails inside a catch — the message stops
+being correct and nothing in the browser says so. The install generator pins it
+if your Gemfile has `turbo-rails` and refuses loudly if it does not.
+
+## 2. Two commands
+
+```sh
+bin/rails generate maquina_stream:install
+bin/rails generate maquina_stream:streamable Message
 ```
 
-The engine ships no migrations and no models. **The host owns persistence.**
+```
+      create  config/initializers/maquina_stream.rb
+       route  mount MaquinaStream::Engine => "/maquina_stream"
+      append  config/importmap.rb
+      append  app/javascript/controllers/index.js
+      insert  app/views/layouts/application.html.erb
 
-## 2. The migration
-
-The `maquina_stream` macro generates its contract methods from three columns:
-the one you name as the buffer, plus `stream_sequence` and `stream_status`.
-
-```ruby
-create_table :messages do |t|
-  t.references :conversation
-  t.text    :content,         null: false, default: ""
-  t.integer :stream_sequence, null: false, default: 0
-  t.string  :stream_status,   null: false, default: "open"
-  t.timestamps
-end
+      create  db/migrate/20260101000000_create_messages.rb
+      create  app/models/message.rb
+        gsub  config/initializers/maquina_stream.rb
 ```
 
-`stream_status` holds one of `open`, `complete`, `cancelled`, `errored` or
-`timed_out`.
+Both are idempotent and neither overwrites a file. Re-run them as often as you
+like; anything already in place is reported and left alone. A step whose
+ingredient is missing — no importmap, no Stimulus entrypoint, no layout — prints
+the exact content to paste rather than failing or silently doing nothing.
 
-## 3. The Streamable model
+`streamable` is per model, because a host may have several: an assistant
+message and a tool call are two streams, not one.
 
-```ruby
-class Message < ApplicationRecord
-  include MaquinaStream::Streamable
-
-  maquina_stream buffer: :content,
-    stream_for: ->(m) { [:conversation, m.conversation_id, :messages] }
-end
+```sh
+bin/rails db:migrate
 ```
 
-`buffer:` names the column holding the raw markdown. `stream_for:` is a
-callable that returns the Turbo broadcast target — the engine never guesses one,
-because who may subscribe to a stream is your question, not the engine's.
+The migration carries the three columns the contract needs — the buffer, plus
+`stream_sequence` and `stream_status` — and generates them from
+`MaquinaStream::Streamable` itself, so it cannot drift from the contract
+`maquina_stream_contract_gaps` checks. A model whose table already exists gets
+`add_column` for only the columns it lacks.
+
+| Flag | What it does |
+|---|---|
+| `--buffer=body` | Names a different column as the markdown buffer |
+| `--stream-for="[:conversation, record.conversation_id, :messages]"` | Sets the Turbo broadcast target |
+| `--deferred-renderers` (install) | Also pins `mermaid` and `katex`, with `preload: false` |
 
 Assert the contract in your own suite, so a missing column fails at test time
 rather than mid-stream:
@@ -67,28 +73,62 @@ test "Message satisfies the maquina_stream contract" do
 end
 ```
 
-The full method table and what to do when your columns are named differently is
-in [streaming.md](streaming.md).
+## 3. The two seams
 
-## 4. Configure the two host seams
+The generators write everything the engine can know. These two it cannot.
 
-The engine resolves nothing and authorizes nothing on its own.
+### `authorize`, in the initializer
 
 ```ruby
 # config/initializers/maquina_stream.rb
-MaquinaStream.configure do |c|
-  c.find_stream = ->(sid) { Message.find_by(id: sid) }
-  c.authorize = ->(record, request) { record.conversation.readable_by?(request) }
+c.authorize = ->(record, request) { false }   # ← the generated stub
+```
+
+**As generated it denies every repair request.** That is the safe failure and a
+broken feature both: the browser can never repair a message until you replace
+it. Guessing a host's authorization is how an engine leaks other people's
+messages, so it guesses nothing.
+
+```ruby
+c.authorize = ->(record, request) do
+  record.conversation.member?(request.session[:user_id])
 end
 ```
 
-**With no `authorize` configured, every repair request is refused.** With no
-`find_stream`, every repair request raises. See [repair.md](repair.md).
+`find_stream` is the other seam, and `maquina_stream:streamable` fills it in:
 
-Every other option has a working default. [configuration.md](configuration.md)
-lists them.
+```ruby
+c.find_stream = ->(sid) { Message.find_by(id: sid) }
+```
 
-## 5. The view
+Unset, it raises rather than returning `nil` — a silent `nil` would look like a
+missing record rather than a missing seam. Every other option in the generated
+initializer is commented, with the default it already has.
+[configuration.md](configuration.md) explains each one.
+
+### `stream_for:`, in the model
+
+```ruby
+class Message < ApplicationRecord
+  include MaquinaStream::Streamable
+
+  maquina_stream buffer: :content,
+    stream_for: ->(record) { record }
+end
+```
+
+`stream_for:` returns the Turbo broadcast target. The generated one gives every
+message a stream of its own; a conversation-wide target is usually what you
+want:
+
+```ruby
+stream_for: ->(record) { [:conversation, record.conversation_id, :messages] }
+```
+
+The engine never guesses one, because who may subscribe to a stream is your
+question, not the engine's.
+
+## 4. The view
 
 The engine appends block HTML into `#ms-msg-<sid>` and never creates that
 element. The wrapper, the controllers on it and its repair URLs are yours:
@@ -106,7 +146,7 @@ element. The wrapper, the controllers on it and its repair URLs are yours:
 ```
 
 `maquina_stream.` is the mounted engine's route proxy, so those two paths follow
-wherever you mounted it.
+wherever the install generator mounted it.
 
 `data-ms-streaming` is the one attribute you have to keep correct. It is stamped
 from `maquina_stream_open?`, and everything derived from "this message is still
@@ -114,35 +154,16 @@ being written" reads it: the caret CSS, the reveal animation, and the guard that
 keeps copy and download buttons inert while a code block is half-arrived.
 Taking it off is what a seal looks like in the DOM.
 
-Load the reveal stylesheet and, if you want highlighting colours, the generated
-themes:
+Subscribe the page to the same target you gave `stream_for:`:
 
 ```erb
-<%= stylesheet_link_tag "maquina_stream/reveal" %>
-<%= stylesheet_link_tag "maquina_stream/themes/light" %>
-<%= stylesheet_link_tag "maquina_stream/themes/dark" %>
+<%= turbo_stream_from :conversation, @conversation.id, :messages %>
+<div id="messages">
+  <%= render @messages %>
+</div>
 ```
 
-## 6. The JavaScript
-
-Importmap, no build step. The engine appends its own pins to your importmap; it
-pins nothing third-party, not even Stimulus.
-
-```js
-// app/javascript/application.js
-import "@hotwired/turbo-rails"
-import { Application } from "@hotwired/stimulus"
-import { registerMaquinaStreamControllers } from "maquina_stream"
-
-const application = Application.start()
-registerMaquinaStreamControllers(application)
-```
-
-The engine registers its own identifiers rather than relying on your eager-load
-glob, because those identifiers are part of the DOM contract. See
-[javascript.md](javascript.md).
-
-## 7. Stream one message end to end
+## 5. Stream one message end to end
 
 Create the record, broadcast an empty shell so the browser has somewhere to put
 blocks, then feed the broadcaster:
@@ -199,16 +220,7 @@ reconciled rather than deleted and recreated.
 for a frame that never arrives; that is why the `rescue` above seals as
 `errored` before re-raising.
 
-Subscribe the page to the same target you gave `stream_for:`:
-
-```erb
-<%= turbo_stream_from :conversation, @conversation.id, :messages %>
-<div id="messages">
-  <%= render @messages %>
-</div>
-```
-
-## 8. Watch it work
+## 6. Watch it work
 
 Two live pages in `test/dummy` talk to a real model rather than a fixture:
 
@@ -234,6 +246,107 @@ endpoint.
 `/harness` itself is the fixture page — every control, the link dialog, the
 autoscroll pane, the deferred renderers — and `/history` shows a page of sealed
 messages served from the render cache.
+
+## What the generators do for you
+
+Every step, for a host that would rather do it by hand — or that has to,
+because it uses a bundler instead of importmaps.
+
+### `maquina_stream:install`
+
+**The initializer**, `config/initializers/maquina_stream.rb`, with every option
+commented at its default and the two seams stubbed:
+
+```ruby
+MaquinaStream.configure do |c|
+  c.find_stream = ->(sid) { Message.find_by(id: sid) }
+  c.authorize = ->(record, request) { record.conversation.readable_by?(request) }
+end
+```
+
+**The mount**, in `config/routes.rb`. The engine contributes two `GET` routes —
+the repair path — and nothing else:
+
+```ruby
+mount MaquinaStream::Engine => "/maquina_stream"
+```
+
+**The Turbo pin**, in `config/importmap.rb`. The engine appends its own pins to
+your importmap through its engine initializer, and pins nothing third-party —
+not even Stimulus, because an engine that pinned it would win or lose a version
+fight with your app for no reason:
+
+```ruby
+pin "@hotwired/turbo-rails", to: "turbo.min.js"
+```
+
+**The Stimulus registration**, appended to `app/javascript/controllers/index.js`
+or, failing that, to whichever entrypoint calls `Application.start()`:
+
+```js
+import { registerMaquinaStreamControllers } from "maquina_stream"
+registerMaquinaStreamControllers(application)
+```
+
+The engine registers its own identifiers rather than relying on your eager-load
+glob, because those identifiers are part of the DOM contract. See
+[javascript.md](javascript.md).
+
+**The stylesheets**, injected into the layout's `<head>`:
+
+```erb
+<%= stylesheet_link_tag "maquina_stream/reveal" %>
+<%= stylesheet_link_tag "maquina_stream/themes/light" %>
+<%= stylesheet_link_tag "maquina_stream/themes/dark" %>
+```
+
+**The deferred-renderer pins**, with `--deferred-renderers`:
+
+```ruby
+pin "mermaid", to: "https://cdn.jsdelivr.net/npm/mermaid@11.4.1/+esm", preload: false
+pin "katex", to: "https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.mjs", preload: false
+```
+
+`preload: false` is load-bearing. importmap-rails preloads by default, which
+emits a `<link rel="modulepreload">` and fetches both libraries on every page —
+exactly the cost the lazy import inside the deferred controller exists to
+avoid. Pin an exact version: NoBuild means no lockfile, so the version lives
+there and nowhere else.
+
+### `maquina_stream:streamable`
+
+**The migration.** The `maquina_stream` macro generates its contract methods
+from three columns: the one you name as the buffer, plus `stream_sequence` and
+`stream_status`.
+
+```ruby
+create_table :messages do |t|
+  t.text    :content,         null: false, default: ""
+  t.integer :stream_sequence, null: false, default: 0
+  t.string  :stream_status,   null: false, default: "open"
+  t.timestamps
+end
+```
+
+`stream_status` holds one of `open`, `complete`, `cancelled`, `errored` or
+`timed_out`.
+
+**The model**, created if it is missing and injected into if it is not:
+
+```ruby
+class Message < ApplicationRecord
+  include MaquinaStream::Streamable
+
+  maquina_stream buffer: :content,
+    stream_for: ->(record) { record }
+end
+```
+
+**The `find_stream` seam**, but only when it is still the stub the install
+generator wrote. One you wrote yourself is never touched.
+
+The full method table, and what to do when your columns are named differently,
+is in [streaming.md](streaming.md).
 
 ## Where to go next
 

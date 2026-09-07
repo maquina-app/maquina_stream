@@ -1,0 +1,26 @@
+Description:
+    Wires maquina_stream into a host application: the initializer, the engine
+    mount, the importmap pins, the Stimulus registration and the stylesheets.
+
+    It never overwrites a file. Anything already in place is reported and left
+    alone, so re-running is safe.
+
+    Two seams are deliberately left stubbed — `find_stream` and `authorize`.
+    The engine cannot guess a host's authorization, and a guessed one is how an
+    engine leaks other people's messages. Until `authorize` is written, every
+    repair request is refused.
+
+Example:
+    bin/rails generate maquina_stream:install
+
+    Creates or reports:
+        config/initializers/maquina_stream.rb
+        config/routes.rb                          mount MaquinaStream::Engine
+        config/importmap.rb                       @hotwired/turbo-rails pin
+        app/javascript/controllers/index.js       registerMaquinaStreamControllers
+        app/views/layouts/application.html.erb    the three stylesheet links
+
+    bin/rails generate maquina_stream:install --deferred-renderers
+
+    Also pins mermaid and katex with `preload: false`, for the client-deferred
+    diagram and math renderers.

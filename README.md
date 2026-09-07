@@ -17,40 +17,48 @@ gem "maquina_stream"
 
 Rails 8, Ruby 3.3+. Depends on `maquina_remend`, `commonmarker`, `nokogiri` and
 `rouge`. `maquina_components` is optional — without it, components render plain
-Tailwind fallbacks.
+Tailwind fallbacks. Turbo is required: repair applies Turbo Stream morphs, and
+with `window.Turbo` undefined every repair fails silently.
 
-## Five minutes to a streaming message
-
-Mount the engine so the browser can repair itself:
-
-```ruby
-# config/routes.rb
-mount MaquinaStream::Engine => "/maquina_stream"
+```sh
+bin/rails generate maquina_stream:install
+bin/rails generate maquina_stream:streamable Message
+bin/rails db:migrate
 ```
 
-Tell the engine how to find a record and who may see it:
+The first wires the engine into the app — the initializer, the mount, the
+importmap pins, the Stimulus registration, the stylesheets. The second is per
+model, because a host may have several: the migration carrying the contract
+columns, and the `include` plus macro in the model. Both are idempotent and
+neither overwrites a file; a host missing an ingredient is told what to paste
+rather than left with a silent no-op.
+
+## Two seams the generators will not guess
+
+**`authorize`**, in `config/initializers/maquina_stream.rb`. It is generated as
+a stub that denies everything, which is the safe failure and a broken feature
+both — the browser can never repair a message until you replace it. Guessing a
+host's authorization is how an engine leaks other people's messages:
 
 ```ruby
-# config/initializers/maquina_stream.rb
-MaquinaStream.configure do |c|
-  c.find_stream = ->(sid) { Message.find_by(id: sid) }
-  c.authorize = ->(record, request) { record.conversation.readable_by?(request) }
-end
+c.authorize = ->(record, request) { record.conversation.member?(request.session[:user_id]) }
 ```
 
-Make the model streamable. The macro generates the contract methods from three
-columns — the buffer you name, `stream_sequence` and `stream_status`:
+**`stream_for:`**, in the model. Who may subscribe to a stream is your question,
+not the engine's:
 
 ```ruby
 class Message < ApplicationRecord
   include MaquinaStream::Streamable
 
   maquina_stream buffer: :content,
-    stream_for: ->(m) { [:conversation, m.conversation_id, :messages] }
+    stream_for: ->(record) { [:conversation, record.conversation_id, :messages] }
 end
 ```
 
-Stream into it:
+## Streaming a message
+
+Feed the broadcaster and seal exactly once:
 
 ```ruby
 broadcaster = MaquinaStream::Broadcaster.new(message)
@@ -58,7 +66,8 @@ chat.ask(prompt) { |chunk| broadcaster.append(chunk.content.to_s) }
 broadcaster.seal!
 ```
 
-Render it, live or from history:
+Render it, live or from history. The engine appends block HTML into
+`#ms-msg-<sid>` and never creates that element — the wrapper is yours:
 
 ```erb
 <div id="ms-msg-<%= message.maquina_stream_id %>"
@@ -68,17 +77,9 @@ Render it, live or from history:
      <%= "data-ms-streaming" if message.maquina_stream_open? %>><%= MaquinaStream.render(message) %></div>
 ```
 
-And start the JavaScript, which ships by importmap with no build step:
-
-```js
-import { Application } from "@hotwired/stimulus"
-import { registerMaquinaStreamControllers } from "maquina_stream"
-
-registerMaquinaStreamControllers(Application.start())
-```
-
 That is the whole integration. [Getting started](docs/getting-started.md) walks
-the same path with the migration, the view and a working end-to-end run.
+the same path with a working end-to-end run, and lists every step the
+generators take for hosts that would rather do them by hand.
 
 ## What you get
 

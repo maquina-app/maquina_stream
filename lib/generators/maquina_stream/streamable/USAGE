@@ -1,0 +1,28 @@
+Description:
+    Makes one model streamable: the migration carrying the columns the
+    Streamable contract requires, and the `include` plus `maquina_stream` macro
+    in the model itself.
+
+    Per model, because a host may have several — an assistant message and a
+    tool call are two streams, not one.
+
+    The migration's columns come from MaquinaStream::Streamable itself, so they
+    cannot drift from the contract `maquina_stream_contract_gaps` checks.
+
+Example:
+    bin/rails generate maquina_stream:streamable Message
+
+    Creates or reports:
+        db/migrate/XXXXXXXX_add_maquina_stream_to_messages.rb
+        app/models/message.rb                     include + maquina_stream
+        config/initializers/maquina_stream.rb     fills in the find_stream stub
+
+    bin/rails generate maquina_stream:streamable Message --buffer=body
+
+    Names a different column as the markdown buffer.
+
+    bin/rails generate maquina_stream:streamable Message \
+      --stream-for="[:conversation, message.conversation_id, :messages]"
+
+    Sets the Turbo broadcast target. The engine never guesses one: who may
+    subscribe to a stream is your question, not the engine's.
