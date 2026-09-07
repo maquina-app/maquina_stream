@@ -7,3 +7,7 @@ Antes del bloque.
 </div>
 
 Después del bloque.
+
+Párrafo posterior uno, para que el bloque anterior quede sellado.
+
+Párrafo posterior dos, para superar el seal lag.

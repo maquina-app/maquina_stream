@@ -5,3 +5,7 @@
       no es código, es continuación
 
 Párrafo final.
+
+Párrafo posterior uno, para que el bloque anterior quede sellado.
+
+Párrafo posterior dos, para superar el seal lag.

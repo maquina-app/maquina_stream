@@ -4,3 +4,7 @@
 - segundo punto
 
 - tercer punto tras una línea en blanco
+
+Párrafo posterior uno, para que el bloque anterior quede sellado.
+
+Párrafo posterior dos, para superar el seal lag.

@@ -5,3 +5,7 @@ y continúa en la línea siguiente
 sin línea en blanco entre medias.
 
 Otro párrafo.
+
+Párrafo posterior uno, para que el bloque anterior quede sellado.
+
+Párrafo posterior dos, para superar el seal lag.

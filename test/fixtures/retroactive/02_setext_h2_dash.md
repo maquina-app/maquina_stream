@@ -4,3 +4,7 @@ Resumen
 -------
 
 - primer punto
+
+Párrafo posterior uno, para que el bloque anterior quede sellado.
+
+Párrafo posterior dos, para superar el seal lag.

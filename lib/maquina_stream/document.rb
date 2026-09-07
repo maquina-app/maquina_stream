@@ -31,12 +31,21 @@ module MaquinaStream
     # a table's delimiter row turns the line above into a header - so a block is
     # only safe to freeze once enough later blocks exist that nothing can reach
     # back into it.
+    #
+    # The lag is not the whole story. A link reference definition resolves links
+    # in blocks arbitrarily far above it, so no fixed lag makes a block with an
+    # unresolved reference safe. The pointer stops there instead, and moves on
+    # once the definition arrives.
     def sealed_blocks
-      blocks.first([blocks.length - config.seal_lag, 0].max)
+      blocks.first(seal_pointer)
     end
 
     def unsealed_blocks
-      blocks.drop(sealed_blocks.length)
+      blocks.drop(seal_pointer)
+    end
+
+    def seal_pointer
+      @seal_pointer ||= blocks.count(&:sealed?)
     end
 
     def open_block
@@ -52,23 +61,56 @@ module MaquinaStream
     end
 
     private
+      # Blocks are matched to their source range by the index the post-pass
+      # stamped on them, never by position in the rendered output. The sanitizer
+      # drops nodes - an HTML comment, a disallowed element - and a positional
+      # match silently shifts every range after the first drop.
       def build_blocks
         rendered = Nokogiri::HTML5.fragment(html).children.select(&:element?)
         ranges = source_ranges
         sealed_count = [rendered.length - config.seal_lag, 0].max
 
-        rendered.each_with_index.map do |node, index|
-          range = ranges[index]
+        rendered.each_with_index.map do |node, position|
+          source_index = node["data-ms-block-index"]&.to_i || position
+          range = ranges[source_index]
 
           Block.new(
-            index: index,
+            index: source_index,
             markdown: slice(range),
             html: node.to_html,
             line_range: range,
             sid: sid,
-            sealed: index < sealed_count
+            sealed: false
           )
+        end.then { |built| apply_seal(built, sealed_count) }
+      end
+
+      # Sealing is a prefix: the pointer is the position it reaches, so a block
+      # that cannot seal holds every block after it open too.
+      def apply_seal(built, sealed_count)
+        limit = [sealed_count, unresolved_position(built) || sealed_count].min
+        built.each_with_index.map { |block, position| position < limit ? block.seal : block }
+      end
+
+      def unresolved_position(built)
+        built.index { |block| unresolved_references?(block.markdown) }
+      end
+
+      REFERENCE_USE = /\[[^\]\n]*\]\[([^\]\n]*)\]/
+      # A definition counts only once its line is complete: "[docs]:" with no
+      # destination yet resolves nothing, and "[docs]: https://exa" resolves to
+      # a truncated host that changes when the rest arrives. Either would seal a
+      # block whose links are still moving.
+      REFERENCE_DEFINITION = /^ {0,3}\[([^\]\n]+)\]:[ \t]*\S+[^\n]*\n/
+
+      def unresolved_references?(source)
+        source.scan(REFERENCE_USE).flatten.any? do |label|
+          !defined_reference_labels.include?(label.strip.downcase)
         end
+      end
+
+      def defined_reference_labels
+        @defined_reference_labels ||= markdown.scan(REFERENCE_DEFINITION).flatten.map { |l| l.strip.downcase }.to_set
       end
 
       # Line ranges come from a parse of the raw buffer, not from the rendered
