@@ -109,6 +109,7 @@ pagination bar.
 | `docs/deferred-renderers.md` | Diagrams, math, and adding a third renderer host-side |
 | `docs/sanitizer.md` | What survives, what is dropped, and the known holes |
 | `docs/component-scope.md` | Which components are vendored and how they extract |
+| `docs/agent-runs.md` | Streaming a tool-call run: one record per step, or one buffer |
 | `docs/design.md` | Why the architecture is what it is |
 
 `test/dummy` is a working host: the Streamable model, both seams, all three
