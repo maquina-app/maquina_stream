@@ -1,0 +1,52 @@
+phase: 6
+slug: deferred-renderers
+title: Client-deferred renderers
+repo: maquina_stream
+depends_on: [2, 4]
+status: complete_except_library_smoke_test
+opened: 2026-09-06
+
+tasks:
+  - { id: 1, title: base deferred controller - payload, lazy import, shimmer, status: done }
+  - { id: 2, title: sanitize renderer output before insertion, status: done }
+  - { id: 3, title: diagram renderer in strict security mode, status: done }
+  - { id: 4, title: math renderer with trust disabled, status: done }
+  - { id: 5, title: graceful error state per renderer, status: done }
+  - { id: 6, title: third renderer registered host-side in the dummy app, status: done }
+  - { id: 7, title: export fallback decided and implemented once, status: done, note: "show the source the model wrote; ms-deferred#fail" }
+  - { id: 8, title: text direction per block, status: pending }
+  - { id: 9, title: CJK through preprocessor and parser, status: done, note: "covered by the remend real corpus and the Phase 2 golden cjk_and_emoji" }
+
+dod:
+  - line: Rendered output survives repair, verified as an automated test.
+    met: true
+    verification: >-
+      In-browser: a byte-identical payload after a morph triggers ZERO
+      re-renders, a changed one triggers exactly one. The output element is
+      data-turbo-permanent, so the morph does not touch it.
+  - line: Renderer-side sanitization has its own regression suite, independent of the server's.
+    met: true
+    verification: >-
+      A stub renderer returning hostile markup is driven in Chromium: script,
+      iframe, onload and style stripped; javascript: href dropped while https:
+      survives; nothing executes; legitimate SVG renders.
+  - line: Heavy libraries load lazily, never on pages that don't need them.
+    met: partial
+    verification: >-
+      Structurally true - the import is inside library(), called on first draw,
+      and draw only runs on intersection with a payload present. NOT confirmed
+      in a network panel with the real libraries, because mermaid and katex are
+      host pins and are not pinned in this environment.
+  - line: A host can add a renderer using only the documented registry, demonstrated in the dummy app.
+    met: true
+    verification: >-
+      register_fence "timeline" with controller "ms-timeline" in the dummy app's
+      initializer. The string ms-timeline appears nowhere in the engine, and the
+      payload, controller and permanent output element all render correctly.
+  - line: Export fallback decided, implemented once, applied to every deferred renderer.
+    met: true
+    verification: "ms-deferred#fail shows the source the model wrote; every subclass inherits it."
+
+open:
+  - "Text direction per block (task 8) is not implemented."
+  - "The lazy-load claim needs one run with mermaid and katex actually pinned, watching the network panel."
