@@ -40,6 +40,10 @@ class MaquinaStream::RegistriesTest < ActiveSupport::TestCase
   end
 
   test "re-registering replaces the previous registration" do
+    # The dummy host registers its own fences on boot, so this asserts that the
+    # second registration replaced the first rather than that the registry is
+    # empty apart from it.
+    MaquinaStream.reset_registries!
     MaquinaStream.register_fence "ruby", strategy: :server
     MaquinaStream.register_fence "ruby", strategy: :passthrough
 

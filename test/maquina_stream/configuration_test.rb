@@ -13,7 +13,7 @@ class MaquinaStream::ConfigurationTest < ActiveSupport::TestCase
     assert_equal 2, c.seal_lag
     assert_equal :es, c.locale
     assert_equal :maquina, c.components
-    assert_equal({ light: "github", dark: "github_dark" }, c.themes)
+    assert_equal({ light: "github.light", dark: "github.dark" }, c.themes)
 
     assert_nil c.default_origin
     assert_equal %w[http https mailto], c.allowed_protocols

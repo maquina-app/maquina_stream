@@ -55,7 +55,7 @@ MaquinaStream.configure do |c|
   c.seal_lag             = 2          # never seal block N until N+seal_lag opens
   c.locale               = :es
   c.components           = :maquina   # :maquina | :plain
-  c.themes               = { light: "github", dark: "github_dark" }
+  c.themes               = { light: "github.light", dark: "github.dark" }  # Rouge theme names
 
   c.default_origin         = nil
   c.allowed_protocols      = %w[http https mailto]
@@ -77,6 +77,11 @@ MaquinaStream.configure do |c|
   c.transport   = :turbo_streams      # Solid Cable underneath; seam for SSE
 end
 ```
+
+Theme names are Rouge's own. **Corrected in Phase 2:** the default read
+`"github_dark"`, which Rouge does not define — the registry has `github.dark`
+and `github.light`. Generating the stylesheets raised rather than silently
+falling back, which is how it was found.
 
 `find_stream` and `authorize` have no defaults. An unset `authorize` denies:
 authorization is the host's, and an engine that guesses is an engine that leaks.

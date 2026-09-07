@@ -20,7 +20,7 @@ module MaquinaStream
       @seal_lag             = 2
       @locale               = :es
       @components           = :maquina
-      @themes               = { light: "github", dark: "github_dark" }
+      @themes               = { light: "github.light", dark: "github.dark" }
 
       @default_origin         = nil
       @allowed_protocols      = %w[http https mailto]

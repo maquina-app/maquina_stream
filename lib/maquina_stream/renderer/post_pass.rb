@@ -97,7 +97,21 @@ module MaquinaStream
           node = Nokogiri::XML::Node.new("div", fragment.document)
           node["data-controller"] = fence.controller if fence.controller
           node["data-#{fence.controller}-payload-value"] = payload_json(fence) if fence.controller
-          node.inner_html = render_shimmer(fence)
+
+          # Split ownership, per the DOM contract: the payload attribute is
+          # server state and belongs to morph, the output element is client
+          # state and belongs to the controller. The skeleton sits inside the
+          # output element so the controller replaces it when it renders.
+          #
+          # The stable id (ms-<sid>-b<n>-out) needs the message id, which a pure
+          # renderer does not have. Phase 3 stamps it along with the block ids,
+          # and data-turbo-permanent only takes effect once it is there.
+          output = Nokogiri::XML::Node.new("div", fragment.document)
+          output["data-#{fence.controller}-target"] = "output" if fence.controller
+          output["data-turbo-permanent"] = ""
+          output.inner_html = render_shimmer(fence)
+
+          node.add_child(output)
           node.to_html
         end
 
