@@ -13,6 +13,7 @@ require "maquina_stream/frame"
 require "maquina_stream/manifest"
 require "maquina_stream/sanitizer"
 require "maquina_stream/themes"
+require "maquina_stream/export"
 require "maquina_stream/component_cache"
 require "maquina_stream/components"
 require "maquina_stream/engine" if defined?(Rails::Engine)

@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "digest"
+
 module MaquinaStream
   # Turns a growing buffer into a stream of small patches.
   #
@@ -23,6 +25,7 @@ module MaquinaStream
       @config = config
       @transport = transport || TurboTransport.new
       @known = {}
+      @tail_id = nil
       @last_flush = nil
     end
 
@@ -77,7 +80,7 @@ module MaquinaStream
         return nil if frame.empty?
 
         @last_flush = now
-        frame.blocks.each { |block| @known[block.id] = block.digest }
+        frame.blocks.each { |block| @known[block.id] = sent_digest(block) }
 
         # The sequence belongs to the host's row and moves once per frame that
         # actually goes out, not once per append.
@@ -86,6 +89,21 @@ module MaquinaStream
         sequenced
       end
 
+      # Append what the browser has never seen; patch the open tail, and nothing
+      # else.
+      #
+      # A block often takes its final form in the very frame that opens the one
+      # below it — a heading completes as the paragraph after it begins — and so
+      # stops being the tail while the client still holds "Informe de est".
+      # Sending it once more at that handover was measured: it costs a full
+      # extra copy of the message, 1.248x -> 2.41x, because it happens once per
+      # block. The repair path already fixes it for free, because that change is
+      # a CONTENT change and content is exactly what a manifest digest covers.
+      #
+      # What repair does not fix is presentation chrome (data-ms-reveal, the
+      # block state) on a block that sealed after it stopped being the tail: the
+      # digest ignores chrome by design. That divergence is left, and corrected
+      # by the next reload. See the Phase 7 progress notes.
       def build_frame
         current = document
         tail = current.blocks.last
@@ -93,12 +111,23 @@ module MaquinaStream
         appends = current.blocks.reject { |block| @known.key?(block.id) }
         patch = []
 
-        if tail && @known.key?(tail.id) && @known[tail.id] != tail.digest
+        if tail && changed?(tail)
           patch << tail
           appends.delete_if { |block| block.id == tail.id }
         end
 
         Frame.new(seq: record.maquina_stream_sequence, appends: appends, patch: patch)
+      end
+
+      # What the client holds is bytes, so "changed" is measured on the bytes.
+      # The manifest's digest answers a different question — what the block says
+      # — and ignores state and caret attributes on purpose.
+      def changed?(block)
+        @known.key?(block.id) && @known[block.id] != sent_digest(block)
+      end
+
+      def sent_digest(block)
+        Digest::SHA256.hexdigest(block.html.to_s)[0, 16]
       end
 
       def monotonic_ms

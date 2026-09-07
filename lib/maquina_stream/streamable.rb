@@ -21,7 +21,10 @@ module MaquinaStream
     SEQUENCE_COLUMN = :stream_sequence
     STATUS_COLUMN = :stream_status
     OPEN_STATUS = "open"
-    SEAL_STATUSES = %i[complete cancelled errored].freeze
+    # A stream that timed out is not the same as one that errored: nothing went
+    # wrong, the model simply stopped answering, and the partial text it did
+    # produce is still worth keeping and replaying.
+    SEAL_STATUSES = %i[complete cancelled errored timed_out].freeze
 
     CONTRACT_METHODS = %i[
       maquina_stream_id
@@ -105,6 +108,13 @@ module MaquinaStream
         maquina_stream_require_column!(SEQUENCE_COLUMN, :maquina_stream_advance)
         self.class.where(id: id).update_all("#{SEQUENCE_COLUMN} = #{SEQUENCE_COLUMN} + 1")
         reload.maquina_stream_sequence
+      end
+
+      # The recorded end state, for replay and export. Nil while still open.
+      def maquina_stream_status
+        return nil if maquina_stream_open?
+
+        maquina_stream_read(STATUS_COLUMN, :maquina_stream_status)&.to_sym
       end
 
       def maquina_stream_open?

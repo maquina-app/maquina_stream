@@ -71,3 +71,7 @@ en:
     suggestion:
       list_label: "Suggestions"
       chip_label: "Use the suggestion: %{text}"
+    export:
+      cancelled: "> _Response cancelled before it finished._"
+      errored: "> _The response ended with an error._"
+      timed_out: "> _The response stopped after a timeout._"
