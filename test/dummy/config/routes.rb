@@ -5,6 +5,6 @@ Rails.application.routes.draw do
 
   # Harness only. See HarnessController.
   get "harness" => "harness#show"
-  get "harness/repair" => "harness#repair", as: :harness_repair
+  get "harness/repair" => "harness#repair", :as => :harness_repair
   get "history" => "history#index", :as => :history
 end
