@@ -33,7 +33,7 @@ module MaquinaStream
             lookup = ActionView::LookupContext.new(view_paths)
             view = ActionView::Base.with_empty_template_cache.new(lookup, {}, nil)
             # Components render through the seam, and the seam is a helper.
-            view.extend(MaquinaStream::ComponentsHelper)
+            view.extend(components_helper)
             view
           end
         end
@@ -44,6 +44,18 @@ module MaquinaStream
           else
             [File.expand_path("../../../app/views", __dir__)]
           end
+        end
+
+        # The helper lives in app/helpers and is normally autoloaded by the
+        # engine. Requiring it directly is what lets the renderer work in a
+        # plain Ruby process with ActionView and no Rails application - which is
+        # the whole claim the pure-function constraint makes.
+        def components_helper
+          unless defined?(MaquinaStream::ComponentsHelper)
+            require File.expand_path("../../../app/helpers/maquina_stream/components_helper", __dir__)
+          end
+
+          MaquinaStream::ComponentsHelper
         end
 
         def require_action_view!
