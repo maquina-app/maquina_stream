@@ -176,13 +176,40 @@ Naming: `ms-` prefix throughout. `<sid>` is `maquina_stream_id`.
      data-ms-repair-blocks-url-value="/maquina_stream/<sid>/blocks"
      data-ms-repair-interval-value="4000">
 
-  <div id="ms-<sid>-b0" data-ms-block-index="0"
-       data-ms-block-digest="a91c…" data-ms-block-state="sealed">…</div>
+  <div id="ms-<sid>-b0" data-ms-block data-ms-block-index="0"
+       data-ms-block-digest="a91c…">…</div>
 
-  <div id="ms-<sid>-b1" data-ms-block-index="1"
-       data-ms-block-state="open">…</div>
+  <div id="ms-<sid>-b1" data-ms-block data-ms-block-index="1"
+       data-ms-block-digest="4fe2…">…</div>
 </div>
 ```
+
+**Changed in Phase 7.** Blocks carried `data-ms-block-state`, plus
+`data-ms-reveal` and `data-ms-caret` while streaming. They no longer carry any
+of it, and a block is exactly its content plus its identity.
+
+The reason is repair. A block's digest covers what the block *says*, so chrome
+was invisible to the manifest diff and repair could not correct it. Two tabs
+that lost different frames ended up visibly different — one showing a caret, one
+not — with no way to reconcile them, because their digests agreed. Correcting
+chrome through the delta path was measured instead, and cost a full extra copy
+of the message (1.248x → 2.41x of the rendered document, against a 1.5x budget).
+
+Chrome is derived from the message element, which the host renders and which is
+one attribute to keep correct rather than one per block:
+
+```css
+[data-ms-streaming] > [data-ms-block]:last-child { /* caret */ }
+[data-ms-streaming] > [data-ms-block]            { /* reveal */ }
+```
+
+Two consequences worth knowing:
+
+* **`mode:` no longer changes the output.** Live, reload, replay and export are
+  the same document, byte for byte — a stronger property than the "identical
+  apart from animation attributes" the plan asked for, and it is asserted
+  exactly rather than after stripping attributes.
+* Which blocks are open is derivable: the last `seal_lag` of them.
 
 Block ids are **index-derived, never content-derived**. Idiomorph keys on `id`; a content-derived id makes morph delete and recreate.
 

@@ -24,17 +24,11 @@ class ReplayTest < ActiveSupport::TestCase
     refute_empty live
     assert_equal simulator.truth.keys.sort, live.keys.sort, "the reader ended up with a different set of blocks"
 
-    # Content parity, which is what a reader sees and what an export contains.
-    #
-    # Not attribute parity: a block that seals AFTER it stops being the tail
-    # keeps `data-ms-reveal` and `data-ms-block-state="open"` on the client,
-    # because the only thing that would correct presentation-only chrome is a
-    # full re-send of the message at seal — 1.0x on top of the 1.248x the
-    # bandwidth budget already spends. The chrome is corrected by the next
-    # reload. See progress.yml, "known divergence".
+    # Exact parity, byte for byte. It used to be content-only, because blocks
+    # carried streaming chrome that repair could not correct; they no longer
+    # carry any.
     simulator.truth.each do |id, html|
-      assert_equal content_of(html), content_of(live[id]),
-        "block #{id} differs in content between the live stream and a reload"
+      assert_equal html, live[id], "block #{id} differs between the live stream and a reload"
     end
   end
 

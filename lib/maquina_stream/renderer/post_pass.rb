@@ -28,7 +28,6 @@ module MaquinaStream
         wrap_tables
         render_registered_tags
         apply_overrides
-        annotate_reveal if streaming?
         annotate_blocks
         fragment
       end
@@ -283,17 +282,22 @@ module MaquinaStream
           end
         end
 
-        # The only difference between streaming and static output. The parity
-        # test strips these and demands the rest be byte-identical.
+        # There is deliberately no per-block chrome here any more.
         #
-        # The caret marks the block still being written. Static output has none,
-        # which is what removes it at seal: the sealed message renders in static
-        # mode, the tail's HTML changes, and the final frame carries that change.
-        def annotate_reveal
-          elements = fragment.children.select(&:element?)
-          elements.each { |node| node["data-ms-reveal"] = "" }
-          elements.last&.[]=("data-ms-caret", "")
-        end
+        # The caret and the reveal marker used to be stamped on each block, and
+        # it made a block's bytes disagree with its digest: the digest covers
+        # what a block SAYS, so repair could not correct chrome. Two tabs that
+        # lost different frames ended up visibly different — one with a caret,
+        # one without — and nothing could reconcile them, because their digests
+        # agreed.
+        #
+        # Chrome is derived instead, from the message element the host renders:
+        #
+        #   [data-ms-streaming] > [data-ms-block]:last-child { /* caret */ }
+        #   [data-ms-streaming] > [data-ms-block]            { /* reveal */ }
+        #
+        # A block is then exactly its content, identical content is identical
+        # bytes, and streaming and static output are the same document.
 
         def view
           @view ||= ViewContext.build

@@ -127,8 +127,9 @@ class RendererTest < ActiveSupport::TestCase
     streaming = MaquinaStream::Renderer.call(markdown, mode: :streaming)
     static = MaquinaStream::Renderer.call(markdown, mode: :static)
 
-    assert_equal strip_reveal(streaming), strip_reveal(static)
-    refute_equal streaming, static, "streaming mode must actually add the reveal attributes"
+    # Identical, not "identical apart from animation attributes": blocks carry
+    # no chrome at all, so live, reload, replay and export are one document.
+    assert_equal streaming, static
   end
 
   test "rejects an unknown mode rather than guessing" do
