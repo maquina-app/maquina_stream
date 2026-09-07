@@ -1,0 +1,15 @@
+<h1>ms-repair against the real endpoints</h1>
+
+<p>
+  The repair controller talks to the mounted engine: it fetches the manifest,
+  diffs it against what this page holds, asks for the blocks that differ, and
+  morphs them. Corrupt a block and watch it come back.
+</p>
+
+<div id="ms-msg-<%= @message.maquina_stream_id %>"
+     data-controller="ms-repair"
+     data-ms-repair-manifest-url-value="<%= maquina_stream.manifest_path(sid: @message.maquina_stream_id) %>"
+     data-ms-repair-blocks-url-value="<%= maquina_stream.blocks_path(sid: @message.maquina_stream_id) %>"
+     data-ms-repair-interval-value="0">
+  <%= MaquinaStream.render(@message) %>
+</div>

@@ -53,11 +53,29 @@ module MaquinaStream
     def render(record, config: self.config)
       markdown = record.maquina_stream_buffer
 
-      return Renderer.call(markdown, mode: :streaming, config: config) if record.maquina_stream_open?
+      # Through Document, not Renderer. Renderer produces the HTML; Document is
+      # what stamps each block with the id and digest the DOM contract requires,
+      # and without those a page cannot be repaired at all — ms-repair would
+      # have nothing to compare a manifest against.
+      return document_html(record, markdown, config) if record.maquina_stream_open?
 
       ComponentCache.fetch("document", record.maquina_stream_id, Digest::SHA256.hexdigest(markdown.to_s)) do
-        Renderer.call(markdown, mode: :static, config: config)
+        document_html(record, markdown, config)
       end
+    end
+
+    private
+
+    def document_html(record, markdown, config)
+      blocks = Document.new(
+        markdown,
+        config: config,
+        sid: record.maquina_stream_id,
+        mode: record.maquina_stream_open? ? :streaming : :static
+      ).blocks
+
+      html = blocks.map(&:html).join("\n")
+      html.respond_to?(:html_safe) ? html.html_safe : html
     end
   end
 end
