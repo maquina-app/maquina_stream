@@ -48,7 +48,7 @@ module MaquinaStream
 
     attr_reader :controls
 
-    attr_accessor :frame_budget_ms, :keyframe_interval_ms, :seal_lag,
+    attr_accessor :frame_budget_ms, :keyframe_interval_ms, :seal_lag, :manifest_window,
       :locale, :components, :themes,
       :default_origin, :allowed_protocols,
       :allowed_link_prefixes, :allowed_image_prefixes,
@@ -58,6 +58,10 @@ module MaquinaStream
     def initialize
       @frame_budget_ms = 250
       @keyframe_interval_ms = 4_000
+      # How many recent sealed blocks a manifest carries in full. Everything
+      # older is covered by one rollup digest, which is what keeps the payload
+      # bounded by the window instead of by the message. See Manifest.
+      @manifest_window      = 50
       @seal_lag = 2
       @locale = :es
       @components = :maquina

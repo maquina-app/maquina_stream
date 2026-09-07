@@ -1,10 +1,13 @@
 # frozen_string_literal: true
 
 module MaquinaStream
-  # Phase 2 (render pipeline) renders MaquinaStream::Manifest here.
+  # The snapshot the repair path diffs against: sequence plus one digest per
+  # sealed block. A few hundred bytes whatever the message weighs.
   class ManifestsController < ApplicationController
     def show
-      head :not_implemented
+      # `full=1` is the cold path: a client whose rollup disagrees with ours
+      # cannot repair from the window alone and asks for everything.
+      render json: Manifest.for(@record, full: params[:full].present?).to_h
     end
   end
 end

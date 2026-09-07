@@ -3,16 +3,16 @@
 require "test_helper"
 
 class MaquinaStream::RoutesTest < ActionDispatch::IntegrationTest
-  test "manifest is routed and stubbed until Phase 2" do
+  test "manifest is routed and served" do
     get "/maquina_stream/#{messages(:streaming).id}/manifest"
 
-    assert_response :not_implemented
+    assert_response :success
   end
 
-  test "blocks is routed and stubbed until Phase 2" do
+  test "blocks is routed and served" do
     get "/maquina_stream/#{messages(:streaming).id}/blocks", params: {ids: ["ms-1-b0"]}
 
-    assert_response :not_implemented
+    assert_response :success
   end
 
   test "an unknown stream is not found" do
