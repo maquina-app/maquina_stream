@@ -11,7 +11,7 @@ tasks:
   - { id: 2, title: completed messages frozen and fragment-cached by digest, status: done, note: "MaquinaStream.render caches a sealed message by buffer digest; an open one is never cached. 95.04ms cold -> 0.049ms cached, 1942x. A 50-message page: 4752ms -> 2.4ms." }
   - { id: 3, title: explicit cancelled / errored / timed_out states with replay behaviour, status: done }
   - { id: 4, title: whole-message markdown export with the Phase 6 fallback, status: done, file: lib/maquina_stream/export.rb }
-  - { id: 5, title: review VENDORED_COMPONENTS, status: done, note: "docs/component-scope.md - three couplings block extraction, not just the fallback branch" }
+  - { id: 5, title: review VENDORED_COMPONENTS, status: done, note: "docs/component-scope.md - three couplings block extraction, not just the fallback branch; two of them removed on 2026-09-07 by MaquinaStream::Components::Contract, the third travels with the partials" }
   - { id: 6, title: multi-tab convergence review, status: done, file: test/maquina_stream/multi_tab_test.rb }
   - { id: 7, title: dummy app demonstrating every feature, status: done, note: "Streamable model, both seams, all three fence strategies, tag registry, third host-side renderer, browser harness at /harness, history pagination at /history" }
   - { id: 8, title: README and integration guide, status: done }
@@ -43,6 +43,32 @@ dod:
   - line: 0.1 tagged; Fragua consumes the released gem, not a path reference.
     met: false
     verification: "Deferred at the user's request: no remote, no tag, no release."
+
+resolved_2026-09-07:
+  frame_budget_ms:
+    was: 250, chosen against token-shaped arrival
+    now: 100, approved by the user
+    measured: >-
+      Coalescing only saves bytes when frames arrive faster than the budget, so
+      its cost depends entirely on arrival shape. Against the rendered document
+      on a 20KB message - token 4ch/25ms: 3.03x / 2.34x / 1.65x / 1.08x at
+      60/100/150/250ms; batch 40ch/200ms: 1.07x at every budget except 0.89x at
+      250ms; step 2000ch/1s: 1.17x at every budget. Under the batched arrival
+      this engine is built for the budget buys nothing, and 250ms was merging
+      two steps into one frame.
+    cost: >-
+      A host whose model emits token by token now pays 2.34x against a 1.5x
+      budget and should raise its own frame_budget_ms. Pinned by its own test in
+      broadcaster_test.rb rather than hidden - all three rows are asserted.
+  tool_call_shape:
+    decided: separate Streamable record, by the user
+    built: >-
+      test/dummy/app/models/message.rb holds the whole bridge; nexo_test.rb
+      drives it against a real Nexo::Agent. The deciding case is a tool result
+      that arrives late: as a block it rewrites the middle of a message whose
+      tail has moved on, which is what the seal lag cannot cover. As a record it
+      is just another stream, still open. Two open at once is also what a
+      parallel tool call is, and the block shape cannot represent it.
 
 measurements:
   history_500_messages: { render_ms: 387, per_message_ms: 0.77, html_kb: 2071, objects: 1891041, warm_ms: 289 }
@@ -81,7 +107,5 @@ resolved_divergence:
     docs/api-surface.md.
 
 open:
-  - "frame_budget_ms was set to 250 against token-shaped arrival. Under step-shaped (Nexo) arrival, CPU is no longer the constraint and 250ms can coalesce two steps into one frame, costing per-step feedback. Recommend reverting to 60-100ms; not changed without the user."
-  - "Whether a Nexo tool call is a separate Streamable record or a block inside one message. Shapes stream_for: and morph scope. Unanswered."
-  - "Extraction is blocked by three couplings, not one: the data-ms-* contract attributes, the maquina_stream.* locale namespace, and the shared component_html_options helper. Fix for the first is to pass them as locals at the call site; not yet done."
-  - "Release steps deferred by the user."
+  - "Release steps: both remotes are configured (github.com/maquina-app) and 0.1.0 is bumped with a changelog, but NOTHING IS PUSHED and nothing is released. maquina_stream depends on maquina_remend by path, so remend has to ship first. Awaiting the user."
+  - "Extraction: two of the three couplings are gone (2026-09-07). The data-ms-* contract attributes, the ms-* Stimulus identifiers and the maquina_stream.* labels are now supplied at the call site by MaquinaStream::Components::Contract (lib/maquina_stream/components/contract.rb), which both callers use - the component helper and the fence renderer. A test fails if a vendored partial names any of them. What remains is component_html_options: the conventions helper the partials are written against. It cannot become a local - it is behaviour invoked on every render, and it is precisely the maquina_components house-style API - so it travels WITH the partials rather than blocking them. Until it is published there, the vendored copies depend on the engine's copy. See docs/component-scope.md."
