@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        ruby: ["3.3", "3.4"]
+        rails: ["8.0", "8.1"]
+
+    env:
+      RAILS_VERSION: ${{ matrix.rails }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ matrix.ruby }}
+          bundler-cache: true
+
+      # The suite includes the chaos test, which drops 30% of frames across
+      # eight seeds. It is not allowed to be flaky: a run that does not converge
+      # is a failure, not a retry.
+      - name: Test
+        run: bundle exec rake test
+
+      - name: Standard
+        run: bundle exec standardrb
+
+      # HTML-aware, so a malformed partial fails here rather than in a browser.
+      - name: Herb
+        run: bundle exec herb analyze app/views
