@@ -69,8 +69,17 @@ MaquinaStream.configure do |c|
     image: { download: true },
     link_safety: true
   }
+
+  # Host seams. Added in Phase 1: the repair routes cannot be written without
+  # them, and this document said only "the engine calls a configured callable".
+  c.find_stream = ->(sid) { Message.find_by(id: sid) }
+  c.authorize   = ->(record, request) { record.conversation.readable_by?(request) }
+  c.transport   = :turbo_streams      # Solid Cable underneath; seam for SSE
 end
 ```
+
+`find_stream` and `authorize` have no defaults. An unset `authorize` denies:
+authorization is the host's, and an engine that guesses is an engine that leaks.
 
 ### Registries
 
@@ -104,7 +113,19 @@ class Message < ApplicationRecord
 end
 ```
 
-Host must satisfy (the macro generates these when the column names match):
+Host must satisfy. The macro generates each of these when the column it reads
+exists — `buffer:` names the buffer column, and the other two are conventions
+this document fixes in Phase 1:
+
+| Generated method | Column |
+|---|---|
+| `#maquina_stream_buffer`, `#maquina_stream_append` | the column named by `buffer:` |
+| `#maquina_stream_sequence` | `stream_sequence` |
+| `#maquina_stream_open?`, `#maquina_stream_seal!` | `stream_status`, holding `open` / `complete` / `cancelled` / `errored` |
+
+A method whose column is missing raises `MaquinaStream::ContractError` naming the
+method, the column and the class. A method the host defines in the model body
+always wins over the generated one.
 
 | Method | Returns |
 |---|---|
@@ -113,7 +134,8 @@ Host must satisfy (the macro generates these when the column names match):
 | `#maquina_stream_append(text)` | appends and persists |
 | `#maquina_stream_sequence` | `Integer`, monotonic, incremented per frame |
 | `#maquina_stream_open?` | `Boolean` |
-| `#maquina_stream_seal!(status: :complete)` | `:complete \| :cancelled \| :errored` |
+| `#maquina_stream_seal!(status: :complete)` | the status symbol it sealed with |
+| `#maquina_stream_advance` | `Integer` — the next sequence number. **Phase 2 adds this**: `maquina_stream_sequence` is documented as "incremented per frame", but the Broadcaster cannot write host state directly without contradicting "host owns persistence". |
 | `#maquina_stream_target` | Turbo broadcast target |
 
 ---
@@ -237,5 +259,10 @@ Vendored partials follow `maquina_components` conventions exactly:
 GET /maquina_stream/:sid/manifest        → { seq:, blocks: [[id, digest], …] }
 GET /maquina_stream/:sid/blocks?ids[]=   → Turbo Stream, morph per requested block
 ```
+
+CRUD-shaped: `MaquinaStream::ManifestsController#show` and
+`MaquinaStream::BlocksController#index`. The engine looks the message up through
+`config.find_stream`, and refuses to serve it unless `config.authorize` returns
+truthy.
 
 Authorization is the host's. The engine calls a configured callable and never assumes it can serve a message.
