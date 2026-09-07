@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased — 0.1.0
+## 0.1.0 — 2026-09-07
 
 First working version. The engine renders a streaming markdown buffer to HTML on
 the server and broadcasts it over Turbo Streams; only rendered HTML reaches the
@@ -34,5 +34,3 @@ browser.
   they cannot do. Both seams stay the host's: `authorize` is generated as a stub
   that denies.
 - Spanish default locale, English secondary. No Node build step anywhere.
-
-Not yet released: `maquina_remend` is still a path reference.
