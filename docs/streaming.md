@@ -250,7 +250,11 @@ each record is rendered on its own. If a run's steps genuinely share link
 references, keep them in one record.
 
 `Message.stream_agent_run` in `test/dummy/app/models/message.rb` is a worked
-example against a real `nexo_ai` agent, and `/harness/agent` runs it.
+example against a real [Nexo](https://maquina.app/documentation/nexo/) agent,
+and `/harness/agent` runs it. Nexo reports tool activity through the block
+`Agent#prompt` takes, so each `:tool_call` opens a record and each
+`:tool_result` seals one. Nothing in the engine depends on it — any client
+that hands you text as it arrives works the same way.
 
 ## History, and rendering a sealed message
 

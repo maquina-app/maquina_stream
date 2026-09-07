@@ -85,9 +85,9 @@ the same path with the migration, the view and a working end-to-end run.
 Markdown in:
 
 ````markdown
-## Estado
+## Status
 
-Todo **bien**. Ver [docs](https://example.com).
+All **good**. See [docs](https://example.com).
 
 ```ruby
 puts 1
@@ -98,8 +98,8 @@ HTML out — sanitized, block-addressed, and highlighted by CSS class so a theme
 switch needs no re-render (attributes elided for width):
 
 ```html
-<h2 id="ms-42-b0" data-ms-element="h2" data-ms-block data-ms-block-digest="1f2c81c1fcf4af59">Estado…</h2>
-<p id="ms-42-b1" data-ms-element="p" data-ms-block data-ms-block-digest="94c9fba06f14c1bc">Todo <strong>bien</strong>. Ver <a href="https://example.com" rel="noopener noreferrer">docs</a>.</p>
+<h2 id="ms-42-b0" data-ms-element="h2" data-ms-block data-ms-block-digest="fa59d158d6fc403e">Status…</h2>
+<p id="ms-42-b1" data-ms-element="p" data-ms-block data-ms-block-digest="c39b9098233d53d5">All <strong>good</strong>. See <a href="https://example.com" rel="noopener noreferrer">docs</a>.</p>
 <div id="ms-42-b2" data-ms-code data-ms-code-lang="ruby" data-controller="ms-code" data-ms-block …>
   <pre><code><span class="nb">puts</span> <span class="mi">1</span></code></pre>
   <pre hidden data-ms-code-source>puts 1</pre>
@@ -109,6 +109,22 @@ switch needs no re-render (attributes elided for width):
 Plus: copy and download on code blocks and tables, a link-safety dialog, a
 word-level reveal animation, autoscroll that gets out of the reader's way,
 client-rendered diagrams and math, and markdown export.
+
+## Agents
+
+This engine is built for agent output, and a tool call is its own `Streamable`
+record rather than a block inside the assistant's message — so each step of a
+run seals, repairs and exports on its own, and two steps can be open at once,
+which is what a parallel tool call is.
+
+[Nexo](https://maquina.app/documentation/nexo/) is the agent harness it is built
+alongside: `Agent#prompt` reports tool activity through a block, and each
+`:tool_call` opens a record. `Message.stream_agent_run` in
+`test/dummy/app/models/message.rb` is the whole bridge, and `/harness/agent`
+runs it against a real model. See [streaming.md](docs/streaming.md#streaming-an-agent-run).
+
+Nothing here depends on Nexo. Bare `ruby_llm`, or any client that hands you text
+as it arrives, works the same way — `/harness/chat` is that version.
 
 ## Documentation
 

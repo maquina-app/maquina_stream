@@ -215,7 +215,7 @@ Two live pages in `test/dummy` talk to a real model rather than a fixture:
 | Page | What it is |
 |---|---|
 | `/harness/chat` | Bare `ruby_llm`. `chat.ask` yields chunks, one record, one seal. |
-| `/harness/agent` | `nexo_ai`. One `Streamable` record per step of an agent run. |
+| `/harness/agent` | [Nexo](https://maquina.app/documentation/nexo/). One `Streamable` record per step of an agent run. |
 
 Both read `test/dummy/config/llm.yml`, which is git-ignored. Copy the example
 and point it at any OpenAI-compatible endpoint — ollama, vLLM, LM Studio,
