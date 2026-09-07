@@ -1,0 +1,4 @@
+--- input
+<template><img src=x onerror=alert(1)></template><p>texto</p>
+--- note
+template content lives in a separate document fragment that many walkers never visit. Dropped whole.

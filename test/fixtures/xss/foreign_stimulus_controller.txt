@@ -1,0 +1,4 @@
+--- input
+<div data-controller="admin-panel evil-controller" data-admin-panel-url-value="https://evil.example">texto</div>
+--- note
+Injected Stimulus controller identifiers outside our namespace, plus their values. Only ms-* identifiers survive; foreign value attributes are dropped.

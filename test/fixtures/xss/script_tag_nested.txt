@@ -1,0 +1,4 @@
+--- input
+<p><scr<script>ipt>alert(1)</scr</script>ipt></p>
+--- note
+Nested tag names relying on a naive string-strip re-forming a script element. Nothing executable may remain after one pass.

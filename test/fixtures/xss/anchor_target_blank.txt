@@ -1,0 +1,4 @@
+--- input
+<a href="https://example.com" target="x" rel="opener">clic</a>
+--- note
+target is normalized and rel gains noopener noreferrer, so an external link cannot reach back through window.opener.

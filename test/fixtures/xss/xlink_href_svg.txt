@@ -1,0 +1,4 @@
+--- input
+<svg xmlns="http://www.w3.org/2000/svg"><a xlink:href="javascript:alert(1)"><text>clic</text></a></svg>
+--- note
+SVG anchor with xlink:href. The whole SVG subtree is dropped: foreign content parses by different rules than HTML.

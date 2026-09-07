@@ -1,0 +1,4 @@
+--- input
+<math><maction actiontype="statusline#javascript:alert(1)">clic</maction></math>
+--- note
+MathML maction vector. The MathML subtree is dropped.

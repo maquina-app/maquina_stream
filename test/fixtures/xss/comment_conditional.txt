@@ -1,0 +1,4 @@
+--- input
+<!--[if IE]><script>alert(1)</script><![endif]--><p>texto</p>
+--- note
+Conditional comment. All comments are removed.

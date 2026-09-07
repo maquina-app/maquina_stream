@@ -1,0 +1,4 @@
+--- input
+<img src="https://example.com/a.png" onerror="alert(1)" alt="a">
+--- note
+onerror handler. The image survives with its src; the handler must be gone.

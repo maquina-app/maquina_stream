@@ -1,0 +1,4 @@
+--- input
+<iframe srcdoc="&lt;script&gt;alert(1)&lt;/script&gt;"></iframe>
+--- note
+iframe srcdoc. The iframe element is dropped with its content; srcdoc is on the forbidden-attribute list besides.

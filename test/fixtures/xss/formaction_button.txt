@@ -1,0 +1,4 @@
+--- input
+<form action="https://evil.example"><button formaction="javascript:alert(1)">enviar</button></form>
+--- note
+formaction on a submit button. Forms and buttons are dropped whole; nothing interactive reaches the reader.

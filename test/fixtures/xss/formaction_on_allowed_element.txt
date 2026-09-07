@@ -1,0 +1,4 @@
+--- input
+<div formaction="javascript:alert(1)">texto</div>
+--- note
+formaction on an allowed element.

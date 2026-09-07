@@ -1,0 +1,4 @@
+--- input
+<a href="/\evil.example/x">clic</a>
+--- note
+Slash-backslash spelling of the same trick.

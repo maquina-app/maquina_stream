@@ -1,0 +1,4 @@
+--- input
+<a href="java&#115;cript:alert(1)">clic</a>
+--- note
+Decimal entity inside the scheme. The HTML parser decodes it before we see it; the decoded scheme must still be rejected.

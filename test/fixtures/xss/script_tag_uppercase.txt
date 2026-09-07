@@ -1,0 +1,4 @@
+--- input
+<p>Hola<SCRIPT>alert(1)</SCRIPT></p>
+--- note
+Uppercase tag name. Element matching is case-insensitive; the script element must be dropped with its content.

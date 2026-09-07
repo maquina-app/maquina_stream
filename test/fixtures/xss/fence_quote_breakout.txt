@@ -1,0 +1,5 @@
+--- input
+<div data-ms-code data-ms-code-lang="ruby"><pre><code>x = "&quot; onmouseover=&quot;alert(1)&quot; data-x=&quot;"
+</code></pre></div>
+--- note
+Quotes inside a fenced code block trying to break out of a data attribute. The code text survives verbatim as text; no new attribute may appear on the wrapper.

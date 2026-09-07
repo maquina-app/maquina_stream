@@ -1,0 +1,4 @@
+--- input
+<table><tr><td onclick="alert(1)" colspan="2">celda</td></tr></table>
+--- note
+Handler on a table cell. The table structure and colspan survive.

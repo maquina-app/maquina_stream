@@ -1,0 +1,4 @@
+--- input
+<iframe src="javascript:alert(1)"></iframe>
+--- note
+iframe with a javascript: source.

@@ -1,0 +1,5 @@
+--- input
+<div data-ms-code data-ms-code-lang="html"><pre><code>&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;script&gt;alert(1)&lt;/script&gt;
+</code></pre></div>
+--- note
+Angle brackets inside a fence trying to close the code shell and open a script. The escaped text must stay escaped text.

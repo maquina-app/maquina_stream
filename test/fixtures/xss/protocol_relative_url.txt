@@ -1,0 +1,4 @@
+--- input
+<a href="//evil.example/x">clic</a>
+--- note
+Protocol-relative URL: inherits our scheme and none of our origin.

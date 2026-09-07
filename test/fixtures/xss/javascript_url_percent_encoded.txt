@@ -1,0 +1,4 @@
+--- input
+<a href="%6Aavascript:alert(1)">clic</a>
+--- note
+Percent-encoded scheme character. Not a valid scheme to a browser, but never a URL we are willing to emit.

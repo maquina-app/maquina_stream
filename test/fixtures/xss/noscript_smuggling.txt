@@ -1,0 +1,4 @@
+--- input
+<noscript><p title="&lt;/noscript&gt;&lt;img src=x onerror=alert(1)&gt;">texto</p></noscript>
+--- note
+noscript parses differently with and without scripting enabled: a classic mutation XSS source. Dropped whole.

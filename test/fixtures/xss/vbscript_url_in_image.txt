@@ -1,0 +1,4 @@
+--- input
+<img src="vbscript:msgbox(1)" alt="x">
+--- note
+vbscript: in an image source. The image is removed.

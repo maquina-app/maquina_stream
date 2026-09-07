@@ -1,0 +1,5 @@
+--- input
+<a href="java
+script&#58;alert(1)">clic</a>
+--- note
+Newline inside the scheme plus an entity-encoded colon.

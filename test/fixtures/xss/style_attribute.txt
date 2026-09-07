@@ -1,0 +1,4 @@
+--- input
+<p style="background:url(javascript:alert(1))">texto</p>
+--- note
+style attribute carrying a URL. style is never allowed; the paragraph text survives.

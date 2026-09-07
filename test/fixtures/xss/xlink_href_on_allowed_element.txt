@@ -1,0 +1,4 @@
+--- input
+<a xlink:href="javascript:alert(1)" href="https://example.com">clic</a>
+--- note
+xlink:href alongside a legitimate href. The namespaced attribute never survives; the http href does.

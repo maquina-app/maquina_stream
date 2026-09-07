@@ -1,0 +1,4 @@
+--- input
+<a href="JaVaScRiPt:alert(1)">clic</a>
+--- note
+Mixed-case scheme. Scheme comparison is case-insensitive.

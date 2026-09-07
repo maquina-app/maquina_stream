@@ -1,0 +1,4 @@
+--- input
+<math><annotation-xml encoding="text/html"><img src=x onerror=alert(1)></annotation-xml></math>
+--- note
+annotation-xml with an HTML encoding re-enters HTML parsing inside MathML.

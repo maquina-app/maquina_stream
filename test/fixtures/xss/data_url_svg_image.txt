@@ -1,0 +1,4 @@
+--- input
+<img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIG9ubG9hZD0iYWxlcnQoMSkiLz4=" alt="x">
+--- note
+data:image/svg+xml is a scriptable document wearing an image MIME type. Rejected even when allow_data_images is on; only base64 raster types pass.

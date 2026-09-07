@@ -1,0 +1,4 @@
+--- input
+<span data-action="click->window#alert" data-controller="ms-code">texto</span>
+--- note
+Injected action descriptor naming a non-ms controller. The descriptor is dropped, the ms-code controller name is not.

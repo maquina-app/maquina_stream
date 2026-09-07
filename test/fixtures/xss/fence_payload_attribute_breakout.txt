@@ -1,0 +1,4 @@
+--- input
+<div data-controller="ms-diagram" data-ms-diagram-payload-value='{"source":"graph TD\n  A[&quot;&gt;&lt;img src=x onerror=alert(1)&gt;&quot;]","info":"mermaid"}'><div data-ms-diagram-target="output"></div></div>
+--- note
+Client-deferred payload whose JSON contains an image with a handler. The payload stays an attribute value; the client sanitizes what it renders, which is why the client sanitizes again.

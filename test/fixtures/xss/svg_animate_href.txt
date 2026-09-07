@@ -1,0 +1,4 @@
+--- input
+<svg><a><animate attributeName="href" values="javascript:alert(1)"></animate><text>clic</text></a></svg>
+--- note
+SMIL animate rewriting an href at runtime.

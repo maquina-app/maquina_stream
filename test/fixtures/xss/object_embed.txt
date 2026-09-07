@@ -1,0 +1,4 @@
+--- input
+<object data="javascript:alert(1)"></object><embed src="javascript:alert(1)">
+--- note
+object and embed, both dropped whole.

@@ -1,0 +1,4 @@
+--- input
+<marquee>desplazar</marquee><blink>parpadeo</blink><font color="red">rojo</font>
+--- note
+Unknown and obsolete elements. marquee is dropped with its content; blink and font are unwrapped so their text survives without their attributes.

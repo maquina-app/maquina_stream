@@ -1,0 +1,4 @@
+--- input
+<div data-ms-code data-ms-code-lang="ruby"><pre><code>puts 1</code></pre><script type="text/plain" data-ms-code-source>&lt;script&gt;alert(1)&lt;/script&gt;</script></div>
+--- note
+The DOM contract's raw-source carrier is itself a script element, so an attacker can imitate it. The sanitizer drops every script element without exception; the code wrapper and the highlighted pre/code must survive.

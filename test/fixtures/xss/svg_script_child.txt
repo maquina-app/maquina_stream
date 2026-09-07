@@ -1,0 +1,4 @@
+--- input
+<svg><script>alert(1)</script></svg>
+--- note
+Script inside SVG, where HTML parsing rules do not apply.

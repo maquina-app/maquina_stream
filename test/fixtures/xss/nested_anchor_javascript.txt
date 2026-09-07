@@ -1,0 +1,4 @@
+--- input
+<a href="https://example.com"><span><a href="javascript:alert(1)"><strong>texto</strong></a></span></a>
+--- note
+Nested anchors, the inner one hostile. Recursion must reach it; the inner text survives.

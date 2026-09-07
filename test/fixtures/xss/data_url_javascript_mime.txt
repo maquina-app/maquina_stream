@@ -1,0 +1,4 @@
+--- input
+<img src="data:text/javascript,alert(1)" alt="x">
+--- note
+data: URL with a script MIME type in an image position.

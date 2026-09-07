@@ -1,0 +1,4 @@
+--- input
+<style>body{background:url("javascript:alert(1)")}</style><p>texto</p>
+--- note
+style element. Dropped with its content, so the CSS text does not become visible page text.

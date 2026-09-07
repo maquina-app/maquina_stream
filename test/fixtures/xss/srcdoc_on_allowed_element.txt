@@ -1,0 +1,4 @@
+--- input
+<div srcdoc="&lt;script&gt;alert(1)&lt;/script&gt;" class="ok">texto</div>
+--- note
+srcdoc smuggled onto an element that is allowed. The element survives without the attribute.

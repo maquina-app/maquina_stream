@@ -1,0 +1,5 @@
+--- input
+<a href="https://example.com" on
+click="alert(1)">enlace</a>
+--- note
+Newline inside the attribute name. The parser decides the name; whatever it produces must not survive as a handler. Link text and href survive.

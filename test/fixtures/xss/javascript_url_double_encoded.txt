@@ -1,0 +1,4 @@
+--- input
+<a href="&amp;#106;avascript:alert(1)">clic</a>
+--- note
+Double-encoded entity: the parser decodes one round and leaves a literal &#106; in the value. The sanitizer decodes again before testing the scheme.

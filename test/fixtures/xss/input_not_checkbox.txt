@@ -1,0 +1,4 @@
+--- input
+<input type="text" value="x"><input type="image" src="javascript:alert(1)">
+--- note
+Only the tasklist extension's disabled checkbox is an acceptable input. Any other input is removed.

@@ -1,0 +1,4 @@
+--- input
+<a href="\\evil.example/x">clic</a>
+--- note
+Backslash spelling that browsers normalize into a protocol-relative URL.

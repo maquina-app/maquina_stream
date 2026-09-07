@@ -1,0 +1,4 @@
+--- input
+<a href=" javascript:alert(1)">clic</a>
+--- note
+Leading C0 control characters and a space before the scheme.

@@ -1,0 +1,4 @@
+--- input
+<img src=x onerror=alert(1)>
+--- note
+Unquoted attribute value, the classic minimal payload. The image loses its src (not http/https) and is therefore removed entirely.

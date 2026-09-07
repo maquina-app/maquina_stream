@@ -1,0 +1,4 @@
+--- input
+<p onload="alert(1)" onmouseover="alert(2)">texto</p>
+--- note
+Multiple event handlers on an allowed element. The paragraph and its text survive.

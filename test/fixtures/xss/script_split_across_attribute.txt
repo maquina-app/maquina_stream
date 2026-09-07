@@ -1,0 +1,4 @@
+--- input
+<div id="a"><script type="text/javascript" src="https://evil.example/x.js"></script></div>
+--- note
+External script include. The div survives, the script element and its src do not.

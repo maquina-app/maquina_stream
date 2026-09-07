@@ -1,0 +1,4 @@
+--- input
+<a href="vbscript:msgbox(1)">clic</a>
+--- note
+vbscript: scheme.

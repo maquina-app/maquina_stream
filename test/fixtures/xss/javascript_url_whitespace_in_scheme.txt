@@ -1,0 +1,4 @@
+--- input
+<a href="java	script:alert(1)">clic</a>
+--- note
+Tab inside the scheme. Browsers strip tab, newline and carriage return anywhere in a URL before parsing it.

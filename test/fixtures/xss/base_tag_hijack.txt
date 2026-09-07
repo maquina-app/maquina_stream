@@ -1,0 +1,4 @@
+--- input
+<base href="https://evil.example/"><a href="/local">clic</a>
+--- note
+base tag repointing every relative URL in the document.

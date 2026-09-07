@@ -1,0 +1,4 @@
+--- input
+<div OnClIcK="alert(1)" class="ok">texto</div>
+--- note
+Mixed-case handler name. Attribute matching is case-insensitive; class survives.

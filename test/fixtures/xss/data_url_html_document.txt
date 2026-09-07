@@ -1,0 +1,4 @@
+--- input
+<a href="data:text/html;base64,PHNjcmlwdD5hbGVydCgxKTwvc2NyaXB0Pg==">clic</a>
+--- note
+data:text/html carrying a script. data: is never an allowed link scheme, whatever allow_data_images says.

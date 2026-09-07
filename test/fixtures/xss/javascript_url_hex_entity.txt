@@ -1,0 +1,4 @@
+--- input
+<a href="&#x6a;avascript:alert(1)">clic</a>
+--- note
+Hex entity for the leading j.
