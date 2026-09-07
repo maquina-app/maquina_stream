@@ -49,12 +49,27 @@ tasks:
     status: done
   - id: 12
     title: backgrounded tab restore
-    status: blocked
+    status: done
+    verified: 2026-09-07
     note: >-
-      Not verifiable headlessly. Playwright fires no visibilitychange, and
-      neither Emulation.setPageVisibilityOverride (removed from CDP) nor
-      Page.setWebLifecycleState frozen produces one. Counter is wired; needs a
-      human with a real tab.
+      Playwright fires no visibilitychange, and neither
+      Emulation.setPageVisibilityOverride (removed from CDP) nor
+      Page.setWebLifecycleState frozen produces one. Driven directly instead:
+      the controller only ever READS document.hidden and LISTENS for
+      visibilitychange, so overriding the property and dispatching the event
+      exercises the same code path. Three fragments appended while hidden
+      produced 0 animations; returning produced 0; the next genuinely new
+      fragment animated alone, holding only its own text, and all three hidden
+      fragments were present unrevealed. The user then ran it in a real tab.
+    false_alarm: >-
+      The user reported "append animates after switching back", and the
+      instrumentation was to blame rather than the controller. It counted any
+      animation within a second of the tab becoming visible, and the first
+      fragment to arrive after the reader returns IS new text, which is supposed
+      to animate. The harness now numbers each fragment, records which ones
+      arrived while hidden, and reports whether any animated span holds one of
+      them - which is the only version of the question that separates correct
+      from broken.
   - id: 13
     title: human review and decision
     status: done

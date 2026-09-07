@@ -127,14 +127,22 @@
   let delivered = 0
   let deliveredHidden = 0
   let animatedAfterReturn = 0
+  let replayedHidden = 0
   let returnedAt = 0
+  const hiddenFragments = []
 
-  // An animation that starts within a second of the tab becoming visible again
-  // is the thing to look for: it means text that arrived while the tab was
-  // hidden is being revealed now, in front of the reader, rather than simply
-  // being there.
-  message.addEventListener("animationstart", () => {
-    if (returnedAt && performance.now() - returnedAt < 1000) animatedAfterReturn += 1
+  // "Did anything animate after I came back" is the WRONG question, and asking
+  // it produced a false alarm: the first fragment to arrive after the reader
+  // returns is new text, and new text is supposed to animate. The question that
+  // separates correct from broken is whether the animated span holds text that
+  // arrived WHILE THE TAB WAS HIDDEN — that is the reveal replaying a stretch
+  // the reader was not there for.
+  message.addEventListener("animationstart", (event) => {
+    if (!returnedAt || performance.now() - returnedAt > 2000) return
+
+    animatedAfterReturn += 1
+    const text = event.target.textContent
+    if (hiddenFragments.some((fragment) => text.includes(fragment.trim()))) replayedHidden += 1
   })
 
   document.addEventListener("visibilitychange", () => {
@@ -145,15 +153,27 @@
   })
 
   function report() {
+    const verdict = replayedHidden > 0
+      ? "MAL: se volvió a revelar texto que llegó con la pestaña oculta"
+      : (deliveredHidden > 0 && returnedAt ? "BIEN: nada de lo oculto se volvió a revelar" : "…")
+
     readout.textContent =
       `fragmentos: ${delivered} · llegados con la pestaña oculta: ${deliveredHidden} · ` +
-      `animaciones al volver: ${animatedAfterReturn}`
+      `animaciones al volver: ${animatedAfterReturn} · de ellas repetidas: ${replayedHidden} · ${verdict}`
   }
 
   function tick() {
-    window.appendDelta(FRAGMENTS[delivered % FRAGMENTS.length])
+    // Each fragment is numbered, so a span animating on return can be traced to
+    // the moment its text arrived rather than merely counted.
+    const text = `${FRAGMENTS[delivered % FRAGMENTS.length]} [${delivered}]`
+    window.appendDelta(text)
     delivered += 1
-    if (document.hidden) deliveredHidden += 1
+
+    if (document.hidden) {
+      deliveredHidden += 1
+      hiddenFragments.push(text)
+    }
+
     report()
   }
 
