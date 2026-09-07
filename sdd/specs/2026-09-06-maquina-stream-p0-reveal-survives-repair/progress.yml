@@ -51,8 +51,15 @@ tasks:
       human with a real tab.
   - id: 13
     title: human review and decision
-    status: pending
+    status: awaiting_human
     agent_may_close: false
+    prepared: >-
+      docs/phase0-frames/ holds 10 frames per strategy at 120ms intervals,
+      spanning 1.1s-2.3s of a run so the snapshot morph at frame 40 falls in the
+      middle of each strip, captured with 20% of delta frames dropped so the
+      snapshot repairs real divergence. README.md there says what to look for.
+      This is the closest an agent can get to "reviewed frame by frame"; the
+      judgement is still a person's.
 
 dod:
   - line: One strategy chosen, reason written in the spec.
