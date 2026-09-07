@@ -1,0 +1,30 @@
+<h1>Live — nexo_ai agent run</h1>
+
+<p>
+  The same endpoint, driven as an agent run instead of one answer. A run is a
+  loop — think, call a tool, read the result, continue — and each step is its own
+  streamable record: shape A, decided 2026-09-07, see
+  <code>docs/agent-runs.md</code>. Tool records are the ones with a blue rule.
+</p>
+
+<p>
+  That is what the separate records buy, visible on the page: each one seals
+  with its own status, each has its own sequence and its own manifest, and two
+  can be open at once — which is what a parallel tool call is. They share one
+  cable subscription, because <code>stream_for:</code> names the conversation
+  rather than the message.
+</p>
+
+<p>
+  The agent runs in Nexo's <code>:virtual</code> sandbox — an in-memory
+  filesystem with zero host access — so a prompt that asks it to write a file
+  writes into a Ruby Hash that dies with the request. The plain version of this
+  page is at <%= link_to "/harness/chat", harness_chat_path %>.
+</p>
+
+<%= render "harness/console",
+      llm: @llm,
+      messages: @messages,
+      conversation_id: Harness::AgentsController::CONVERSATION_ID,
+      form_url: harness_agent_path,
+      default_prompt: "Write a two-line markdown summary of the Ruby language to /workspace/ruby.md with write_file, read it back with read_file, then quote it and add a fenced code block." %>

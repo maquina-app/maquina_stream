@@ -1,15 +1,15 @@
 <!-- reinterprets: everything after the opening fence stops being prose, and
      the fence is not closed until the last line -->
-Ejemplo:
+Example:
 
 ```ruby
-def saludar(nombre)
-  puts "Hola, #{nombre}"
+def greet(name)
+  puts "Hello, #{name}"
 end
 ```
 
-Texto posterior.
+Text afterwards.
 
-Párrafo posterior uno, para que el bloque anterior quede sellado.
+Following paragraph one, so the block above seals.
 
-Párrafo posterior dos, para superar el seal lag.
+Following paragraph two, to clear the seal lag.

@@ -16,24 +16,24 @@ class HarnessController < ActionController::Base
   layout "application"
 
   MARKDOWN = <<~'MD'
-    # Panel de pruebas
+    # Test panel
 
-    Un párrafo con **negrita** y un [enlace externo](https://example.com/externo).
+    A paragraph with **bold** and an [external link](https://example.com/external).
 
     ```ruby
-    def saludar(nombre)
-      puts "Hola, #{nombre}"
+    def greet(name)
+      puts "Hello, #{name}"
     end
     ```
 
-    | Producto | Precio | Notas |
+    | Product | Price | Notes |
     |---|---|---|
-    | Café | 3,50 | con "comillas" |
-    | Té | 2,00 | y, una coma |
+    | Coffee | 3.50 | with "quotes" |
+    | Tea | 2.00 | and, a comma |
   MD
 
   # A real, sealed record so ms-repair has genuine endpoints to talk to.
-  REPAIRABLE = "# Informe\n\nPrimer párrafo, sellado.\n\nSegundo párrafo, sellado.\n\nTercero.\n\nCuarto.\n"
+  REPAIRABLE = "# Report\n\nFirst paragraph, sealed.\n\nSecond paragraph, sealed.\n\nThird.\n\nFourth.\n"
 
   def repair
     @message = Message.find_or_create_by!(content: REPAIRABLE) do |m|
@@ -53,8 +53,8 @@ class HarnessController < ActionController::Base
   DIAGRAM = <<~MD
     ```mermaid
     graph TD
-      A[Pregunta] --> B[Respuesta]
-      B --> C[Cita]
+      A[Question] --> B[Answer]
+      B --> C[Citation]
     ```
   MD
 
@@ -73,12 +73,12 @@ class HarnessController < ActionController::Base
   # mask got wrong: a character fraction is not a horizontal position, so the
   # defect only shows once a block occupies more than one line.
   REVEAL = <<~MD
-    Primer bloque, ya en pantalla. Este párrafo es deliberadamente largo para que
-    ocupe varias líneas visuales cuando el contenedor es estrecho, porque el
-    defecto que este arnés existe para detectar sólo aparece cuando un bloque se
-    reparte en más de una línea.
+    First block, already on screen. This paragraph is deliberately long so that it
+    occupies several visual lines when the container is narrow, because the defect
+    this harness exists to catch only shows up once a block is spread over more
+    than one line.
 
-    Segundo bloque, también en pantalla.
+    Second block, also on screen.
   MD
 
   # Through Document, not Renderer: the reveal binds to `data-ms-block`, and
@@ -97,10 +97,10 @@ class HarnessController < ActionController::Base
     response.headers["Cache-Control"] = "no-cache"
 
     fragments = [
-      "El informe continúa con una frase más.",
-      "Cada fragmento llega como llegaría una trama.",
-      "El texto se envuelve en varias líneas visuales.",
-      "Y así la cola crece mientras nadie mira."
+      "The report continues with one more sentence.",
+      "Each fragment arrives the way a frame would.",
+      "The text wraps over several visual lines.",
+      "And so the tail grows while nobody is watching."
     ]
 
     40.times do |index|

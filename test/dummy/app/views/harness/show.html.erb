@@ -5,6 +5,22 @@
   this page is the real one; nothing here is stubbed.
 </p>
 
+<nav>
+  <p>
+    Fixture text:
+    <a href="/harness/repair">repair</a> ·
+    <a href="/harness/deferred">deferred</a> ·
+    <a href="/harness/reveal">reveal</a> ·
+    <a href="/history">history</a>
+  </p>
+  <p>
+    A real model, over the cable:
+    <a href="/harness/chat">chat (ruby_llm)</a> ·
+    <a href="/harness/agent">agent (nexo_ai)</a>
+    — these need <code>config/llm.yml</code>; the page says so if it is missing.
+  </p>
+</nav>
+
 <section id="static"
          data-controller="ms-link-safety"
          data-action="click->ms-link-safety#intercept">
@@ -12,14 +28,14 @@
   <div id="ms-msg-harness"><%= @html %></div>
 
   <dialog data-ms-link-safety-target="dialog" aria-labelledby="link-safety-title">
-    <h3 id="link-safety-title"><%= t("maquina_stream.link_safety.title", default: "¿Salir del sitio?") %></h3>
+    <h3 id="link-safety-title"><%= t("maquina_stream.link_safety.title", default: "Leave this site?") %></h3>
     <p data-ms-link-safety-target="url"></p>
     <label>
       <input type="checkbox" data-ms-link-safety-target="remember">
-      <%= t("maquina_stream.link_safety.remember", default: "Confiar en este sitio") %>
+      <%= t("maquina_stream.link_safety.remember", default: "Trust this site") %>
     </label>
-    <button type="button" data-action="ms-link-safety#confirm"><%= t("maquina_stream.link_safety.confirm", default: "Continuar") %></button>
-    <button type="button" data-action="ms-link-safety#cancel"><%= t("maquina_stream.link_safety.cancel", default: "Cancelar") %></button>
+    <button type="button" data-action="ms-link-safety#confirm"><%= t("maquina_stream.link_safety.confirm", default: "Continue") %></button>
+    <button type="button" data-action="ms-link-safety#cancel"><%= t("maquina_stream.link_safety.cancel", default: "Cancel") %></button>
   </dialog>
 </section>
 
@@ -42,7 +58,7 @@
   <div id="scroller"
        data-controller="ms-autoscroll"
        data-action="scroll->ms-autoscroll#track wheel->ms-autoscroll#release touchmove->ms-autoscroll#release">
-    <div id="scroller-content"><p>Contenido inicial.</p></div>
+    <div id="scroller-content"><p>Initial content.</p></div>
   </div>
   <button type="button" id="append-line">Append a line</button>
 </section>
@@ -52,7 +68,7 @@
   // up mid-stream and watch whether it fights them.
   document.getElementById("append-line").addEventListener("click", () => {
     const p = document.createElement("p")
-    p.textContent = `Línea ${document.querySelectorAll("#scroller-content p").length}`
+    p.textContent = `Line ${document.querySelectorAll("#scroller-content p").length}`
     document.getElementById("scroller-content").append(p)
   })
 </script>

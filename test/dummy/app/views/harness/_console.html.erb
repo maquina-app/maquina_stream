@@ -1,0 +1,105 @@
+<%# The live console, shared by /harness/chat and /harness/agent. Both pages are
+    the same page: a prompt in, records streaming back over the cable. %>
+
+<style>
+  .live-console { max-width: 46rem; }
+  .live-panel { border: 1px solid #ddd; border-radius: 6px; padding: 1rem; margin: 1rem 0; }
+  .live-panel[data-tone="warning"] { border-color: #b8860b; background: #fffbea; }
+  .live-panel[data-tone="error"] { border-color: #b00020; background: #fff5f5; }
+  .live-settings { display: flex; gap: 1.5rem; flex-wrap: wrap; font-size: 0.9rem; }
+  .live-settings dt { font-weight: 600; }
+  .live-settings dd { margin: 0; font-family: ui-monospace, monospace; }
+  .live-form textarea { width: 100%; font: inherit; padding: 0.5rem; }
+  .live-form-actions { display: flex; gap: 0.5rem; align-items: center; margin-top: 0.5rem; }
+  .live-messages { border: 1px solid #ddd; border-radius: 6px; padding: 0 1rem; max-height: 34rem; overflow-y: auto; }
+  .live-message { border-bottom: 1px solid #eee; padding: 0.5rem 0; }
+  .live-message:last-child { border-bottom: 0; }
+  .live-message-header { display: flex; gap: 0.75rem; font-size: 0.8rem; color: #555; text-transform: uppercase; letter-spacing: 0.04em; }
+  .live-message[data-live-role="tool"] { border-left: 3px solid #0b5fff; padding-left: 0.75rem; }
+  .live-empty { color: #666; padding: 1.5rem 0; }
+  /* The caret is derived from the message element, never from the block: see
+     the DOM contract in docs/api-surface.md. */
+  [data-ms-streaming] > [data-ms-block]:last-child::after {
+    content: "▍"; animation: live-caret 1s steps(1) infinite;
+  }
+  @keyframes live-caret { 50% { opacity: 0; } }
+</style>
+
+<div class="live-console">
+  <% if flash[:alert] %>
+    <div class="live-panel" data-tone="error" data-live-part="error" role="alert">
+      <strong>The run failed.</strong>
+      <p><%= flash[:alert] %></p>
+      <p>
+        The record still sealed — as <code>errored</code> — because a stream that
+        ends without a seal leaves every client waiting for a frame that is never
+        coming.
+      </p>
+    </div>
+  <% end %>
+
+  <% if llm.configured? %>
+    <div class="live-panel" data-live-part="settings">
+      <dl class="live-settings">
+        <div><dt>Endpoint</dt><dd><%= llm.url %></dd></div>
+        <div><dt>Model</dt><dd><%= llm.model %></dd></div>
+        <div><dt>Key</dt><dd>read from <code><%= Llm::PATH %></code>, never shown</dd></div>
+      </dl>
+    </div>
+
+    <%# Turbo on purpose. The submission is a fetch, so the page stays put while
+        the request streams — which is the only way the frames arriving on the
+        cable are visible at all. The 303 at the end reloads, and the reload is
+        itself the check: live and reload are the same document. %>
+    <%= form_with url: form_url, method: :post, class: "live-form" do |form| %>
+      <%= form.label :prompt, "Prompt" %>
+      <%= form.text_area :prompt, rows: 3, value: default_prompt %>
+      <div class="live-form-actions">
+        <%= form.submit "Stream it" %>
+        <span>Capped at <%= Llm::DEADLINE %>s. The record always seals.</span>
+      </div>
+    <% end %>
+  <% else %>
+    <div class="live-panel" data-tone="warning" data-live-part="unconfigured">
+      <h2>No model configured</h2>
+      <p>
+        This page streams from a real endpoint, and the settings for it are not
+        committed. Create <code>test/dummy/<%= Llm::PATH %></code> — git ignores
+        it — by copying the example beside it:
+      </p>
+      <pre><code>cp test/dummy/<%= Llm::EXAMPLE %> test/dummy/<%= Llm::PATH %></code></pre>
+      <p>Three settings, and the defaults are a local ollama:</p>
+      <ul>
+        <li><code>url</code> — an OpenAI-compatible endpoint, including <code>/v1</code></li>
+        <li><code>key</code> — the API key; ollama needs none, so leave it empty</li>
+        <li><code>model</code> — the model name exactly as the endpoint spells it</li>
+      </ul>
+      <p>Then reload this page.</p>
+    </div>
+  <% end %>
+
+  <h2>Records</h2>
+
+  <%# The engine's default transport is Turbo Streams over this subscription.
+      The stream name is the host's `stream_for:`, so every record of the
+      conversation shares one subscription — which is the point of it. %>
+  <%= turbo_stream_from :conversation, conversation_id, :messages %>
+
+  <div id="messages"
+       class="live-messages"
+       data-controller="ms-autoscroll"
+       data-action="scroll->ms-autoscroll#track wheel->ms-autoscroll#release touchmove->ms-autoscroll#release">
+    <% if messages.any? %>
+      <%= render partial: "messages/message", collection: messages, as: :message %>
+    <% else %>
+      <p class="live-empty" data-live-part="empty">
+        Nothing streamed yet. Send a prompt and watch the blocks arrive, seal and
+        stop revealing.
+      </p>
+    <% end %>
+  </div>
+
+  <% if messages.any? %>
+    <%= button_to "Clear these records", form_url, method: :delete %>
+  <% end %>
+</div>

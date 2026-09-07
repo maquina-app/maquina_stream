@@ -1,12 +1,12 @@
 <!-- reinterprets: the link on line 1 is unresolved until its definition
      arrives at the end - which is why a block must never be rendered in
      isolation via Node#to_html -->
-Consulta la [documentación][docs] para más detalle.
+See the [documentation][docs] for more detail.
 
-Un párrafo intermedio.
+An intervening paragraph.
 
 [docs]: https://example.com/docs
 
-Párrafo posterior uno, para que el bloque anterior quede sellado.
+Following paragraph one, so the block above seals.
 
-Párrafo posterior dos, para superar el seal lag.
+Following paragraph two, to clear the seal lag.

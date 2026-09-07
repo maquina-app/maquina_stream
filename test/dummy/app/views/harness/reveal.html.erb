@@ -16,7 +16,7 @@
 <div id="ms-msg-reveal" data-controller="ms-reveal" data-ms-streaming><%= @html %></div>
 
 <p id="reveal-controls">
-  <button type="button" id="reveal-stream">Empezar a transmitir</button>
+  <button type="button" id="reveal-stream">Start streaming</button>
   <button type="button" id="reveal-append">Append to block 0</button>
   <button type="button" id="reveal-suppress">ms:suppress</button>
   <button type="button" id="reveal-resume">ms:resume</button>
@@ -147,12 +147,12 @@
 
   function report() {
     const verdict = replayedHidden > 0
-      ? "MAL: se volvió a revelar texto que llegó con la pestaña oculta"
-      : (deliveredHidden > 0 && returnedAt ? "BIEN: nada de lo oculto se volvió a revelar" : "…")
+      ? "WRONG: text that arrived while the tab was hidden was revealed again"
+      : (deliveredHidden > 0 && returnedAt ? "RIGHT: nothing that arrived hidden was re-revealed" : "…")
 
     readout.textContent =
-      `fragmentos: ${delivered} · llegados con la pestaña oculta: ${deliveredHidden} · ` +
-      `animaciones al volver: ${animatedAfterReturn} · de ellas repetidas: ${replayedHidden} · ${verdict}`
+      `fragments: ${delivered} · arrived while hidden: ${deliveredHidden} · ` +
+      `animations on return: ${animatedAfterReturn} · of those replayed: ${replayedHidden} · ${verdict}`
   }
 
   function tick(fragment) {
@@ -179,18 +179,18 @@
     if (source) {
       source.close()
       source = null
-      streamButton.textContent = "Empezar a transmitir"
+      streamButton.textContent = "Start streaming"
       return
     }
 
     source = new EventSource("<%= harness_reveal_stream_path %>")
     source.addEventListener("message", (event) => tick(event.data))
-    streamButton.textContent = "Detener"
+    streamButton.textContent = "Stop"
     report()
   })
 
   document.getElementById("reveal-append").addEventListener("click", () => {
-    window.appendDelta(" Y aquí llega el siguiente fragmento del texto.")
+    window.appendDelta(" And here comes the next fragment of the text.")
   })
   document.getElementById("reveal-suppress").addEventListener("click", () => {
     message.dispatchEvent(new CustomEvent("ms:suppress", { bubbles: false }))

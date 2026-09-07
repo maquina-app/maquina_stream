@@ -1,0 +1,23 @@
+<%# One streamed record. The wrapper and everything on it is the host's half of
+    the DOM contract in docs/api-surface.md: the engine appends block HTML into
+    `#ms-msg-<sid>` and never creates that element. %>
+<article id="live-msg-<%= message.maquina_stream_id %>"
+         class="live-message"
+         data-live-part="message"
+         data-live-role="<%= message.role %>">
+  <header class="live-message-header">
+    <span data-live-part="role"><%= message.tool_name.presence || message.role %></span>
+    <span data-live-part="status"><%= message.stream_status %></span>
+    <span data-live-part="seq">seq <%= message.maquina_stream_sequence %></span>
+  </header>
+
+  <%# `data-ms-streaming` is the host's signal, stamped from
+      maquina_stream_open?. It is what the caret CSS and the reveal read, and
+      taking it off is what a seal looks like in the DOM. %>
+  <div id="ms-msg-<%= message.maquina_stream_id %>"
+       data-controller="ms-repair ms-reveal"
+       data-ms-repair-manifest-url-value="<%= maquina_stream.manifest_path(sid: message.maquina_stream_id) %>"
+       data-ms-repair-blocks-url-value="<%= maquina_stream.blocks_path(sid: message.maquina_stream_id) %>"
+       data-ms-repair-interval-value="4000"
+       <%= "data-ms-streaming" if message.maquina_stream_open? %>><%= MaquinaStream.render(message) %></div>
+</article>

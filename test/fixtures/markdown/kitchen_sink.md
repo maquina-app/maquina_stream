@@ -1,38 +1,38 @@
-# Informe de estado
+# Status report
 
-Un párrafo con **negrita**, *cursiva*, `código en línea` y un
-[enlace](https://example.com/ruta).
+A paragraph with **bold**, *italic*, `inline code` and a
+[link](https://example.com/path).
 
-## Lista anidada
+## Nested list
 
-- primer punto
-  - anidado con `código`
-  - otro anidado
-- segundo punto
+- first point
+  - nested with `code`
+  - another nested
+- second point
 
-1. numerado
-2. también numerado
+1. numbered
+2. also numbered
 
-> Una cita que ocupa
-> dos líneas.
+> A quote that runs to
+> two lines.
 
-| Columna | Valor |
+| Column | Value |
 |---|---|
-| uno | 1 |
-| dos | 2 |
+| one | 1 |
+| two | 2 |
 
 ```ruby
-def saludar(nombre)
-  puts "Hola, #{nombre}"
+def greet(name)
+  puts "Hello, #{name}"
 end
 ```
 
 ```text
-sin resaltado
+no highlighting
 ```
 
-Texto final con una imagen: ![alt](https://example.com/i.png)
+Closing text with an image: ![alt](https://example.com/i.png)
 
 ---
 
-Último párrafo. 日本語とEnglishが同じ行に混在する 🎉
+Last paragraph, with an accented café. 日本語とEnglishが同じ行に混在する 🎉

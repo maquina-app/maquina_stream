@@ -1,10 +1,10 @@
 <!-- reinterprets: line 3 has no > marker but still belongs to the quote -->
-> Primera línea de la cita
-> segunda línea
-tercera línea sin marcador
+> First line of the quote
+> second line
+third line with no marker
 
-Fuera de la cita.
+Outside the quote.
 
-Párrafo posterior uno, para que el bloque anterior quede sellado.
+Following paragraph one, so the block above seals.
 
-Párrafo posterior dos, para superar el seal lag.
+Following paragraph two, to clear the seal lag.

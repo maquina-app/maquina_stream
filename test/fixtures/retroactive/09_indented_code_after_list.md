@@ -1,11 +1,11 @@
 <!-- reinterprets: the indented block is a list continuation, not a code block,
      until the list ends -->
-- primer punto
+- first point
 
-      no es código, es continuación
+      not code, a continuation
 
-Párrafo final.
+Final paragraph.
 
-Párrafo posterior uno, para que el bloque anterior quede sellado.
+Following paragraph one, so the block above seals.
 
-Párrafo posterior dos, para superar el seal lag.
+Following paragraph two, to clear the seal lag.

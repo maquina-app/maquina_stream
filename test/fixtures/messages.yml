@@ -1,11 +1,11 @@
 streaming:
   conversation_id: 1
-  content: "# Hola\n\nEsto es un mensaje"
+  content: "# Hello\n\nThis is a message"
   stream_sequence: 7
   stream_status: open
 
 sealed:
   conversation_id: 1
-  content: "Listo."
+  content: "Done."
   stream_sequence: 42
   stream_status: complete

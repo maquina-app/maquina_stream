@@ -4,7 +4,7 @@
   <%= turbo_frame_tag "history-before-#{messages.first.id}",
         src: history_path(before: messages.first.id),
         loading: :lazy do %>
-    <p data-history-part="loading"><%= t("maquina_stream.history.loading", default: "Cargando mensajes anteriores…") %></p>
+    <p data-history-part="loading"><%= t("maquina_stream.history.loading", default: "Loading earlier messages…") %></p>
   <% end %>
 <% end %>
 

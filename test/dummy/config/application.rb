@@ -20,6 +20,15 @@ rescue LoadError
   # Running without the harness gems. The suite still passes.
 end
 
+# The cable the live pages stream over, and the reason it is loaded here rather
+# than unconditionally: `Turbo::StreamsChannel` is a subclass of an Action Cable
+# channel, so requiring this is what makes the engine's default transport stop
+# being a no-op. Every unit test hands the broadcaster a recorder instead, and
+# the suite is meant to keep proving the engine rather than the wire — so the
+# test environment stays exactly as it was, and only the browser harness gets a
+# real cable.
+require "action_cable/engine" unless ENV["RAILS_ENV"] == "test"
+
 require "maquina_stream"
 
 module Dummy

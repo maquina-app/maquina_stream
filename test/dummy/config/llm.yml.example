@@ -1,0 +1,23 @@
+# Live model settings for the two harness pages:
+#
+#   /harness/chat    bare ruby_llm  — one assistant message, streamed
+#   /harness/agent   nexo_ai        — one record per step of an agent run
+#
+# Copy this file to `config/llm.yml` and edit it. That file is git-ignored and
+# is the ONLY place these three settings are read from: there is no ENV
+# fallback and no default host, so a missing or incomplete file makes the pages
+# say what to create rather than guess and fail against somebody's endpoint.
+#
+#   url    an OpenAI-compatible chat endpoint, including the /v1 suffix.
+#          ollama, vLLM, LM Studio, OpenRouter and OpenAI itself all speak it,
+#          which is why one setting covers every one of them.
+#   key    the API key. ollama needs none — leave it empty. It is read once,
+#          never logged and never rendered.
+#   model  the model name exactly as the endpoint spells it. It is passed
+#          through without a registry lookup, so a local tag works.
+#
+# The defaults are a local ollama.
+
+url: http://localhost:11434/v1
+key: ""
+model: gemma4:cloud

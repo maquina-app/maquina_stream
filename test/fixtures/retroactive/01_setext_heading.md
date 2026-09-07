@@ -1,9 +1,9 @@
 <!-- reinterprets: the paragraph on line 1 becomes an h1 when line 2 arrives -->
-Informe de estado
-=================
+Status report
+=============
 
-Texto que sigue al encabezado.
+Text that follows the heading.
 
-Párrafo posterior uno, para que el bloque anterior quede sellado.
+Following paragraph one, so the block above seals.
 
-Párrafo posterior dos, para superar el seal lag.
+Following paragraph two, to clear the seal lag.

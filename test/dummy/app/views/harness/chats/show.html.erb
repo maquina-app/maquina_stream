@@ -1,0 +1,30 @@
+<h1>Live — bare ruby_llm</h1>
+
+<p>
+  A real model, not a fixture. <code>chat.ask</code> yields chunks,
+  <code>Message#stream_from</code> appends each one and seals once, and the
+  engine turns the growing buffer into frames. There is no adapter and no agent
+  framework in between: that method is the whole integration.
+</p>
+
+<p>
+  Watch three things. Blocks arrive one at a time and the last one carries the
+  caret. A block <strong>seals</strong> once <code>seal_lag</code> blocks follow
+  it, and never changes again. The seal takes
+  <code>data-ms-streaming</code> off the message, which stops the reveal and
+  re-enables the copy and download controls.
+</p>
+
+<p>
+  <code>ms-repair</code> is live on every record here, with a keyframe every four
+  seconds, so the mounted engine's manifest and blocks endpoints are being
+  called for real while the page is open. The agent version of this page is at
+  <%= link_to "/harness/agent", harness_agent_path %>.
+</p>
+
+<%= render "harness/console",
+      llm: @llm,
+      messages: @messages,
+      conversation_id: Harness::ChatsController::CONVERSATION_ID,
+      form_url: harness_chat_path,
+      default_prompt: "Write a short status report in markdown: a heading, a paragraph with bold and a link, a three-row table, and a fenced ruby code block." %>

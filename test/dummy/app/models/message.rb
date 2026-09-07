@@ -16,6 +16,45 @@ class Message < ActiveRecord::Base
   scope :assistant, -> { where(role: "assistant") }
   scope :tools, -> { where(role: "tool") }
 
+  # The browser half of the contract, for the live harness pages.
+  #
+  # The engine appends block HTML into `#ms-msg-<sid>` and never creates that
+  # element: the wrapper, the controllers on it and its repair URLs are the
+  # host's, per the DOM contract in docs/api-surface.md. It goes out twice — once
+  # empty when the record opens, and once more when it seals, which is what
+  # takes `data-ms-streaming` off and so stops the reveal and re-enables the
+  # controls. The second one morphs, so the blocks the deltas already delivered
+  # are reconciled rather than deleted and recreated.
+  def broadcast_shell
+    if maquina_stream_open?
+      Turbo::StreamsChannel.broadcast_append_to(
+        maquina_stream_target,
+        target: "messages",
+        partial: "messages/message",
+        locals: {message: self}
+      )
+    else
+      Turbo::StreamsChannel.broadcast_replace_to(
+        maquina_stream_target,
+        target: "live-msg-#{maquina_stream_id}",
+        partial: "messages/message",
+        locals: {message: self},
+        attributes: {"method" => "morph"}
+      )
+    end
+  end
+
+  # A run that raises — a timeout, a refusal, an endpoint that went away — ends
+  # with records still open, and an open record is a client waiting for a frame
+  # that is never coming. Only the host knows the run ended, so only the host
+  # can send that frame.
+  def self.seal_abandoned!(conversation_id:)
+    where(conversation_id: conversation_id, stream_status: "open").each do |record|
+      MaquinaStream::Broadcaster.new(record).seal!(status: :errored)
+      record.broadcast_shell
+    end
+  end
+
   # A Nexo agent run, streamed as several records rather than one.
   #
   # Nexo reports tool activity through the block `Agent#prompt` takes, as

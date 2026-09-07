@@ -9,5 +9,13 @@ Rails.application.routes.draw do
   get "harness/deferred" => "harness#deferred", :as => :harness_deferred
   get "harness/reveal" => "harness#reveal", :as => :harness_reveal
   get "harness/reveal/stream" => "harness#reveal_stream", :as => :harness_reveal_stream
+
+  # The two live pages. CRUD-shaped: showing the conversation, creating one
+  # streamed run, clearing it. See Harness::LiveController.
+  namespace :harness do
+    resource :chat, only: %i[show create destroy]
+    resource :agent, only: %i[show create destroy]
+  end
+
   get "history" => "history#index", :as => :history
 end

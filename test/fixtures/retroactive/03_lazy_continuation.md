@@ -1,11 +1,11 @@
 <!-- reinterprets: line 3 joins the paragraph above it rather than starting a
      new block, so the block above is not final when it looks final -->
-Un párrafo que empieza aquí
-y continúa en la línea siguiente
-sin línea en blanco entre medias.
+A paragraph that starts here
+and carries on to the next line
+with no blank line in between.
 
-Otro párrafo.
+Another paragraph.
 
-Párrafo posterior uno, para que el bloque anterior quede sellado.
+Following paragraph one, so the block above seals.
 
-Párrafo posterior dos, para superar el seal lag.
+Following paragraph two, to clear the seal lag.

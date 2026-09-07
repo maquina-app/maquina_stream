@@ -1,13 +1,13 @@
 <!-- reinterprets: an HTML block carries no data-sourcepos at all (confirmed in
      test/sourcepos_test.rb), so the splitter cannot assume total line coverage -->
-Antes del bloque.
+Before the block.
 
-<div class="aviso">
-  <p>contenido</p>
+<div class="notice">
+  <p>content</p>
 </div>
 
-Después del bloque.
+After the block.
 
-Párrafo posterior uno, para que el bloque anterior quede sellado.
+Following paragraph one, so the block above seals.
 
-Párrafo posterior dos, para superar el seal lag.
+Following paragraph two, to clear the seal lag.

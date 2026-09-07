@@ -1,2 +1,6 @@
+# "sin contrato" — deliberately left as it is. It is not sample copy: it is the
+# literal string `streamable_test.rb` asserts on when it checks that a model
+# without the maquina_stream macro raises ContractError, and that test file is
+# not part of this change.
 plain:
   body: "sin contrato"

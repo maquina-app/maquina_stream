@@ -23,7 +23,7 @@ MaquinaStream.register_fence "mermaid",
 
 # Tag registry — the reference case, not a toy. A model citing its sources emits
 #
-#   <source id="3" href="https://example.com/a" title="Un artículo"></source>
+#   <source id="3" href="https://example.com/a" title="An article"></source>
 #
 # and the engine renders it through the source_citation component, keeping only
 # the attributes registered here. Anything else the model puts on the tag is

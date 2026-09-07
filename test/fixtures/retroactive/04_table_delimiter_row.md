@@ -1,10 +1,10 @@
 <!-- reinterprets: line 1 is a paragraph until line 2 arrives, at which point it
      retroactively becomes a table header -->
-| Columna | Valor |
+| Column | Value |
 |---|---|
-| uno | 1 |
-| dos | 2 |
+| one | 1 |
+| two | 2 |
 
-Párrafo posterior uno, para que el bloque anterior quede sellado.
+Following paragraph one, so the block above seals.
 
-Párrafo posterior dos, para superar el seal lag.
+Following paragraph two, to clear the seal lag.

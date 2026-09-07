@@ -1,10 +1,10 @@
 <!-- reinterprets: the blank line makes the whole list loose, so every item
      already emitted gains a <p> wrapper -->
-- primer punto
-- segundo punto
+- first point
+- second point
 
-- tercer punto tras una línea en blanco
+- third point after a blank line
 
-Párrafo posterior uno, para que el bloque anterior quede sellado.
+Following paragraph one, so the block above seals.
 
-Párrafo posterior dos, para superar el seal lag.
+Following paragraph two, to clear the seal lag.

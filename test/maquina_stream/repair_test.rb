@@ -132,7 +132,7 @@ class RepairTest < ActiveSupport::TestCase
       base = File.read(File.expand_path("../fixtures/markdown/kitchen_sink.md", __dir__))
       buffer = +""
       section = 0
-      buffer << base.gsub("# Informe de estado", "# Sección #{section += 1}") while buffer.bytesize < bytes
+      buffer << base.gsub("# Status report", "# Section #{section += 1}") while buffer.bytesize < bytes
       buffer
     end
 

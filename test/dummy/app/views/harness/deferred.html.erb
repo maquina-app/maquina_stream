@@ -1,26 +1,26 @@
-<h1>Carga perezosa de los renderizadores diferidos</h1>
+<h1>Lazy loading of the deferred renderers</h1>
 
 <p>
-  Dos bloques diferidos — una fence <code>mermaid</code> y una fence
-  <code>math</code> — colocados deliberadamente muy por debajo del pliegue, y
-  separados entre sí, de modo que cada biblioteca se pueda atribuir al bloque
-  que entró en pantalla. Nada de esto está simulado: <code>mermaid</code> y
-  <code>katex</code> están fijados en el importmap del anfitrión, sin precarga.
+  Two deferred blocks — a <code>mermaid</code> fence and a <code>math</code>
+  fence — placed deliberately far below the fold, and far apart from each other,
+  so each library fetch is attributable to the block that scrolled into view.
+  None of this is stubbed: <code>mermaid</code> and <code>katex</code> are
+  pinned in the host's importmap, with no preload.
 </p>
 
 <p>
-  Compárese con <a href="/harness">/harness</a>, que no tiene ningún bloque
-  diferido y por tanto no debe pedir ninguna de las dos bibliotecas.
+  Compare with <a href="/harness">/harness</a>, which has no deferred block at
+  all and must therefore request neither library.
 </p>
 
 <div class="spacer" style="height: 250vh; border-left: 2px dashed #ccc;">
-  <p>Espaciador. Nada aquí necesita una biblioteca.</p>
+  <p>Spacer. Nothing here needs a library.</p>
 </div>
 
 <div id="ms-msg-diagram"><%= @diagram_html %></div>
 
 <div class="spacer" style="height: 250vh; border-left: 2px dashed #ccc;">
-  <p>Segundo espaciador, entre el diagrama y la fórmula.</p>
+  <p>Second spacer, between the diagram and the formula.</p>
 </div>
 
 <div id="ms-msg-math"><%= @math_html %></div>

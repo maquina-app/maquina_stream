@@ -200,7 +200,7 @@ class BroadcasterTest < ActiveSupport::TestCase
       base = File.read(File.expand_path("../fixtures/markdown/kitchen_sink.md", __dir__))
       buffer = +""
       section = 1
-      buffer << base.gsub("# Informe de estado", "# Sección #{section += 1}") while buffer.bytesize < 20_000
+      buffer << base.gsub("# Status report", "# Section #{section += 1}") while buffer.bytesize < 20_000
       buffer
     end
 
