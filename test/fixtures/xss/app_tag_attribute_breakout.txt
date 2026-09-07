@@ -1,0 +1,10 @@
+--- input
+<thinking title="a><img src=x onerror=alert(1)>">
+Razonamiento.
+
+Más.
+</thinking>
+
+Después.
+--- note
+A quoted attribute value holding a complete img tag with a handler. The match must read CommonMark's attribute grammar rather than stopping at the first ">", or the pass would splice a newline into the middle of the tag and leave the img as live markup on a line of its own. Registered or not, no handler attribute survives.

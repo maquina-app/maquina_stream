@@ -1,0 +1,15 @@
+--- input
+<thinking>
+Razonamiento.
+
+```html
+</thinking>
+<img src=x onerror=alert(1)>
+```
+
+Más razonamiento.
+</thinking>
+
+Después.
+--- note
+A forged closing tag inside a fenced code block, trying to close the app tag early and promote the fence's contents into markup. The fence is masked before matching, so the closer inside it is code and the real closer four lines later is the one that pairs. The code stays code and the handler never becomes an attribute.

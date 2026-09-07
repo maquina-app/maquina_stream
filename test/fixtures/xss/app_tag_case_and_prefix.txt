@@ -1,0 +1,14 @@
+--- input
+<THINKINGXYZ onload="alert(1)">
+Uno.
+
+Dos.
+</THINKINGXYZ>
+
+<Thinking>
+Tres.
+</thinking onload="alert(1)">
+
+Después.
+--- note
+A tag name that merely starts with a registered one must not match it, whatever its case; and a closing tag with an attribute is still a closing tag. Neither may keep an event handler, and the unregistered element is unwrapped rather than rendered.

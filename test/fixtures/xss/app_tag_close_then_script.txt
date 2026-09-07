@@ -1,0 +1,10 @@
+--- input
+<thinking>
+Razonamiento.
+
+Más razonamiento.
+</thinking><script>alert(1)</script>
+
+Después.
+--- note
+Attacks Renderer::TagBlocks. The closing tag carries a script element on the same line, so the newline this pass inserts after the closer puts the script at the start of a block of its own. It is raw HTML there exactly as it was raw HTML inside the paragraph before, and the sanitizer drops it with its subtree either way. Nothing the transform does may widen what survives.

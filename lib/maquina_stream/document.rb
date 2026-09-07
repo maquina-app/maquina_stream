@@ -113,7 +113,7 @@ module MaquinaStream
           # when the caret moves past it, and neither changes what it says.
           digest = Digest::SHA256.hexdigest("#{source_index}:#{node.inner_html}")[0, 16]
 
-          # The DOM contract, from docs/api-surface.md. The id is index-derived
+          # The DOM contract, from docs/javascript.md. The id is index-derived
           # so idiomorph pairs the node instead of recreating it.
           node["id"] = sid ? "ms-#{sid}-b#{source_index}" : "ms-b#{source_index}"
           node["data-ms-block"] = ""
@@ -243,7 +243,7 @@ module MaquinaStream
       # range of its own inherits the lines between its neighbours.
       def source_ranges
         parsed = Commonmarker.to_html(
-          MaquinaRemend.call(markdown),
+          prepared,
           options: Renderer::COMMONMARKER_OPTIONS,
           plugins: Renderer::COMMONMARKER_PLUGINS
         )
@@ -274,8 +274,15 @@ module MaquinaStream
         end
       end
 
+      # The same string the renderer parsed: repaired by maquina_remend and
+      # normalised by Renderer::TagBlocks. Ranges and slices have to share one
+      # coordinate system, and the rendered document is in this one.
+      def prepared
+        @prepared ||= Renderer.prepare(markdown)
+      end
+
       def lines
-        @lines ||= markdown.lines
+        @lines ||= prepared.lines
       end
 
       def line_count = lines.length

@@ -1,0 +1,8 @@
+--- input
+<thinking>
+Razonamiento.
+</thinking> <img src=x onerror=alert(1)>
+
+Después.
+--- note
+The same breakout with an inline element that the allowlist does admit. The img may survive; its onerror may not, and the paragraph that follows the tag must not reach the tag's partial.

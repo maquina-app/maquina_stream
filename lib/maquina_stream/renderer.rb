@@ -8,6 +8,7 @@ require "maquina_remend"
 require_relative "renderer/view_context"
 require_relative "renderer/fence"
 require_relative "renderer/post_pass"
+require_relative "renderer/tag_blocks"
 
 module MaquinaStream
   # Markdown in, sanitized HTML out.
@@ -25,10 +26,13 @@ module MaquinaStream
   #
   # 1. `MaquinaRemend.call` repairs the unterminated markdown a half-written
   #    buffer always ends in — an open bold run, an unclosed fence.
-  # 2. Commonmarker parses it, with source positions.
-  # 3. Renderer::PostPass rewrites elements: fences, custom tags, registered
+  # 2. Renderer::TagBlocks puts blank lines around the opening and closing tags
+  #    of a *registered* tag, so a block-level `<thinking>` is its own HTML
+  #    block rather than a closing tag stranded inside a paragraph.
+  # 3. Commonmarker parses it, with source positions.
+  # 4. Renderer::PostPass rewrites elements: fences, custom tags, registered
   #    element overrides, text direction, block indices.
-  # 4. Sanitizer runs, unconditionally, last.
+  # 5. Sanitizer runs, unconditionally, last.
   #
   # Renderer returns one HTML string for the whole buffer. It does **not**
   # split it into blocks or stamp ids and digests on them — that is Document,
@@ -77,6 +81,18 @@ module MaquinaStream
       new(mode: mode, config: config).call(markdown)
     end
 
+    # The buffer as commonmarker will see it: repaired, then normalised so a
+    # registered block-level tag stands on its own. Document parses this rather
+    # than the raw buffer, so its source positions are the ones the rendered
+    # document was built from — two parses of two different strings do not line
+    # up, and the block ids are derived from the alignment.
+    #
+    # Byte-identical to `MaquinaRemend.call(markdown)` when no tag is
+    # registered.
+    def self.prepare(markdown)
+      TagBlocks.call(MaquinaRemend.call(markdown))
+    end
+
     # Builds a reusable renderer. Raises ArgumentError unless `mode:` is one of
     # MODES.
     def initialize(mode: :streaming, config: MaquinaStream.config)
@@ -93,11 +109,11 @@ module MaquinaStream
     def call(markdown)
       return safe("") if markdown.nil? || markdown.strip.empty?
 
-      repaired = MaquinaRemend.call(markdown)
-      parsed = Commonmarker.to_html(repaired, options: COMMONMARKER_OPTIONS, plugins: COMMONMARKER_PLUGINS)
+      prepared = self.class.prepare(markdown)
+      parsed = Commonmarker.to_html(prepared, options: COMMONMARKER_OPTIONS, plugins: COMMONMARKER_PLUGINS)
       fragment = Nokogiri::HTML5.fragment(parsed)
 
-      PostPass.new(fragment, markdown: repaired, mode: mode, config: config).call
+      PostPass.new(fragment, markdown: prepared, mode: mode, config: config).call
 
       safe(Sanitizer.call(fragment.to_html, config: config))
     end

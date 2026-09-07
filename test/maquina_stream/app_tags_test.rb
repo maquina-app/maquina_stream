@@ -100,23 +100,11 @@ class AppTagsTest < ActiveSupport::TestCase
     assert_empty seal_violations(SPANNING)
   end
 
-  # A registered tag whose content is several blocks. The registry works on ONE
-  # node: the post-pass replaces the tag node with the partial and hands it the
-  # node's inner HTML.
-  #
-  # Two things follow, and both are visible here rather than argued:
-  #
-  # 1. Everything inside the tag becomes ONE block. There is no way for the
-  #    partial to receive four paragraphs and leave four blocks behind.
-  # 2. CommonMark emits the closing tag inside a paragraph — "</thinking></p>" —
-  #    so the HTML5 parser never closes the element, and the rest of the message
-  #    is parsed INSIDE it. The partial receives content that came after the
-  #    closing tag.
-  #
-  # The registry is an inline/single-node facility. This is the failing case,
-  # asserted so it fails loudly if it is ever fixed rather than sitting in a
-  # document nobody reads.
-  test "a registered block-level tag takes the rest of the message with it" do
+  # A registered tag whose content is several blocks. Renderer::TagBlocks puts
+  # blank lines around the tag's own tags before commonmarker sees them, so the
+  # element is a well-formed HTML block: it closes where the model closed it,
+  # and the partial receives the tag body and nothing else.
+  test "a registered block-level tag renders its own content and nothing after it" do
     MaquinaStream.register_tag :thinking, attributes: [], partial: "tags/reasoning"
 
     blocks = MaquinaStream::Document.new(SPANNING, sid: "m1").blocks
@@ -124,43 +112,100 @@ class AppTagsTest < ActiveSupport::TestCase
 
     assert reasoning, "the registered tag must render through its partial"
 
-    assert_includes reasoning.html, "Alpha reasoning line.",
-      "the whole tag body is one block"
-    assert_includes reasoning.html, "And a closing paragraph.",
-      "KNOWN LIMITATION: content after </thinking> is parsed inside the tag and " \
-      "reaches the partial. register_tag is single-node; see docs/registries.md."
-    assert_equal blocks.last, reasoning,
-      "everything after the tag opens ends up in the same block"
+    %w[Alpha Beta Gamma Delta].each do |line|
+      assert_includes reasoning.html, "#{line} reasoning line.",
+        "the whole tag body is one block, so every reasoning line is in it"
+    end
+
+    refute_includes reasoning.html, "Here is the answer.",
+      "content after </thinking> must never reach the partial"
+    refute_includes reasoning.html, "And a closing paragraph.",
+      "content after </thinking> must never reach the partial"
+
+    refute_equal blocks.last, reasoning, "the message continues in blocks of its own"
+    assert(blocks.any? { |block| block.html.include?("Here is the answer.") && !block.html.include?("data-ms-reasoning") })
+    assert(blocks.any? { |block| block.html.include?("And a closing paragraph.") && !block.html.include?("data-ms-reasoning") })
   end
 
-  # And the consequence for streaming, which is the part that costs something:
-  # that block is the tail, so it is never far enough from the end to seal. The
-  # rest of the message is re-sent on every frame.
-  test "a registered block-level tag leaves the rest of the message unsealable" do
+  # The mid-stream case, which is the one that matters: a message is rendered
+  # from every prefix of itself, and the leak has to be absent from all of them,
+  # not only from the finished document. Replayed character by character.
+  test "the partial never receives post-close content at any truncation point" do
     MaquinaStream.register_tag :thinking, attributes: [], partial: "tags/reasoning"
 
+    (0..SPANNING.length).each do |cut|
+      source = SPANNING[0, cut]
+      after = source.split("</thinking>", 2)[1].to_s
+      next if after.strip.empty?
+
+      text = MaquinaStream::Document.new(source, sid: "m1")
+        .blocks
+        .select { |block| block.html.include?("data-ms-reasoning") }
+        .map { |block| Nokogiri::HTML5.fragment(block.html).text }
+        .join(" ")
+
+      # Whole lines, and the first characters of a line that is still arriving:
+      # a leak of half a sentence is a leak.
+      arrived = after.strip[0, 6]
+      refute_includes text, arrived,
+        "the partial received post-close content (#{arrived.inspect}) at truncation point #{cut}"
+
+      ["Here is the answer.", "And a closing paragraph."].each do |line|
+        next unless after.include?(line)
+
+        refute_includes text, line, "the partial received #{line.inspect} at truncation point #{cut}"
+      end
+    end
+  end
+
+  # What the fix costs, measured rather than asserted from memory.
+  #
+  # The tag body is ONE block — a registered component is one component — so the
+  # four reasoning paragraphs that would otherwise be four sealable blocks are a
+  # single block that stays open until two blocks follow it. Everything the model
+  # writes inside the tag is therefore re-sent on every frame until the tag
+  # closes, and the cost grows with the square of the body length.
+  #
+  # Over this document, replayed character by character: 5 blocks instead of 8,
+  # a seal pointer of 3 instead of 6, and 74,063 bytes of unsealed HTML re-sent
+  # across the replay instead of 56,767 — 30% more. With a twenty-paragraph
+  # reasoning body it is 3.5x, and 88% of it is that one block.
+  test "the tag body is one block, and it is re-sent until it closes" do
     # Document renders lazily, so each one is forced while the registry it is
     # being measured under is the one that is installed.
+    MaquinaStream.register_tag :thinking, attributes: [], partial: "tags/reasoning"
     registered = MaquinaStream::Document.new(SPANNING, sid: "m1")
     registered.blocks
+    registered_bytes = replay_bytes(SPANNING)
+
     MaquinaStream.reset_registries!
     unregistered = MaquinaStream::Document.new(SPANNING, sid: "m1")
     unregistered.blocks
+    unregistered_bytes = replay_bytes(SPANNING)
 
-    assert_equal 3, registered.blocks.length,
-      "the tag body plus everything after it collapses into one block"
+    assert_equal 5, registered.blocks.length, "the tag body collapses into one block"
     assert_equal 8, unregistered.blocks.length
 
     assert_operator registered.seal_pointer, :<, unregistered.seal_pointer,
-      "the merged tail can never seal, so far more of the message is re-sent per frame"
+      "one block instead of four means four fewer blocks that can seal"
+    assert_operator registered_bytes, :>, unregistered_bytes,
+      "the merged body is re-sent on every frame until it closes"
 
     MaquinaStream.register_tag :thinking, attributes: [], partial: "tags/reasoning"
 
     assert_empty seal_violations(SPANNING),
-      "the merge only ever grows the tail, so it does not rewrite a sealed block"
+      "the body only ever grows, so closing the tag does not rewrite a sealed block"
   end
 
   private
+    # Every byte of unsealed HTML the replay would put on the wire: the patch
+    # set of every frame, summed.
+    def replay_bytes(markdown)
+      (0..markdown.length).sum do |cut|
+        MaquinaStream::Document.new(markdown[0, cut], sid: "m1").unsealed_blocks.sum { |block| block.html.bytesize }
+      end
+    end
+
     # Replays the buffer character by character and reports every sealed block
     # whose HTML changed after it was sealed — the failure sealing exists to
     # prevent, since a sealed block is never broadcast again.

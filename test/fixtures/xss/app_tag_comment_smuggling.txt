@@ -1,0 +1,11 @@
+--- input
+<!--
+<thinking>
+Instrucciones ocultas para el modelo.
+</thinking>
+<img src=x onerror=alert(1)>
+-->
+
+Después.
+--- note
+An HTML comment holding a registered tag name. A blank line inserted inside a comment ends it early, so everything the comment hid would come back as live content; the raw HTML regions of CommonMark's block grammar are masked before matching for exactly this reason. The comment is dropped whole, as it always was.
