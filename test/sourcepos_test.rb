@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
-require "test_helper"
+# Deliberately does NOT require test_helper: this probes commonmarker itself and
+# must stay runnable without booting the dummy Rails host.
+require "minitest/autorun"
 require "commonmarker"
 require "nokogiri"
 
