@@ -1,0 +1,6 @@
+<%# A host-side partial for a BLOCK-level registered tag, used by
+    test/maquina_stream/app_tags_test.rb. `content` is the tag's inner HTML,
+    which the post-pass has already rendered and the sanitizer still has to
+    approve — this partial is the last place it is markup rather than text. %>
+<%# locals: (content: "") %>
+<section data-ms-reasoning><%= content.to_s.html_safe %></section>

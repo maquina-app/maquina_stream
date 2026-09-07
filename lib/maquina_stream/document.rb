@@ -99,12 +99,13 @@ module MaquinaStream
       # drops nodes - an HTML comment, a disallowed element - and a positional
       # match silently shifts every range after the first drop.
       def build_blocks
-        rendered = Nokogiri::HTML5.fragment(html).children.select(&:element?)
+        rendered = block_nodes(Nokogiri::HTML5.fragment(html))
         ranges = source_ranges
+        indices = block_indices(rendered)
         sealed_count = [rendered.length - config.seal_lag, 0].max
 
         rendered.each_with_index.map do |node, position|
-          source_index = node["data-ms-block-index"]&.to_i || position
+          source_index = indices[position]
           range = ranges[source_index]
 
           # The digest covers the block's content, before the element-level
@@ -116,6 +117,7 @@ module MaquinaStream
           # so idiomorph pairs the node instead of recreating it.
           node["id"] = sid ? "ms-#{sid}-b#{source_index}" : "ms-b#{source_index}"
           node["data-ms-block"] = ""
+          node["data-ms-block-index"] = source_index.to_s
           node["data-ms-block-digest"] = digest
 
           Block.new(
@@ -128,6 +130,79 @@ module MaquinaStream
             digest: digest
           )
         end.then { |built| apply_seal(built, sealed_count) }
+      end
+
+      # Inline-level elements. Content inside a block, never a block of their
+      # own — and every one of them can be stranded at the top level by the
+      # unwrap below.
+      INLINE_ELEMENTS = Set[
+        "a", "abbr", "b", "br", "cite", "code", "del", "dfn", "em", "i", "img",
+        "input", "ins", "kbd", "mark", "q", "s", "samp", "small", "span",
+        "strong", "sub", "sup", "time", "u", "var", "wbr"
+      ]
+
+      # Splitting must not be able to lose a character.
+      #
+      # The sanitizer unwraps an element it does not know — <thinking>,
+      # <tool_call>, <citation>, any tag a model invents to carry meaning for the
+      # application — and keeps its children. CommonMark has already made that
+      # tag an HTML block, so the text under it comes back as a bare text node at
+      # the TOP level of the fragment, where `select(&:element?)` used to drop it
+      # on the floor. The same happens to an inline element the unwrap strands
+      # there.
+      #
+      # The wrapping belongs here rather than in the sanitizer's final pass. The
+      # sanitizer is a pure allowlist over an arbitrary fragment: it runs again
+      # on the client over fragments that are deliberately inline, and a pass
+      # that invented a <p> around them would change what the caller asked to
+      # sanitize. Document is the object that claims every character which
+      # survives sanitizing lands in exactly one block, so it is the object that
+      # has to make the claim true.
+      #
+      # Consecutive orphans are wrapped together — text plus the <em> beside it
+      # stay one block, as they read — and a run that is only whitespace is
+      # inter-block separation, not content, so it is left where it is.
+      def block_nodes(fragment)
+        fragment.children.to_a
+          .slice_when { |before, after| orphan?(before) != orphan?(after) }
+          .flat_map { |run| orphan?(run.first) ? [wrap_orphans(run)].compact : run.select(&:element?) }
+      end
+
+      def orphan?(node)
+        return true unless node.element?
+
+        INLINE_ELEMENTS.include?(node.name.downcase)
+      end
+
+      def wrap_orphans(run)
+        return nil if run.map(&:text).join.strip.empty?
+
+        wrapper = Nokogiri::XML::Node.new("p", run.first.document)
+        wrapper["data-ms-element"] = "p"
+        run.first.add_previous_sibling(wrapper)
+        run.each { |node| wrapper.add_child(node) }
+        wrapper
+      end
+
+      # The post-pass stamps `data-ms-block-index` on every top-level element it
+      # sees; a block wrapped above never passed under it, and neither did an
+      # element the unwrap promoted from inside one. Those take the first free
+      # index at or after their position, so ids stay unique — the one property
+      # idiomorph needs from them. They are not always in ascending order, and
+      # they do not have to be: block order is the order of #blocks.
+      def block_indices(nodes)
+        used = nodes.filter_map { |node| node["data-ms-block-index"]&.to_i }.to_set
+        cursor = 0
+
+        nodes.each_with_index.map do |node, position|
+          stamped = node["data-ms-block-index"]&.to_i
+          next stamped if stamped
+
+          cursor = [cursor, position].max
+          cursor += 1 while used.include?(cursor)
+          used << cursor
+          cursor
+        end
       end
 
       # Sealing is a prefix: the pointer is the position it reaches, so a block
