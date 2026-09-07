@@ -60,7 +60,9 @@ tasks:
       exercises the same code path. Three fragments appended while hidden
       produced 0 animations; returning produced 0; the next genuinely new
       fragment animated alone, holding only its own text, and all three hidden
-      fragments were present unrevealed. The user then ran it in a real tab.
+      fragments were present unrevealed. Then confirmed by the user in a REAL
+      tab, 2026-09-07, after two false reports that were both the harness's
+      fault: "BIEN: nada de lo oculto se volvió a revelar".
     harness_was_lying: >-
       The user's second report - "it stops streaming when I switch tab, but
       after I came back it does continue with animation" - was about the harness,

@@ -191,26 +191,85 @@ The gate. Roughly ten minutes:
 
 ## Definition of done (from `docs/plan.md`)
 
-- [ ] One strategy chosen, reason written in this spec.
-- [ ] Specific failing behaviour of each rejected strategy documented, not just "worse".
-- [ ] Suppression mechanism described concretely enough for Phase 4 to implement against.
-- [ ] Reduced-motion path confirmed.
+- [x] One strategy chosen, reason written in this spec.
+- [x] Specific failing behaviour of each rejected strategy documented, not just "worse".
+- [x] Suppression mechanism described concretely enough for Phase 4 to implement against.
+- [x] Reduced-motion path confirmed.
 
 ## Decision
 
-> **Unfilled. This section is written by a human after watching the recordings.**
-> Phases 3, 4 and 6 read it. If it stays empty, three later sessions will each invent
-> their own answer, which is the failure this section exists to prevent. Once written,
-> the decision is copied as a line under Phase 0 in `docs/plan.md`.
+Reviewed by a human on 2026-09-07, live against the spike with 20% of delta
+frames dropped, on all three strategies.
 
-**Chosen strategy:** —
+**Chosen strategy:** none of the three as built. **C's granularity with C's
+geometry removed** — the newly-arrived tail text is wrapped in one element,
+faded in, and unwrapped again when the animation ends.
 
-**Why:** —
+**Why:** the review found that none of the three is both correct and affordable.
+A and B are correct in reading order and cost ~10,100 reveal-added DOM nodes on
+a 20KB message against a budget of 8,000. C costs none and reveals in the wrong
+order. The reviewer preferred B on looks and **could not distinguish A from B**,
+which is the finding that decided it: the per-word fade those two pay ~10,000
+nodes for is not visibly different from each other, let alone worth the budget.
+Wrapping only the tail keeps C's cost — one live element per block, zero at rest
+— while revealing in document order, which is the one thing C could not do.
 
-**Rejected — A, specific failing behaviour:** —
+It also leaves nothing behind. The span is unwrapped on `animationend`, so a
+block's bytes are its content and nothing else. That matters because a block's
+digest covers its content: any reveal chrome left in the DOM is drift the repair
+path cannot see, which is the two-tabs-disagree bug that Phase 7 fixed by
+removing per-block chrome. Marking the new text **server-side** was considered
+and rejected for exactly this reason, even though the broadcaster knows the
+delta precisely and it would be free on the client.
 
-**Rejected — B, specific failing behaviour:** —
+**Rejected — A, specific failing behaviour:** 10,103 reveal-added DOM nodes on a
+20KB message against a budget of 8,000, and a 248ms patch maximum against a
+budget of 30ms — the worst maximum of the three. Its one advantage over C is a
+per-word fade the reviewer could not tell apart from B's.
 
-**Suppression mechanism, for Phase 4:** —
+**Rejected — B, specific failing behaviour:** the only strategy that flashes the
+whole message on every snapshot morph when suppression is off; the reviewer
+confirmed this directly by unchecking the suppression box and watching the
+content flash. It also destroys node identity across a morph, and is over budget
+on all three counts: 10,101 nodes, 42.7ms patch median against 8ms, 147.8ms
+maximum against 30ms.
 
-**Reduced motion:** —
+**Rejected — C as built, specific failing behaviour:** it reveals in the wrong
+order. The controller sets the mask position from `revealedLength /
+textContent.length` — a **character** fraction — while the CSS is
+`linear-gradient(90deg, …)`, which hides by **horizontal position**. The two are
+unrelated as soon as a block wraps. Measured on a three-visual-line block: every
+line's text ends at ~94% of the block width, so with the mask edge at 75% the
+last ~19% of *every* line is hidden and swept back in — including the first line,
+read seconds earlier. It fades out as the block grows only because
+`revealedLength / length` approaches 100% and the swept strip shrinks, which is
+what the reviewer saw: *"C flashes a little bit at the end of the 3 first rows,
+after that I see no flashes."*
+
+The Phase 0 animation counter could never have caught this. It asserts that no
+element already marked revealed began an animation, and C has exactly one
+element, so "old text re-animated" was structurally always zero. The pixel
+evidence did see it — 25–58px of difference per frame after the snapshot — and
+it was written down as "the mask's gradient edge", an artifact, rather than as
+the defect it is. **A counter that cannot fail is not evidence.**
+
+**Suppression mechanism, for Phase 4:** `ms-repair` dispatches `ms:suppress` on
+the message element before the repair morph and `ms:resume` after it, non-
+bubbling. Events rather than method calls, so the reveal strategy can change
+without the repair path changing — which is what made this decision survivable
+after the chosen strategy turned out not to be one of the three. On `suppress`
+the reveal unwraps any in-flight spans so the morph sees plain text; on `resume`
+it re-baselines to the current text length, which is what stops a repair from
+re-revealing text already on screen.
+
+**Reduced motion:** answered in the controller as well as in CSS, because with
+`animation: none` no `animationend` ever fires and a span wrapped anyway would
+never be unwrapped. Under `prefers-reduced-motion: reduce` nothing is wrapped at
+all: verified at 0 animations, 0 spans, opacity 1, with every delta present.
+
+**Backgrounded tab:** verified by the reviewer in a real tab on 2026-09-07, after
+two false reports that were both the harness's fault — a counter that asked
+"did anything animate after I came back" (the first new fragment is supposed to
+animate), and a `setInterval` that a hidden tab throttles, so nothing arrived
+unseen to replay. Driven over server-sent events instead, which is what a real
+frame does: *"BIEN: nada de lo oculto se volvió a revelar."*
