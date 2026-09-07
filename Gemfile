@@ -31,6 +31,9 @@ end
 group :development, :test do
   gem "ruby_llm"
   gem "ruby_llm-test", require: false
+
+  # The harness this engine is being built for. Path reference: no release yet.
+  gem "nexo_ai", path: "../../nexo_ai", require: false
 end
 
 group :development, :test do
