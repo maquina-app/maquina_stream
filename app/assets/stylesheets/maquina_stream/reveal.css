@@ -1,0 +1,48 @@
+/* maquina_stream — streaming reveal.
+ *
+ * Load once in the host layout, next to the theme:
+ *
+ *   <%= stylesheet_link_tag "maquina_stream/reveal" %>
+ *
+ * `ms-reveal` wraps the text that just arrived in one
+ * `<span data-ms-revealing>` and unwraps it again on `animationend`. This file
+ * is therefore one keyframe and one rule: the controller decides *what*
+ * animates, the stylesheet decides only how it looks.
+ *
+ * There is no mask here on purpose. A gradient mask placed from a character
+ * fraction hides a horizontal band, and on a block wrapped over several lines
+ * that band crosses lines the reader has already read — they flash out and back
+ * in on every frame. Animating the new text itself needs no mapping from
+ * characters to pixels at all. See app/javascript/maquina_stream/controllers/
+ * ms_reveal_controller.js.
+ */
+
+@keyframes ms-reveal-in {
+  from {
+    opacity: 0;
+    filter: blur(4px);
+  }
+
+  to {
+    opacity: 1;
+    filter: blur(0);
+  }
+}
+
+[data-ms-revealing] {
+  animation: ms-reveal-in var(--ms-reveal-duration, 320ms) ease-out both;
+}
+
+/* No animation, and the text is fully present the moment it arrives. The
+ * controller answers the same query and stops wrapping entirely — with
+ * `animation: none` no `animationend` fires, so a span wrapped anyway would
+ * never be unwrapped. This rule is the second half of that: it also covers a
+ * span left mid-flight by the preference changing while a message streams.
+ */
+@media (prefers-reduced-motion: reduce) {
+  [data-ms-revealing] {
+    animation: none !important;
+    opacity: 1 !important;
+    filter: none !important;
+  }
+}

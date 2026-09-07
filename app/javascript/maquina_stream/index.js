@@ -21,6 +21,7 @@ import MsDeferredController from "maquina_stream/controllers/ms_deferred_control
 import MsDiagramController from "maquina_stream/controllers/ms_diagram_controller"
 import MsMathController from "maquina_stream/controllers/ms_math_controller"
 import MsRepairController from "maquina_stream/controllers/ms_repair_controller"
+import MsRevealController from "maquina_stream/controllers/ms_reveal_controller"
 import MsTableController from "maquina_stream/controllers/ms_table_controller"
 
 export { linkSafety } from "maquina_stream/controllers/ms_link_safety_controller"
@@ -34,6 +35,7 @@ export const controllers = {
   "ms-diagram": MsDiagramController,
   "ms-math": MsMathController,
   "ms-repair": MsRepairController,
+  "ms-reveal": MsRevealController,
   "ms-table": MsTableController
 }
 

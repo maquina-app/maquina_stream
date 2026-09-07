@@ -1,6 +1,6 @@
 # Interaction layer
 
-Four Stimulus controllers, the markup they bind to, and how a host turns any of
+The Stimulus controllers, the markup they bind to, and how a host turns any of
 it off. Identifiers are fixed by `docs/api-surface.md`.
 
 ## Registering
@@ -67,13 +67,95 @@ is derived:
 
 ```css
 [data-ms-streaming] > [data-ms-block]:last-child::after { /* caret */ }
-[data-ms-streaming] > [data-ms-block]                   { /* reveal */ }
 ```
+
+`ms-reveal` reads the same attribute from JavaScript: a message without it is
+sealed, and a sealed message does not animate.
 
 One attribute to keep correct instead of one per block — and, more importantly,
 one that cannot drift: a block's bytes are exactly what its digest covers, so
 two tabs holding the same content hold the same DOM. See `docs/api-surface.md`
 for why this changed.
+
+## The reveal
+
+`ms-reveal` mounts on the message element and needs one stylesheet, which the
+host loads next to the theme:
+
+```erb
+<%= stylesheet_link_tag "maquina_stream/reveal" %>
+```
+
+It has no targets and no actions. When a block's text grows, the tail that just
+arrived is wrapped in **one** `<span data-ms-revealing>`, that span is animated
+in, and on `animationend` it is unwrapped again — so a block is plain text
+between frames, and the DOM gains at most one live extra node per block rather
+than one per word.
+
+Two values, both optional:
+
+| Value | Default | Meaning |
+|---|---|---|
+| `data-ms-reveal-duration-value` | the stylesheet's `320ms` | writes `--ms-reveal-duration` |
+| `data-ms-reveal-disabled-value` | `false` | markup without the animation |
+
+Nothing animates when the message element has no `data-ms-streaming`, while the
+tab is hidden, while suppressed, or under `prefers-reduced-motion: reduce` —
+the last one is answered in the controller as well as in CSS, because with
+`animation: none` no `animationend` fires and a span wrapped anyway would never
+be unwrapped.
+
+### Suppression is an event, not a method call
+
+`ms-repair` dispatches `ms:suppress` on the message element before a repair
+morph and `ms:resume` after it. `ms-reveal` listens for both; it exposes no
+public method for it, and `ms-repair` holds no reference to it. Suppression
+unwraps whatever is mid-flight, so the morph never sees reveal chrome, and
+resume re-baselines every block to the text currently on screen — which is what
+keeps a repair from re-revealing what the reader has already read.
+
+The listeners are wired in `connect`, not through `data-action`, because the
+markup a host renders (`docs/api-surface.md`) carries `data-controller` and no
+actions. A reveal that needed one more attribute would silently never suppress.
+
+### Why not a CSS mask
+
+Phase 0's strategy C masked the whole block with a horizontal gradient whose
+edge sat at `revealed / total` **characters**. A character fraction is a
+horizontal position only while a block occupies one line. Measured on a
+three-line block, each line's text ended at ~94% of the block's width, so an
+edge at 75% hid the last fifth of *every* line — including lines read seconds
+earlier — and swept them back in on the next frame. That is the flash the
+review saw on a block's first few lines, fading as the fraction approached 100%.
+
+No gradient stop fixes that: the geometry is wrong, not the easing. Animating
+the newly arrived text itself is reading-order correct by construction, because
+there is no mapping from characters to pixels anywhere in it.
+
+### Verified in a browser
+
+Against `/harness/reveal` in Chromium, on a block wrapping over **10** visual
+lines. The measurements are per animation — which element animated, the text it
+held, and the box it occupied — because the mask had a single animated element
+and "something animated" could not have caught the bug above.
+
+- **Open message reveals.** 12 consecutive deltas, 12 `animationstart` events,
+  each on a `span[data-ms-revealing]` and never on the block. Every span's text
+  was exactly the delta that had just arrived, every span's box sat at or below
+  the last line that existed before it, and the client rects of all preceding
+  lines were identical before and after each frame. The block's node count was
+  7 before the 12 frames and 7 after them.
+- **Sealed message does not animate.** With `data-ms-streaming` removed: 5
+  appends, **0** animation events, 0 running animations, 0 spans, full text
+  present.
+- **Suppression.** A frame mid-animation, then `ms:suppress` → the in-flight
+  span is unwrapped immediately (0 spans, 0 running animations) with its text
+  intact. Text arriving while suppressed: 0 animations, text intact. After
+  `ms:resume` the next delta animates one span holding **only** that delta —
+  neither the text that arrived during suppression nor anything before it.
+- **`prefers-reduced-motion: reduce`.** Emulated at the browser level, message
+  still open: 6 appends, **0** animation events, `document.getAnimations()`
+  empty, 0 spans, block opacity 1, filter `none`, and all six deltas present.
 
 ## The allowlist is a function, not an attribute
 

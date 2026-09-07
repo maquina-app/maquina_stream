@@ -1,0 +1,117 @@
+<h1>ms-reveal — streaming reveal</h1>
+
+<p>
+  The message below is open. Appending text is what a delta frame does; the
+  controller wraps the tail that just arrived, animates it, and unwraps it
+  again. Nothing here is stubbed except the transport.
+</p>
+
+<style>
+  /* Narrow on purpose: the defect the mask had only appears once a block wraps
+     over several visual lines. */
+  #ms-msg-reveal { max-width: 26rem; border: 1px solid #ddd; padding: 0.5rem 1rem; }
+  #reveal-controls button { margin-right: 0.5rem; }
+</style>
+
+<div id="ms-msg-reveal" data-controller="ms-reveal" data-ms-streaming><%= @html %></div>
+
+<p id="reveal-controls">
+  <button type="button" id="reveal-append">Append to block 0</button>
+  <button type="button" id="reveal-suppress">ms:suppress</button>
+  <button type="button" id="reveal-resume">ms:resume</button>
+  <button type="button" id="reveal-seal">Seal it</button>
+</p>
+
+<script type="module">
+  const message = document.getElementById("ms-msg-reveal")
+
+  // Instrumentation. The mask strategy had a single animated element — the
+  // whole block — so recording "something animated" could not tell a tail
+  // reveal from a re-reveal of text already on screen. What is recorded here is
+  // therefore, per animation: which element animated, what text it holds, and
+  // the box it occupies. An animation whose box crosses a line the reader has
+  // already read is the bug, and it shows up in these numbers.
+  const probe = window.__reveal = {
+    animations: [],
+    reset() { this.animations = [] },
+
+    // The top of the last visual line of a block, in page coordinates. Text
+    // revealed after this point may only ever paint at or below it.
+    lastLineTop(id) {
+      const range = document.createRange()
+      range.selectNodeContents(document.getElementById(id))
+      const rects = Array.from(range.getClientRects())
+      return rects.length ? Math.max(...rects.map((r) => r.top)) : 0
+    },
+
+    lineTops(id) {
+      const range = document.createRange()
+      range.selectNodeContents(document.getElementById(id))
+      return Array.from(range.getClientRects()).map((r) => [Math.round(r.top), Math.round(r.left), Math.round(r.width)])
+    },
+
+    // Every animation the browser is actually running inside the message, with
+    // the box it will repaint.
+    running() {
+      return message.getAnimations({ subtree: true }).map((animation) => {
+        const target = animation.effect?.target
+        const rect = target?.getBoundingClientRect()
+        return {
+          name: animation.animationName,
+          text: target?.textContent ?? "",
+          isBlock: Boolean(target?.hasAttribute?.("data-ms-block")),
+          top: rect ? Math.round(rect.top) : null,
+          bottom: rect ? Math.round(rect.bottom) : null
+        }
+      })
+    },
+
+    spans() {
+      return Array.from(message.querySelectorAll("[data-ms-revealing]")).map((span) => {
+        const rect = span.getBoundingClientRect()
+        return { text: span.textContent, top: Math.round(rect.top), bottom: Math.round(rect.bottom) }
+      })
+    }
+  }
+
+  message.addEventListener("animationstart", (event) => {
+    const target = event.target
+    const rect = target.getBoundingClientRect()
+    probe.animations.push({
+      name: event.animationName,
+      text: target.textContent,
+      isBlock: target.hasAttribute("data-ms-block"),
+      top: Math.round(rect.top),
+      bottom: Math.round(rect.bottom)
+    })
+  })
+
+  // A delta frame, as far as the DOM is concerned: text appended to the end of
+  // the block. Real frames arrive as a morph; this is the same mutation.
+  // The delta always lands at the very end of the block, as a morph's would —
+  // never inside whatever the reveal is currently animating, which is the
+  // client's and not the server's.
+  window.appendDelta = (text) => {
+    const block = document.getElementById("ms-reveal-b0")
+    const last = block.lastChild
+    if (last && last.nodeType === Node.TEXT_NODE) {
+      last.appendData(text)
+    } else {
+      block.appendChild(document.createTextNode(text))
+    }
+    return block.textContent.length
+  }
+
+  document.getElementById("reveal-append").addEventListener("click", () => {
+    window.appendDelta(" Y aquí llega el siguiente fragmento del texto.")
+  })
+  document.getElementById("reveal-suppress").addEventListener("click", () => {
+    message.dispatchEvent(new CustomEvent("ms:suppress", { bubbles: false }))
+  })
+  document.getElementById("reveal-resume").addEventListener("click", () => {
+    message.dispatchEvent(new CustomEvent("ms:resume", { bubbles: false }))
+  })
+  document.getElementById("reveal-seal").addEventListener("click", () => {
+    message.removeAttribute("data-ms-streaming")
+  })
+</script>

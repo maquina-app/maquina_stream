@@ -215,8 +215,14 @@ one attribute to keep correct rather than one per block:
 
 ```css
 [data-ms-streaming] > [data-ms-block]:last-child { /* caret */ }
-[data-ms-streaming] > [data-ms-block]            { /* reveal */ }
 ```
+
+The reveal reads the same attribute, but from JavaScript rather than CSS: it
+animates only inside a message carrying `data-ms-streaming`, and the seal
+removing it takes the animation down live. What it animates is a
+`<span data-ms-revealing>` it wraps around the newly arrived text and unwraps
+again on `animationend` — client-owned, and gone from the DOM before any morph
+can see it, for exactly the reason below.
 
 Two consequences worth knowing:
 
@@ -267,7 +273,7 @@ Payload attribute is server state, owned by morph. Output element is client stat
 |---|---|
 | `ms-stream` | tracks sequence, applies delta frames |
 | `ms-repair` | manifest diff, block fetch, silent morph, keyframe timer |
-| `ms-reveal` | word reveal; exposes `suppress()` / `resume()` for repair |
+| `ms-reveal` | streaming reveal: wraps the text that just arrived in one `<span data-ms-revealing>`, animates it, unwraps it on `animationend`. Suppressed through the `ms:suppress` / `ms:resume` events, not through method calls |
 | `ms-deferred` | base class: lazy import, render on payload change, sanitize output |
 | `ms-diagram`, `ms-math` | extend `ms-deferred` |
 | `ms-code` | copy, download |
@@ -301,6 +307,7 @@ Vendored partials follow `maquina_components` conventions exactly:
 - `data-component` values use the **destination** name — `code-block`, not `ms-code-block`
 - symbol defaults, `css_classes:` not `class:`, always `**html_options`, data attributes merged never overwritten
 - one stylesheet per component, loaded only when the vendored fallback is active
+- **nothing engine-specific inside the partial.** The `data-ms-*` contract above, the `ms-*` controller identifiers and the `maquina_stream.*` labels are supplied at the call site by `MaquinaStream::Components::Contract` — root attributes as `data:`, per-part attributes as `source_attributes:` / `copy_attributes:` / `thumbnail_attributes:` and the like, labels as `copy_label:` and friends. A test fails when a vendored partial names any of them.
 
 `MaquinaStream::VENDORED_COMPONENTS` lists extraction candidates. A test asserts no engine code renders a vendored partial directly — only the resolver may.
 
