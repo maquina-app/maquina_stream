@@ -47,3 +47,40 @@
     document.getElementById("scroller-content").append(p)
   })
 </script>
+
+<section id="deferred">
+  <h2>Deferred renderer sanitization</h2>
+  <p>
+    A stub renderer that returns hostile markup, so the client-side scrub can be
+    verified independently of the server's sanitizer — the payload is model
+    output and the library is third-party, and neither is a reason to trust what
+    comes back.
+  </p>
+  <div id="hostile"
+       data-controller="ms-hostile"
+       data-ms-hostile-payload-value='{"source":"graph TD"}'
+       data-ms-hostile-eager-value="true">
+    <div data-ms-hostile-target="output"></div>
+  </div>
+</section>
+
+<script type="module">
+  import MsDeferredController from "maquina_stream/controllers/ms_deferred_controller"
+
+  // Stands in for a renderer library that returns something hostile.
+  class HostileRenderer extends MsDeferredController {
+    async draw() {
+      return `
+        <svg onload="window.__pwned = true">
+          <script>window.__pwned = true<\/script>
+          <foreignObject><iframe src="javascript:window.__pwned=true"></iframe></foreignObject>
+          <a href="javascript:window.__pwned=true">click</a>
+          <a href="https://example.com/ok">safe</a>
+          <path d="M0 0 L10 10" fill="red" style="behavior:url(x)"></path>
+          <text>rendered</text>
+        </svg>`
+    }
+  }
+
+  window.Stimulus.register("ms-hostile", HostileRenderer)
+</script>

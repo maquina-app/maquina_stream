@@ -35,3 +35,13 @@ MaquinaStream.register_tag :source,
   attributes: %w[id href title],
   partial: "maquina_stream/components/source_citation",
   literal_content: false
+
+# A third renderer, added by the host with no engine change. This is the Phase 6
+# DoD line: a host can add a renderer using only the documented registry.
+#
+# `ms-timeline` is not mentioned anywhere in the engine. The registry carries
+# the controller name and the payload shape; the controller is the host's.
+MaquinaStream.register_fence "timeline",
+  strategy: :client,
+  controller: "ms-timeline",
+  payload: ->(source, info) { {source: source, info: info, format: "timeline"} }
