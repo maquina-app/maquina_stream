@@ -53,6 +53,28 @@ A working example of both is `test/dummy/app/views/harness/show.html.erb`.
 controller simply never hears anything. Both of these were wired wrongly first
 time and only the browser caught it — which is why the harness exists.
 
+## Streaming chrome is the host's one attribute
+
+Blocks carry no streaming state. The message element does, and everything else
+is derived:
+
+```erb
+<div id="ms-msg-<%= message.maquina_stream_id %>"
+     <%= "data-ms-streaming" if message.maquina_stream_open? %>>
+  <%= @message_html %>
+</div>
+```
+
+```css
+[data-ms-streaming] > [data-ms-block]:last-child::after { /* caret */ }
+[data-ms-streaming] > [data-ms-block]                   { /* reveal */ }
+```
+
+One attribute to keep correct instead of one per block — and, more importantly,
+one that cannot drift: a block's bytes are exactly what its digest covers, so
+two tabs holding the same content hold the same DOM. See `docs/api-surface.md`
+for why this changed.
+
 ## The allowlist is a function, not an attribute
 
 ```js
