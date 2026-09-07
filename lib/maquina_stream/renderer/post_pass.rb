@@ -1,0 +1,158 @@
+# frozen_string_literal: true
+
+module MaquinaStream
+  class Renderer
+    # One walk over the parsed document. Everything that needs the tree happens
+    # here: fence strategies, table wrappers, element hooks, registered custom
+    # tags, and the reveal attributes that separate streaming from static.
+    #
+    # It is one pass on purpose. Each extra traversal is paid on every frame of
+    # every message.
+    class PostPass
+      ELEMENT_HOOKS = %w[h1 h2 h3 h4 h5 h6 p ul ol li table blockquote pre hr img a].freeze
+
+      attr_reader :fragment, :markdown, :mode, :config
+
+      def initialize(fragment, markdown:, mode:, config:)
+        @fragment = fragment
+        @markdown = markdown
+        @mode = mode
+        @config = config
+      end
+
+      def call
+        rewrite_fences
+        wrap_tables
+        render_registered_tags
+        annotate_elements
+        strip_sourcepos
+        fragment
+      end
+
+      private
+        def streaming? = mode == :streaming
+
+        # The open fence, when there is one, is the last one in the document:
+        # the buffer can only be cut in one place.
+        def open_fence_index
+          return @open_fence_index if defined?(@open_fence_index)
+
+          open = MaquinaRemend.context(markdown).in_code_fence?
+          @open_fence_index = open ? code_blocks.length - 1 : nil
+        end
+
+        def code_blocks
+          @code_blocks ||= fragment.css("pre > code").map(&:parent)
+        end
+
+        def rewrite_fences
+          code_blocks.each_with_index do |pre, index|
+            code = pre.at_css("code")
+            fence = Fence.new(
+              info: language_of(code),
+              source: code.text,
+              open: index == open_fence_index,
+              config: config
+            )
+
+            replacement = render_fence(fence)
+            pre.replace(replacement) if replacement
+          end
+        end
+
+        def render_fence(fence)
+          case fence.strategy
+          when :client then render_client_fence(fence)
+          when :passthrough then nil
+          else render_server_fence(fence)
+          end
+        end
+
+        def render_server_fence(fence)
+          view.render(
+            Components.partial_for(:code_block, config: config),
+            lang: fence.language,
+            source: fence.source,
+            highlighted: fence.highlighted,
+            open: fence.open?,
+            controls: config.controls[:code]
+          )
+        end
+
+        # Skeleton until the fence closes, then payload and controller. The
+        # skeleton is the shimmer component; there is no ad-hoc placeholder
+        # markup anywhere in the engine.
+        def render_client_fence(fence)
+          return view.render("maquina_stream/components/shimmer", label: fence.language) if fence.open?
+
+          node = Nokogiri::XML::Node.new("div", fragment.document)
+          node["data-controller"] = fence.controller if fence.controller
+          node["data-#{fence.controller}-payload-value"] = JSON.generate(fence.payload) if fence.controller
+          node.inner_html = view.render("maquina_stream/components/shimmer", label: fence.language)
+          node.to_html
+        end
+
+        def language_of(code)
+          code["class"].to_s[/language-(\S+)/, 1].to_s
+        end
+
+        def wrap_tables
+          fragment.css("table").each do |table|
+            wrapper = Nokogiri::XML::Node.new("div", fragment.document)
+            wrapper["data-ms-table"] = ""
+            wrapper["data-controller"] = "ms-table" if config.controls.dig(:table, :copy)
+            table.replace(wrapper)
+            wrapper.add_child(table)
+          end
+        end
+
+        # A registered tag is rendered through its partial with only the
+        # attributes its registration allows. An unregistered tag is left for the
+        # sanitizer, which drops it.
+        def render_registered_tags
+          MaquinaStream.tags.each do |name, tag|
+            fragment.css(name.to_s).each do |node|
+              allowed = Array(tag.options[:attributes]).to_h { |key| [key.to_sym, node[key]] }
+              content = tag.options[:literal_content] ? node.text : node.inner_html
+
+              node.replace(view.render(tag.options[:partial], **allowed, content: content))
+            end
+          end
+        end
+
+        def annotate_elements
+          ELEMENT_HOOKS.each do |name|
+            fragment.css(name).each do |node|
+              node["data-ms-element"] = name
+              apply_element_override(name, node)
+            end
+          end
+
+          annotate_reveal if streaming?
+        end
+
+        def apply_element_override(name, node)
+          registration = MaquinaStream.elements[name.to_sym]
+          return unless registration&.options&.key?(:partial)
+
+          node.replace(view.render(registration.options[:partial], content: node.inner_html, node: node))
+        end
+
+        # The only difference between streaming and static output. The parity
+        # test strips these and demands the rest be byte-identical.
+        def annotate_reveal
+          fragment.children.each do |node|
+            node["data-ms-reveal"] = "" if node.element?
+          end
+        end
+
+        def strip_sourcepos
+          fragment.css("[data-sourcepos]").each { |node| node.remove_attribute("data-sourcepos") }
+        end
+
+        def view
+          @view ||= ViewContext.build
+        end
+    end
+  end
+end
