@@ -2,9 +2,17 @@
 
 module MaquinaStream
   # The view side of the component seam. Engine views and the render pipeline
-  # call +component+; nothing renders a vendored partial by path.
+  # call `component`; nothing renders a vendored partial by path.
   module ComponentsHelper
-    # component(:code_block, lang: "ruby", source: raw, css_classes: "…")
+    # Renders one component through the seam.
+    #
+    # ```erb
+    # <%= component(:code_block, lang: "ruby", source: raw, css_classes: "…") %>
+    # ```
+    #
+    # `name` resolves to a `maquina_components` partial when that gem defines
+    # it, and to the vendored fallback otherwise. Locals go through
+    # MaquinaStream::Components::Contract on the way in.
     #
     # The partial is generic; the engine's DOM contract and labels are added
     # here, by MaquinaStream::Components::Contract. That is what lets a vendored
@@ -24,9 +32,9 @@ module MaquinaStream
 
     # Merges caller-supplied data attributes with the component's own.
     #
-    # The component wins its identity keys — +component+, +variant+, +size+ and
-    # anything ending in +_part+ — because those are what the CSS selects on.
-    # +controller+ and +action+ concatenate, component tokens first. Every other
+    # The component wins its identity keys — `component`, `variant`, `size` and
+    # anything ending in `_part` — because those are what the CSS selects on.
+    # `controller` and `action` concatenate, component tokens first. Every other
     # key belongs to the caller.
     def component_data(own, provided = nil)
       own = own.compact
@@ -44,7 +52,7 @@ module MaquinaStream
     end
 
     # Same-shaped merge for the non-data attributes a caller passes through
-    # +**html_options+, with +css_classes+ folded into +class+.
+    # `**html_options`, with `css_classes` folded into `class`.
     def component_html_options(html_options, own_data: {}, css_classes: nil, base_classes: nil)
       options = html_options.dup
       provided_data = options.delete(:data) || options.delete("data")

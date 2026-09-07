@@ -16,6 +16,7 @@ Gem::Specification.new do |spec|
     "homepage_uri" => spec.homepage,
     "source_code_uri" => spec.homepage,
     "changelog_uri" => "#{spec.homepage}/blob/main/CHANGELOG.md",
+    "documentation_uri" => "https://rubydoc.info/gems/maquina_stream/#{spec.version}",
     "rubygems_mfa_required" => "true"
   }
 
@@ -26,8 +27,20 @@ Gem::Specification.new do |spec|
   # document the gem to someone who installs it.
   spec.files = Dir["{app,config,lib}/**/*"] + Dir["docs/*.md"].reject { |path|
     %w[plan design remend-patterns spike-sourcepos].include?(File.basename(path, ".md"))
-  } + ["README.md", "CHANGELOG.md", "LICENSE.txt"].select { |file| File.exist?(file) }
+  } + ["README.md", "CHANGELOG.md", "LICENSE.txt", ".rdoc_options"].select { |file| File.exist?(file) }
   spec.require_paths = ["lib"]
+
+  # Comments in lib/ and app/ are Markdown, not RDoc markup. `.rdoc_options`
+  # carries the same setting for anyone running `rdoc` in a checkout; these
+  # flags carry it for `gem install`, which does not read that file reliably.
+  spec.extra_rdoc_files = ["README.md", "CHANGELOG.md", "LICENSE.txt"].select { |file| File.exist?(file) }
+  spec.rdoc_options = [
+    "--markup", "markdown",
+    "--main", "README.md",
+    "--title", "maquina_stream #{MaquinaStream::VERSION}",
+    "--exclude", "(?:\\A|/)test/",
+    "--exclude", "(?:\\A|/)sdd/"
+  ]
 
   spec.add_dependency "rails", ">= 8.0"
   # TODO: handoff DoD requires the released maquina_remend gem. Until it ships,

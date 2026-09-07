@@ -10,14 +10,31 @@ module MaquinaStream
   # mode is a stylesheet concern and needs no re-render — which matters, because
   # a re-render mid-stream would mean re-broadcasting sealed blocks to change a
   # colour.
+  #
+  # The two files are generated, not written: `rake maquina_stream:themes`
+  # rewrites them from `config.themes`. A host that changes those theme names
+  # re-runs that task.
   module Themes
+    # Every generated rule is scoped to a code block, so the themes cannot
+    # reach anything else on a host's page.
     SCOPE = "[data-ms-code]"
+
+    # An explicitly chosen dark theme.
     DARK_SELECTOR = '[data-theme="dark"]'
+
+    # An explicitly chosen light theme, and the default.
     LIGHT_SELECTOR = ':root:not([data-theme="dark"])'
 
+    # Raised when `config.themes` names a theme Rouge does not define. Raising
+    # rather than falling back silently is how the `github_dark` typo in the
+    # original default was found.
     class UnknownTheme < Error; end
 
     class << self
+      # The generated CSS for one scheme, as a String.
+      #
+      # `scheme` is `:light` or `:dark`; anything else raises ArgumentError.
+      # An unknown Rouge theme name raises UnknownTheme.
       def stylesheet(scheme, config: MaquinaStream.config)
         case scheme.to_sym
         when :light then light(config)
@@ -26,6 +43,8 @@ module MaquinaStream
         end
       end
 
+      # Where the generated stylesheet for `scheme` lives on disk. What the
+      # rake task writes to.
       def path(scheme)
         File.expand_path("../../app/assets/stylesheets/maquina_stream/themes/#{scheme}.css", __dir__)
       end

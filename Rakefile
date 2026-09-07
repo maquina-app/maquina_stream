@@ -13,6 +13,14 @@ end
 
 require "standard/rake"
 
+# Options — Markdown markup, title, main page, exclusions — live in
+# `.rdoc_options` rather than here, so `rdoc` run by hand in a checkout and
+# `gem install` both produce the same documentation.
+require "rdoc/task"
+RDoc::Task.new do |rdoc|
+  rdoc.rdoc_dir = "doc"
+end
+
 task default: %i[test standard]
 
 namespace :maquina_stream do

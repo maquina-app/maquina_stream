@@ -4,14 +4,19 @@ module MaquinaStream
   # The component seam.
   #
   # Every component the engine renders resolves through here, so extracting a
-  # vendored component into +maquina_components+ is mechanical: publish the
+  # vendored component into `maquina_components` is mechanical: publish the
   # partial in that gem, drop the name from VENDORED_COMPONENTS, done. No call
   # site changes. See docs/component-scope.md.
   #
-  #   MaquinaStream::Components.partial_for(:code_block, config: MaquinaStream.config)
-  #   # => "maquina_components/code_block"        when the gem defines it
-  #   # => "maquina_stream/components/code_block" otherwise
+  # ```ruby
+  # MaquinaStream::Components.partial_for(:code_block, config: MaquinaStream.config)
+  # # => "maquina_components/code_block"        when the gem defines it
+  # # => "maquina_stream/components/code_block" otherwise
+  # ```
   #
+  # `maquina_components` is an optional dependency. Without it every component
+  # renders its vendored plain-Tailwind fallback, and `config.components =
+  # :plain` forces that even when the gem is installed.
   module Components
     # Where a component lives once it has been extracted.
     DESTINATION_PREFIX = "maquina_components"
@@ -23,7 +28,7 @@ module MaquinaStream
     # when a partial of the same name shows up there.
     ENGINE_OWNED = %i[shimmer source_citation].freeze
 
-    # Probes an installed +maquina_components+ for the destination partial.
+    # Probes an installed `maquina_components` for the destination partial.
     # A plain object rather than a stub: tests inject their own.
     class Library
       # Returns nil when the gem is absent, which is the whole point of the
@@ -54,9 +59,9 @@ module MaquinaStream
     end
 
     class << self
-      # The partial path to render for +name+.
+      # The partial path to render for `name`.
       #
-      # +library+ is a seam: pass one in to test either side of the branch
+      # `library` is a seam: pass one in to test either side of the branch
       # without touching the load path.
       def partial_for(name, config: MaquinaStream.config, library: default_library)
         name = name.to_sym
@@ -73,15 +78,20 @@ module MaquinaStream
         MaquinaStream::VENDORED_COMPONENTS.include?(name.to_sym)
       end
 
+      # True for a component that is permanently the engine's and never
+      # resolves to the gem, even if a partial of the same name shows up
+      # there.
       def engine_owned?(name)
         ENGINE_OWNED.include?(name.to_sym)
       end
 
+      # True for any component this engine knows how to render, vendored or
+      # engine-owned.
       def known?(name)
         vendored?(name) || engine_owned?(name)
       end
 
-      # True when +name+ renders from our own app/views right now.
+      # True when `name` renders from our own app/views right now.
       def fallback_active?(name, config: MaquinaStream.config, library: default_library)
         partial_for(name, config: config, library: library).start_with?(VENDORED_PREFIX)
       end

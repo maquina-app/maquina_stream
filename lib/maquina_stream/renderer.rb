@@ -12,13 +12,32 @@ require_relative "renderer/post_pass"
 module MaquinaStream
   # Markdown in, sanitized HTML out.
   #
-  #   MaquinaStream::Renderer.call(markdown, mode: :streaming)
+  # ```ruby
+  # MaquinaStream::Renderer.call(markdown, mode: :streaming) # => SafeBuffer
+  # ```
   #
   # Pure: no request, no controller, no stubbing. The same function serves the
-  # live stream, a page reload, a replay and an export, and +mode+ changes
+  # live stream, a page reload, a replay and an export, and `mode` changes
   # nothing but whether the reveal attributes are emitted. If this ever starts
   # needing request context, that is a design error rather than a plumbing one.
+  #
+  # ## The pipeline
+  #
+  # 1. `MaquinaRemend.call` repairs the unterminated markdown a half-written
+  #    buffer always ends in — an open bold run, an unclosed fence.
+  # 2. Commonmarker parses it, with source positions.
+  # 3. Renderer::PostPass rewrites elements: fences, custom tags, registered
+  #    element overrides, text direction, block indices.
+  # 4. Sanitizer runs, unconditionally, last.
+  #
+  # Renderer returns one HTML string for the whole buffer. It does **not**
+  # split it into blocks or stamp ids and digests on them — that is Document,
+  # and without it a page cannot be repaired at all. Host code almost always
+  # wants MaquinaStream.render or Document rather than this.
   class Renderer
+    # The two render modes. Both produce the same document byte for byte; the
+    # mode is carried so the post-pass knows whether the message is still being
+    # written.
     MODES = %i[streaming static].freeze
 
     # unsafe: true lets registered custom tags through the parser. It is not a
@@ -42,12 +61,24 @@ module MaquinaStream
     # commonmarker 2.10.0 in test/sourcepos_test.rb.
     COMMONMARKER_PLUGINS = {syntax_highlighter: nil}.freeze
 
-    attr_reader :mode, :config
+    # The mode this renderer was built with, one of MODES.
+    attr_reader :mode
 
+    # The Configuration this renderer reads.
+    attr_reader :config
+
+    # Renders `markdown` in one call. The usual entry point.
+    #
+    # `mode:` is `:streaming` or `:static`; anything else raises ArgumentError.
+    # `config:` defaults to the global MaquinaStream.config, and is a keyword
+    # rather than a lookup so the renderer stays callable from a plain Ruby
+    # process with no Rails around it.
     def self.call(markdown, mode: :streaming, config: MaquinaStream.config)
       new(mode: mode, config: config).call(markdown)
     end
 
+    # Builds a reusable renderer. Raises ArgumentError unless `mode:` is one of
+    # MODES.
     def initialize(mode: :streaming, config: MaquinaStream.config)
       raise ArgumentError, "mode must be one of #{MODES.join(", ")}" unless MODES.include?(mode)
 
@@ -55,6 +86,10 @@ module MaquinaStream
       @config = config
     end
 
+    # Renders one markdown string to sanitized HTML.
+    #
+    # Returns an `html_safe` String — a plain String when ActiveSupport is not
+    # loaded — and an empty one for nil or whitespace-only input.
     def call(markdown)
       return safe("") if markdown.nil? || markdown.strip.empty?
 

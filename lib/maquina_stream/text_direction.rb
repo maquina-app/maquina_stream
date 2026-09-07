@@ -13,6 +13,10 @@ module MaquinaStream
   # cost of eleven bytes on every block of every frame for the majority of
   # documents that are left-to-right and need nothing. So the strong character
   # is found here and the attribute is emitted only when it changes something.
+  #
+  # The render pipeline calls this per block. A host calls it when it renders
+  # text of its own — a message header, an attachment filename — that came from
+  # the same place the buffer did.
   module TextDirection
     # The scripts written right to left, as Ruby knows them.
     RTL = /[\p{Hebrew}\p{Arabic}\p{Syriac}\p{Thaana}\p{Nko}\p{Samaritan}\p{Mandaic}\p{Adlam}]/
@@ -27,7 +31,12 @@ module MaquinaStream
     # parser reads in a different order entirely.
     CONTROLS = /[\u061C\u200E\u200F\u202A-\u202E\u2066-\u2069]/
 
-    # :rtl, :ltr, or nil when nothing in the text is strong either way.
+    # The direction `text` reads in: `:rtl`, `:ltr`, or nil when nothing in it
+    # is strong either way.
+    #
+    # Nil is a real answer, not a failure — a block of digits or punctuation
+    # has no direction of its own, and stamping one on it would be a guess. The
+    # caller emits no `dir` attribute for it.
     def self.of(text)
       strong = text.to_s[STRONG]
       return nil unless strong
@@ -35,6 +44,11 @@ module MaquinaStream
       strong.match?(RTL) ? :rtl : :ltr
     end
 
+    # Whether `text` contains an explicit bidi control character.
+    #
+    # True is a reason to be suspicious, not to render differently: see
+    # CONTROLS. Code that displays a filename or a link target unescaped should
+    # check this first.
     def self.controls?(text)
       text.to_s.match?(CONTROLS)
     end

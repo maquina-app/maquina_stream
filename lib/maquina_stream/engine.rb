@@ -1,6 +1,16 @@
 # frozen_string_literal: true
 
 module MaquinaStream
+  # The Rails engine. Mount it for the repair endpoints:
+  #
+  # ```ruby
+  # mount MaquinaStream::Engine => "/maquina_stream"
+  # ```
+  #
+  # It contributes two routes (see MaquinaStream::ManifestsController and
+  # MaquinaStream::BlocksController), the engine's stylesheets and JavaScript,
+  # and its importmap pins. It contributes no migrations and no models: the
+  # host owns persistence.
   class Engine < ::Rails::Engine
     isolate_namespace MaquinaStream
 

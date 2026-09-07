@@ -339,8 +339,10 @@ module MaquinaStream
         #
         # Chrome is derived instead, from the message element the host renders:
         #
-        #   [data-ms-streaming] > [data-ms-block]:last-child { /* caret */ }
-        #   [data-ms-streaming] > [data-ms-block]            { /* reveal */ }
+        # ```css
+        # [data-ms-streaming] > [data-ms-block]:last-child { /* caret */ }
+        # [data-ms-streaming] > [data-ms-block]            { /* reveal */ }
+        # ```
         #
         # A block is then exactly its content, identical content is identical
         # bytes, and streaming and static output are the same document.

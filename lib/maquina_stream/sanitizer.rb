@@ -7,7 +7,9 @@ module MaquinaStream
   # Allowlist plus URL hardening. The last pass before output, and it runs
   # unconditionally.
   #
-  #   MaquinaStream::Sanitizer.call(html, config: MaquinaStream.config) # => String
+  # ```ruby
+  # MaquinaStream::Sanitizer.call(html, config: MaquinaStream.config) # => String
+  # ```
   #
   # The input is model output: hostile, prompt-injectable, and never trusted
   # because an earlier stage already looked at it. Nothing here is a cleanup
@@ -15,7 +17,21 @@ module MaquinaStream
   # survives only by being re-parsed and re-checked. Everything else is
   # dropped, not escaped and kept.
   #
-  # See docs/sanitizer.md.
+  # Renderer calls this itself, last, on every render. A host only calls it
+  # directly when it produces HTML of its own that a model had a hand in.
+  #
+  # Five configuration keys steer it — `default_origin`, `allowed_protocols`,
+  # `allowed_link_prefixes`, `allowed_image_prefixes` and `allow_data_images`.
+  # Nothing else about it is configurable: the element and attribute allowlists
+  # are constants, and widening one means editing this file with the regression
+  # suite in front of you.
+  #
+  # It is not the last line of defence either. Renderer output is sanitized
+  # *again* client-side before it reaches the DOM, because the payload came from
+  # a model and model output is prompt-injectable.
+  #
+  # See docs/sanitizer.md for what survives, what is dropped, and the known
+  # holes.
   class Sanitizer
     # Elements that survive: rendered markdown, plus the wrappers the post-pass
     # adds around it.
@@ -120,17 +136,24 @@ module MaquinaStream
     }xi
 
     class << self
+      # Sanitizes one HTML string. The usual entry point.
       def call(html, config: MaquinaStream.config)
         new(config: config).call(html)
       end
     end
 
+    # The Configuration whose URL keys this sanitizer reads.
     attr_reader :config
 
+    # Builds a reusable sanitizer. A nil `config:` falls back to the global
+    # one rather than failing later, deep in a URL check.
     def initialize(config: MaquinaStream.config)
       @config = config || MaquinaStream.config
     end
 
+    # Sanitizes `html` and returns the result as a String — a plain String, not
+    # `html_safe`: marking it is the caller's decision, and Renderer is the
+    # caller that makes it. Empty in, empty out.
     def call(html)
       return "" if html.nil?
 

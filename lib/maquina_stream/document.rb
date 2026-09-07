@@ -4,17 +4,38 @@ module MaquinaStream
   # Splits a rendered message into top-level blocks, and decides which of them
   # are safe to freeze.
   #
-  #   document = MaquinaStream::Document.new(markdown, config: config)
-  #   document.sealed_blocks   # frozen, never re-sent
-  #   document.open_block      # the tail, patched on every frame
+  # ```ruby
+  # document = MaquinaStream::Document.new(markdown, config: config, sid: "m8f21")
+  # document.blocks          # every top-level block, in order
+  # document.sealed_blocks   # frozen, never re-sent
+  # document.open_block      # the tail, patched on every frame
+  # ```
   #
   # The whole buffer is rendered once and then sliced. Blocks are never rendered
   # in isolation: a block that mentions [docs] needs the link reference
   # definition that lives at the bottom of the message, and rendering it alone
   # silently loses it.
   class Document
-    attr_reader :markdown, :config, :sid, :mode
+    # The raw markdown this document was built from.
+    attr_reader :markdown
 
+    # The Configuration it reads — `seal_lag` in particular.
+    attr_reader :config
+
+    # The stream id every block id is prefixed with, or nil for an anonymous
+    # render.
+    attr_reader :sid
+
+    # The render mode passed through to Renderer, one of Renderer::MODES.
+    attr_reader :mode
+
+    # Builds a document over one markdown buffer.
+    #
+    # `sid:` is the record's `maquina_stream_id`. Pass it: block ids are built
+    # from it, and a document rendered without one produces ids
+    # (`ms-b0`, `ms-b1`) that collide the moment two messages share a page.
+    #
+    # Nothing is rendered until #blocks or #html is called.
     def initialize(markdown, config: MaquinaStream.config, sid: nil, mode: :streaming)
       @markdown = markdown.to_s
       @config = config
@@ -22,6 +43,9 @@ module MaquinaStream
       @mode = mode
     end
 
+    # Every top-level Block, in document order, each already stamped with its
+    # id and digest. Memoized: the whole buffer is rendered once, on the first
+    # call.
     def blocks
       @blocks ||= build_blocks
     end
@@ -40,22 +64,31 @@ module MaquinaStream
       blocks.first(seal_pointer)
     end
 
+    # The blocks behind the seal pointer: still able to change, and therefore
+    # still eligible for a patch on the next frame.
     def unsealed_blocks
       blocks.drop(seal_pointer)
     end
 
+    # How far sealing reached, as an index into #blocks. Sealing is a prefix,
+    # so this is both the count of sealed blocks and the position of the first
+    # unsealed one.
     def seal_pointer
       @seal_pointer ||= blocks.count(&:sealed?)
     end
 
+    # The last block — the tail the model is currently writing into.
     def open_block
       blocks.last
     end
 
+    # The whole document as one rendered HTML string, before it is sliced into
+    # blocks. Memoized.
     def html
       @html ||= Renderer.call(markdown, mode: mode, config: config)
     end
 
+    # `[[id, digest], …]` for the sealed blocks. What Manifest is built from.
     def manifest_entries
       sealed_blocks.map(&:to_manifest_entry)
     end

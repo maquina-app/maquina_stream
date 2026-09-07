@@ -4,30 +4,43 @@ module MaquinaStream
   module Components
     # The engine's half of a vendored component.
     #
-    # A vendored partial is a +maquina_components+ component that happens to
-    # live here for now: it knows about variants, parts and +css_classes+, and
+    # A vendored partial is a `maquina_components` component that happens to
+    # live here for now: it knows about variants, parts and `css_classes`, and
     # about nothing else. Everything that belongs to THIS engine — the
-    # +data-ms-*+ DOM contract from docs/api-surface.md, the +ms-*+ Stimulus
-    # identifiers, and the +maquina_stream.*+ labels — is supplied from the call
+    # `data-ms-*` DOM contract from docs/api-surface.md, the `ms-*` Stimulus
+    # identifiers, and the `maquina_stream.*` labels — is supplied from the call
     # site, and this is the call site.
     #
-    #   Contract.apply(:code_block, {lang: "ruby", source: raw}, config: config)
-    #   # => {lang: "ruby", source: raw,
-    #   #     data: {ms_code: "", ms_code_lang: "ruby"},
-    #   #     source_attributes: {"data-ms-code-source" => ""},
-    #   #     copy_label: "Copiar", …}
+    # ```ruby
+    # Contract.apply(:code_block, {lang: "ruby", source: raw}, config: config)
+    # # => {lang: "ruby", source: raw,
+    # #     data: {ms_code: "", ms_code_lang: "ruby"},
+    # #     source_attributes: {"data-ms-code-source" => ""},
+    # #     copy_label: "Copiar", …}
+    # ```
     #
-    # Two callers, and only two: +ComponentsHelper#component+ and the fence
+    # Two callers, and only two: `ComponentsHelper#component` and the fence
     # renderer in Renderer::PostPass, which renders the same partial from
-    # outside a request. Extraction deletes nothing here — this file is what
-    # the engine keeps when the partials leave.
+    # outside a request. **Components render through the seam, never directly**
+    # — a host that reaches for a vendored partial by path gets markup with none
+    # of this on it. Extraction deletes nothing here: this file is what the
+    # engine keeps when the partials leave.
     #
     # Caller locals win over ours, so a host can name a label itself. The
-    # exception is +data+, which is merged rather than replaced: the DOM
-    # contract is not the host's to drop, and +controller+ concatenates so a
+    # exception is `data`, which is merged rather than replaced: the DOM
+    # contract is not the host's to drop, and `controller` concatenates so a
     # host's own controller rides along with ours.
+    #
+    # Four components have engine locals — `:code_block`, `:snippet`,
+    # `:attachment` and `:suggestion`. Any other name passes its locals through
+    # untouched.
     module Contract
       class << self
+        # Returns `locals` with the engine's own locals folded in.
+        #
+        # `name` is the component name, `locals` the Hash a call site passed.
+        # Unknown names return `locals` unchanged, so this is safe to call on
+        # every component render.
         def apply(name, locals, config: MaquinaStream.config)
           engine = engine_locals(name.to_sym, locals, config)
           return locals if engine.empty?
@@ -39,10 +52,13 @@ module MaquinaStream
           merged
         end
 
+        # Merges the engine's data attributes with a caller's, and returns the
+        # result.
+        #
         # Same rule as ComponentsHelper#component_data, applied one level
-        # earlier: ours wins its own keys, +controller+ and +action+
+        # earlier: ours wins its own keys, `controller` and `action`
         # concatenate with ours first. The helper travels to
-        # +maquina_components+ with the partials; this stays, so the rule is
+        # `maquina_components` with the partials; this stays, so the rule is
         # written out here rather than borrowed.
         def merge_data(own, provided)
           own = own.compact

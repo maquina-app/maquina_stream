@@ -1,0 +1,30 @@
+---
+# RDoc reads this file from the gem root. Comments in lib/ and app/ are written
+# in Markdown, not RDoc markup — see the `markup` key below.
+markup: markdown
+title: maquina_stream — server-rendered streaming markdown for Rails
+main_page: README.md
+# Everything that documents how the gem was BUILT rather than how it is USED.
+# sdd/ holds the phase specs, test/ includes the whole dummy host application,
+# and docs/{plan,design,remend-patterns,spike-sourcepos}.md are the same four
+# files the gemspec refuses to package: none of them documents the gem to
+# somebody who installs it.
+#
+# app/javascript is excluded because the JavaScript is documented as a DOM and
+# controller contract in docs/interaction.md, which is a better description of
+# it than RDoc's JavaScript parser produces.
+#
+# These are matched against ABSOLUTE paths, so each pattern is anchored to a
+# path boundary rather than to the start of the string.
+exclude:
+  - "(?:\\A|/)test/"
+  - "(?:\\A|/)sdd/"
+  - "(?:\\A|/)bin/"
+  - "(?:\\A|/)tmp/"
+  - "(?:\\A|/)pkg/"
+  - "(?:\\A|/)doc/"
+  - "(?:\\A|/)\\.github/"
+  - "(?:\\A|/)app/javascript/"
+  - "(?:\\A|/)docs/(?:plan|design|remend-patterns|spike-sourcepos)\\.md\\z"
+  - "(?:\\A|/)CLAUDE\\.md\\z"
+  - "(?:\\A|/)Gemfile(?:\\.lock)?\\z"

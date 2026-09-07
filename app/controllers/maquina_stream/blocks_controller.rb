@@ -8,6 +8,8 @@ module MaquinaStream
   # than trusted. A request for every block is a legitimate cold repair, so the
   # count is not capped — but each id is matched, not interpolated.
   class BlocksController < ApplicationController
+    # `GET /maquina_stream/:sid/blocks?ids[]=…` → a Turbo Stream carrying one
+    # morphing replace per requested block.
     def index
       requested = Array(params[:ids]).map(&:to_s).to_set
       blocks = document.blocks.select { |block| requested.include?(block.id) }
